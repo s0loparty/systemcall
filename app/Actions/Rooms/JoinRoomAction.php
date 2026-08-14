@@ -5,6 +5,7 @@ namespace App\Actions\Rooms;
 use App\Enums\RoomRole;
 use App\Enums\RoomStatus;
 use App\Enums\RoomVisibility;
+use App\Events\Rooms\RoomMemberJoined;
 use App\Models\Room;
 use App\Models\RoomMember;
 use App\Models\User;
@@ -46,8 +47,9 @@ class JoinRoomAction
         }
 
         $member = RoomMember::query()->firstOrNew($attributes);
+        $isNewMember = ! $member->exists;
 
-        if (! $member->exists) {
+        if ($isNewMember) {
             $member->forceFill([
                 'display_name' => $this->displayName($user, $data),
                 'role' => RoomRole::Participant,
@@ -57,8 +59,13 @@ class JoinRoomAction
         }
 
         $member->save();
+        $member->refresh();
 
-        return $member->refresh();
+        if ($isNewMember) {
+            RoomMemberJoined::dispatch($member);
+        }
+
+        return $member;
     }
 
     private function canAttemptJoin(Room $room, ?User $user): bool

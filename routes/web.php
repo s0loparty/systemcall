@@ -1,12 +1,17 @@
 <?php
 
 use App\Http\Controllers\LiveKitTokenController;
+use App\Http\Controllers\RoomBroadcastAuthController;
 use App\Http\Controllers\RoomCallController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomMembershipController;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
+
+Route::match(['get', 'post'], 'broadcasting/room-auth', RoomBroadcastAuthController::class)
+    ->withoutMiddleware(PreventRequestForgery::class);
 
 Route::get('rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
 Route::get('rooms/{room}/call', [RoomCallController::class, 'show'])->name('rooms.call.show');

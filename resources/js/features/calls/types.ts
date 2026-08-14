@@ -48,3 +48,24 @@ export type SelectedDevices = {
     audioInputId: string;
     videoInputId: string;
 };
+
+export type EchoConnectionState =
+    'connected' | 'connecting' | 'reconnecting' | 'disconnected' | 'failed';
+
+export type RoomMemberJoinedEvent = {
+    type: 'member_joined';
+    room_public_id: string;
+    member: {
+        id: number;
+        display_name: string;
+        role: string;
+        guest: boolean;
+    };
+    occurred_at: string;
+};
+
+export type RoomApplicationActivity = {
+    id: string;
+    message: string;
+    occurredAt: string;
+};

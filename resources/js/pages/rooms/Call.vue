@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { Head, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import ApplicationRealtimePanel from '@/features/calls/components/ApplicationRealtimePanel.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import CallHeader from '@/features/calls/components/CallHeader.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
 import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
 import { useCallSession } from '@/features/calls/composables/useCallSession';
+import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
 import type { CallRoom } from '@/features/calls/types';
 
 type RoomPageProps = {
@@ -22,6 +24,7 @@ const call = useCallSession({
     roomPublicId: props.room.public_id,
     displayName: defaultDisplayName.value,
 });
+const realtime = useRoomApplicationEvents(props.room.public_id);
 const {
     joinRequest,
     connected,
@@ -52,6 +55,7 @@ const {
     toggleScreenShare,
     setMediaHost,
 } = call;
+const { echoConnectionStatus, activities } = realtime;
 
 const needsPassword = computed(
     () => props.room.has_password && !props.can_join_without_password,
@@ -78,6 +82,11 @@ const needsPassword = computed(
             @start-screen-share="toggleScreenShare"
             @stop-screen-share="toggleScreenShare"
             @leave="disconnect"
+        />
+
+        <ApplicationRealtimePanel
+            :connection-state="echoConnectionStatus"
+            :activities="activities"
         />
 
         <DeviceSetupPanel

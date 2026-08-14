@@ -247,8 +247,40 @@ Milestone 4 verification on 2026-08-14:
 - `npm run build` passed with existing Vite chunk-size warning for the call page bundle
 - `npm run types` is not configured in `package.json`
 
-### Milestone 5 — Reverb `[ ]`
+### Milestone 5 — Reverb `[x]`
 Authorized application channels, frontend Echo, application events and reconnect. Never replace LiveKit media presence with Reverb.
+
+Implemented:
+- [x] installed frontend Reverb/Echo dependencies: `laravel-echo`, `pusher-js` and `@laravel/echo-vue`
+- [x] configured Echo during Inertia app bootstrap with public `VITE_REVERB_*` values
+- [x] added private application channel `room.{public_id}` for call-room application events
+- [x] added `/broadcasting/room-auth` for room-channel authorization, including guest-cookie participants that Laravel's default authenticated private-channel auth cannot resolve
+- [x] channel authorization requires an active room, an active `RoomMember` resolved from authenticated user or server-issued guest cookie, and no active ban
+- [x] waiting-room-enabled rooms are denied until Milestone 6 implements approval-specific authorization
+- [x] added `RoomMemberJoined` application event broadcast after commit only when a room membership is first created
+- [x] call page subscribes to room application events and displays Reverb connection state/recent application activity
+- [x] LiveKit remains authoritative for media presence, tracks, screen share and active speaker; Reverb does not duplicate media state
+
+Acceptance criteria:
+- [x] authorized authenticated room members can subscribe to `private-room.{public_id}`
+- [x] authorized guest room members can subscribe using the server-issued guest identity cookie
+- [x] non-members, banned members and waiting-room rooms are denied
+- [x] first room join emits a room application event with a stable payload
+- [x] frontend exposes Reverb connection/reconnect state separately from LiveKit media state
+- [x] backend and frontend checks pass
+- [!] real browser WebSocket reconnect/subscription smoke test still requires running Reverb through the local/Dokploy route
+
+Milestone 5 verification on 2026-08-14:
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/ReverbRoomApplicationTest.php` passed: 4 tests, 16 assertions
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact` passed: 53 tests, 251 assertions
+- `vendor/bin/pint --dirty --format agent` passed
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail composer run types:check` passed: PHPStan, 0 errors
+- `docker compose config` passed
+- `composer validate --strict` passed
+- `npm run format:check` passed after formatting the new frontend files
+- `npm run lint:check` passed
+- `npm run types:check` passed
+- `npm run build` passed with existing Vite chunk-size warning for the call page bundle
 
 ### Milestone 6 — Waiting room `[ ]`
 Request, realtime waiting list, approve/reject, token only after approval, stale cleanup and tests.

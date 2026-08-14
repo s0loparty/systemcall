@@ -46,6 +46,17 @@ LiveKit is authoritative for media/realtime media presence: audio, video, screen
 
 Reverb carries application-level realtime events.
 
+Current room application realtime uses Echo/Reverb private channels:
+```text
+Echo channel:      room.{public_id}
+Broadcast channel: private-room.{public_id}
+Auth endpoint:     /broadcasting/room-auth
+```
+
+The room channel authorizes an active `RoomMember` resolved from an authenticated user or the server-issued guest identity cookie. It rejects inactive rooms, banned participants and waiting-room-enabled rooms until the Milestone 6 approval flow exists.
+
+Current Reverb payloads are application activity only, starting with `room.member.joined`. LiveKit remains the source of truth for media presence, tracks, screen share, active speaker and media reconnect state.
+
 ## Persistence Model
 Milestone 1 adds the Laravel-owned persistence layer:
 ```text
