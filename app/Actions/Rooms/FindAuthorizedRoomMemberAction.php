@@ -3,6 +3,7 @@
 namespace App\Actions\Rooms;
 
 use App\Enums\RoomStatus;
+use App\Enums\WaitingRoomStatus;
 use App\Models\Room;
 use App\Models\RoomMember;
 use App\Models\User;
@@ -26,7 +27,11 @@ class FindAuthorizedRoomMemberAction
             throw new AuthorizationException('This participant is banned from the room.');
         }
 
-        if ($room->waiting_room_enabled) {
+        if (
+            $room->waiting_room_enabled
+            && ! $member->isModerator()
+            && ! $this->hasApprovedWaitingRoomEntry($room, $user, $guestId)
+        ) {
             throw new AuthorizationException('Waiting-room approval is required before media access.');
         }
 
@@ -63,6 +68,22 @@ class FindAuthorizedRoomMemberAction
             ->where(function ($query): void {
                 $query->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+    }
+
+    private function hasApprovedWaitingRoomEntry(Room $room, ?User $user, ?string $guestId): bool
+    {
+        return $room->waitingMembers()
+            ->where('status', WaitingRoomStatus::Approved)
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
             })
             ->exists();
     }

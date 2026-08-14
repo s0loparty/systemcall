@@ -282,8 +282,49 @@ Milestone 5 verification on 2026-08-14:
 - `npm run types:check` passed
 - `npm run build` passed with existing Vite chunk-size warning for the call page bundle
 
-### Milestone 6 — Waiting room `[ ]`
+### Milestone 6 — Waiting room `[!]`
 Request, realtime waiting list, approve/reject, token only after approval, stale cleanup and tests.
+
+Implemented:
+- [x] `POST /rooms/{public_id}/memberships` returns `202` with `waiting_room` when waiting room is enabled instead of creating a `RoomMember`
+- [x] pending waiting-room entries use authenticated user identity or the server-issued guest cookie
+- [x] duplicate pending requests reuse the pending entry
+- [x] approved participants with an existing active `RoomMember` can reuse the membership without creating a new pending entry
+- [x] moderator/owner pending list endpoint: `GET /rooms/{public_id}/waiting-room`
+- [x] moderator/owner decision endpoints: `POST /rooms/{public_id}/waiting-room/{waitingRoomMember}/approve` and `/reject`
+- [x] approval creates the backend-controlled `RoomMember`; rejection does not
+- [x] LiveKit token issuance for waiting-room rooms requires an existing active `RoomMember`; ordinary participants additionally require an approved waiting-room entry
+- [x] pending waiting-room entries can authorize the Reverb room channel to receive decision events
+- [x] Reverb events broadcast waiting-room requested/decided application state
+- [x] call page shows pending/approved/rejected waiting-room status and a moderator approve/reject panel
+- [x] stale pending entries are pruned by `rooms:prune-stale-waiting-room-entries`, scheduled every five minutes with overlap protection
+- [x] `VIDEO_CALL_WAITING_ROOM_STALE_MINUTES` configures the stale cutoff, default `30`
+
+Acceptance criteria:
+- [x] users can request to join a waiting-room-enabled room
+- [x] pending users do not receive LiveKit media tokens
+- [x] moderators/owners can see pending entries and approve/reject them
+- [x] approved users can receive a LiveKit token; rejected users cannot
+- [x] waiting-room updates are broadcast over Reverb application channels
+- [x] stale pending entries have a scheduled cleanup command
+- [!] backend Pest/PHPStan checks could not be executed in this local state because Docker/Podman is not running and the host PHP has no PDO pgsql/sqlite drivers
+- [!] real browser waiting-room Reverb smoke test still requires running Reverb and two browser sessions
+
+Milestone 6 verification on 2026-08-14:
+- `vendor/bin/pint --dirty --format agent` passed
+- `php artisan route:list --except-vendor` passed and shows waiting-room routes
+- `php artisan list rooms` passed and shows `rooms:prune-stale-waiting-room-entries`
+- `php -l` passed for all changed/new PHP files
+- `docker compose config` passed
+- `composer validate --strict` passed
+- `npm run format:check` passed
+- `npm run lint:check` passed
+- `npm run types:check` passed
+- `npm run build` passed with existing Vite chunk-size warning for the call page bundle
+- `php artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` blocked: host PHP lacks PDO pgsql driver
+- `DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` blocked: host PHP lacks PDO sqlite driver
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` blocked: Docker or Podman is not running
+- `composer run types:check` blocked by the existing host PHPStan error: `Failed to listen on "tcp://127.0.0.1:0": Success`; Sail PHPStan could not be run because Docker is not running
 
 ### Milestone 7 — Roles/moderation `[ ]`
 Promote/demote, mute/mute-all, kick, ban, owner-only deletion and authorization tests. No silent remote unmute.

@@ -9,6 +9,7 @@ type Props = {
     microphoneEnabled: boolean;
     cameraEnabled: boolean;
     screenShareEnabled: boolean;
+    waitingRoomStatus: 'pending' | 'approved' | 'rejected' | null;
 };
 
 const props = defineProps<Props>();
@@ -99,10 +100,16 @@ function emitScreenShareIntent(): void {
                     v-if="!connected"
                     class="rounded-full bg-white px-5 py-2 text-sm font-medium text-neutral-950 transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
                     type="button"
-                    :disabled="busy"
+                    :disabled="busy || waitingRoomStatus === 'pending'"
                     @click="emit('join')"
                 >
-                    {{ busy ? 'Connecting...' : 'Join call' }}
+                    {{
+                        waitingRoomStatus === 'pending'
+                            ? 'Waiting approval...'
+                            : busy
+                              ? 'Connecting...'
+                              : 'Join call'
+                    }}
                 </button>
                 <template v-else>
                     <button

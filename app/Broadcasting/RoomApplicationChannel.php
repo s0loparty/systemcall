@@ -3,6 +3,7 @@
 namespace App\Broadcasting;
 
 use App\Enums\RoomStatus;
+use App\Enums\WaitingRoomStatus;
 use App\Models\Room;
 use App\Models\RoomMember;
 use App\Models\User;
@@ -18,14 +19,23 @@ class RoomApplicationChannel
             ->where('public_id', $roomPublicId)
             ->first();
 
-        if (! $room instanceof Room || $room->status !== RoomStatus::Active || $room->waiting_room_enabled) {
+        if (! $room instanceof Room || $room->status !== RoomStatus::Active) {
             return false;
         }
 
         $guestId = $user instanceof User ? null : $this->guestIdentity->current(request());
         $member = $this->memberForIdentity($room, $user, $guestId);
 
-        if (! $member instanceof RoomMember) {
+        if (! $member instanceof RoomMember && ! $this->hasWaitingRoomAccess($room, $user, $guestId)) {
+            return false;
+        }
+
+        if (
+            $room->waiting_room_enabled
+            && $member instanceof RoomMember
+            && ! $member->isModerator()
+            && ! $this->hasApprovedWaitingRoomEntry($room, $user, $guestId)
+        ) {
             return false;
         }
 
@@ -62,6 +72,54 @@ class RoomApplicationChannel
             ->where(function ($query): void {
                 $query->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());
+            })
+            ->exists();
+    }
+
+    private function hasWaitingRoomAccess(Room $room, ?User $user, ?string $guestId): bool
+    {
+        if (! $room->waiting_room_enabled) {
+            return false;
+        }
+
+        if (! $user instanceof User && $guestId === null) {
+            return false;
+        }
+
+        return $room->waitingMembers()
+            ->whereIn('status', [WaitingRoomStatus::Pending, WaitingRoomStatus::Approved])
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
+            })
+            ->exists();
+    }
+
+    private function hasApprovedWaitingRoomEntry(Room $room, ?User $user, ?string $guestId): bool
+    {
+        if (! $room->waiting_room_enabled) {
+            return false;
+        }
+
+        if (! $user instanceof User && $guestId === null) {
+            return false;
+        }
+
+        return $room->waitingMembers()
+            ->where('status', WaitingRoomStatus::Approved)
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
             })
             ->exists();
     }

@@ -53,9 +53,9 @@ Broadcast channel: private-room.{public_id}
 Auth endpoint:     /broadcasting/room-auth
 ```
 
-The room channel authorizes an active `RoomMember` resolved from an authenticated user or the server-issued guest identity cookie. It rejects inactive rooms, banned participants and waiting-room-enabled rooms until the Milestone 6 approval flow exists.
+The room channel authorizes an active `RoomMember` resolved from an authenticated user or the server-issued guest identity cookie. For waiting-room-enabled rooms, pending waiting-room entries may also subscribe so they can receive approval/rejection events. Ordinary participants in waiting-room rooms require an approved waiting-room entry; owner/moderator members may subscribe for moderation updates.
 
-Current Reverb payloads are application activity only, starting with `room.member.joined`. LiveKit remains the source of truth for media presence, tracks, screen share, active speaker and media reconnect state.
+Current Reverb payloads are application activity only: `room.member.joined`, `waiting-room.entry.requested` and `waiting-room.entry.decided`. LiveKit remains the source of truth for media presence, tracks, screen share, active speaker and media reconnect state.
 
 ## Persistence Model
 Milestone 1 adds the Laravel-owned persistence layer:
@@ -92,6 +92,20 @@ Only authenticated verified users create/update/delete rooms. Room route binding
 Room creation hashes `password` into `password_hash` and creates the owner `RoomMember`. Public rooms are viewable by guests. Private rooms are not publicly viewable; private password-protected rooms may be joined through the join endpoint with the correct password.
 
 Guest membership uses an encrypted/httpOnly Laravel cookie named `video_call_guest_id`. The browser never chooses the stored `guest_id`; any submitted `guest_id` field is ignored.
+
+## Waiting Room
+When `rooms.waiting_room_enabled` is true, the membership endpoint creates or reuses a pending `waiting_room_members` row and returns `202` instead of creating a `RoomMember`.
+
+Moderators and owners use:
+```text
+GET  /rooms/{public_id}/waiting-room
+POST /rooms/{public_id}/waiting-room/{waitingRoomMember}/approve
+POST /rooms/{public_id}/waiting-room/{waitingRoomMember}/reject
+```
+
+Approval creates the backend-controlled `RoomMember`, dispatches application realtime events and allows the participant to request a LiveKit token. Rejection leaves no `RoomMember`, so media access remains denied.
+
+Stale pending waiting-room entries are pruned by the scheduled `rooms:prune-stale-waiting-room-entries` command. The cutoff is `VIDEO_CALL_WAITING_ROOM_STALE_MINUTES`, default `30`.
 
 ## Join flow
 ```text

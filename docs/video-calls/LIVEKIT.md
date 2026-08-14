@@ -84,7 +84,8 @@ Current token service:
 - signs room-scoped tokens for LiveKit room `room-{public_id}`;
 - uses `room_members.livekit_identity` as JWT identity;
 - denies token issuance unless Laravel resolves an active room member from authenticated user or server-issued guest cookie;
-- denies banned participants and waiting-room rooms until a later waiting-room approval workflow exists;
+- denies banned participants;
+- for waiting-room-enabled rooms, ordinary participants need an approved waiting-room entry before media token issuance; owner/moderator members may request tokens directly;
 - maps RoomMember publish flags to LiveKit `canPublishSources`.
 
 ## Identity

@@ -5,6 +5,8 @@ use App\Http\Controllers\RoomBroadcastAuthController;
 use App\Http\Controllers\RoomCallController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomMembershipController;
+use App\Http\Controllers\WaitingRoomController;
+use App\Http\Controllers\WaitingRoomDecisionController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +23,15 @@ Route::post('rooms/{room}/memberships', [RoomMembershipController::class, 'store
 Route::post('rooms/{room}/livekit-token', [LiveKitTokenController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('rooms.livekit_token.store');
+Route::get('rooms/{room}/waiting-room', [WaitingRoomController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('rooms.waiting_room.index');
+Route::post('rooms/{room}/waiting-room/{waitingRoomMember}/approve', [WaitingRoomDecisionController::class, 'approve'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->name('rooms.waiting_room.approve');
+Route::post('rooms/{room}/waiting-room/{waitingRoomMember}/reject', [WaitingRoomDecisionController::class, 'reject'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->name('rooms.waiting_room.reject');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

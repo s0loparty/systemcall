@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Rooms\JoinRoomAction;
+use App\Actions\Rooms\RequestWaitingRoomEntryAction;
 use App\Http\Requests\Rooms\JoinRoomRequest;
 use App\Models\Room;
 use App\Models\RoomMember;
+use App\Models\User;
+use App\Models\WaitingRoomMember;
 use App\Support\GuestIdentity;
 use Illuminate\Http\JsonResponse;
 
@@ -15,10 +18,23 @@ class RoomMembershipController extends Controller
         JoinRoomRequest $request,
         Room $room,
         JoinRoomAction $joinRoom,
+        RequestWaitingRoomEntryAction $requestWaitingRoomEntry,
         GuestIdentity $guestIdentity,
     ): JsonResponse {
         $user = $request->user();
         $guestId = $user === null ? $guestIdentity->getOrCreate($request) : null;
+
+        if ($room->waiting_room_enabled) {
+            $member = $this->activeMember($room, $user, $guestId);
+
+            if ($member instanceof RoomMember) {
+                return response()->json(['member' => $this->memberPayload($member)]);
+            }
+
+            $entry = $requestWaitingRoomEntry->handle($room, $user, $guestId, $request->joinData());
+
+            return response()->json(['waiting_room' => $this->waitingRoomPayload($entry)], 202);
+        }
 
         $member = $joinRoom->handle($room, $user, $guestId, $request->joinData());
 
@@ -38,5 +54,32 @@ class RoomMembershipController extends Controller
             'livekit_identity' => $member->livekit_identity,
             'guest' => $member->user_id === null,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function waitingRoomPayload(WaitingRoomMember $entry): array
+    {
+        return [
+            'id' => $entry->id,
+            'room_public_id' => $entry->room->public_id,
+            'display_name' => $entry->display_name,
+            'status' => $entry->status->value,
+            'guest' => $entry->user_id === null,
+        ];
+    }
+
+    private function activeMember(Room $room, ?User $user, ?string $guestId): ?RoomMember
+    {
+        $query = $room->members()->whereNull('left_at');
+
+        if ($user instanceof User) {
+            return $query->whereBelongsTo($user)->first();
+        }
+
+        return $guestId === null
+            ? null
+            : $query->where('guest_id', $guestId)->first();
     }
 }

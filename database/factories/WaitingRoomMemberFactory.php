@@ -36,7 +36,7 @@ class WaitingRoomMemberFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'user_id' => null,
-            'guest_id' => 'guest:'.Str::random(24),
+            'guest_id' => 'guest_'.Str::random(40),
         ]);
     }
 

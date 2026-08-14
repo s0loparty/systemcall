@@ -7,13 +7,18 @@ import CallHeader from '@/features/calls/components/CallHeader.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
 import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
+import WaitingRoomModeratorPanel from '@/features/calls/components/WaitingRoomModeratorPanel.vue';
+import WaitingRoomStatusPanel from '@/features/calls/components/WaitingRoomStatusPanel.vue';
 import { useCallSession } from '@/features/calls/composables/useCallSession';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
-import type { CallRoom } from '@/features/calls/types';
+import type { CallRoom, WaitingRoomEntry } from '@/features/calls/types';
 
 type RoomPageProps = {
     room: CallRoom;
     can_join_without_password: boolean;
+    can_moderate_waiting_room: boolean;
+    waiting_room_entries: WaitingRoomEntry[];
+    current_waiting_room_entry: WaitingRoomEntry | null;
 };
 
 const props = defineProps<RoomPageProps>();
@@ -24,7 +29,14 @@ const call = useCallSession({
     roomPublicId: props.room.public_id,
     displayName: defaultDisplayName.value,
 });
-const realtime = useRoomApplicationEvents(props.room.public_id);
+call.waitingRoomEntry.value = props.current_waiting_room_entry;
+
+const realtime = useRoomApplicationEvents(props.room.public_id, {
+    waitingRoomEntries: props.waiting_room_entries,
+    onWaitingRoomDecision: (event) => {
+        void call.handleWaitingRoomDecision(event);
+    },
+});
 const {
     joinRequest,
     connected,
@@ -33,6 +45,7 @@ const {
     microphoneEnabled,
     cameraEnabled,
     screenShareEnabled,
+    waitingRoomEntry,
     activeSpeakerIdentity,
     tiles,
     errorMessage,
@@ -55,7 +68,12 @@ const {
     toggleScreenShare,
     setMediaHost,
 } = call;
-const { echoConnectionStatus, activities } = realtime;
+const {
+    echoConnectionStatus,
+    activities,
+    waitingRoomEntries,
+    removeWaitingRoomEntry,
+} = realtime;
 
 const needsPassword = computed(
     () => props.room.has_password && !props.can_join_without_password,
@@ -74,6 +92,7 @@ const needsPassword = computed(
             :microphone-enabled="microphoneEnabled"
             :camera-enabled="cameraEnabled"
             :screen-share-enabled="screenShareEnabled"
+            :waiting-room-status="waitingRoomEntry?.status ?? null"
             @join="connect"
             @mute="toggleMicrophone"
             @unmute="toggleMicrophone"
@@ -87,6 +106,15 @@ const needsPassword = computed(
         <ApplicationRealtimePanel
             :connection-state="echoConnectionStatus"
             :activities="activities"
+        />
+
+        <WaitingRoomStatusPanel :entry="waitingRoomEntry" />
+
+        <WaitingRoomModeratorPanel
+            v-if="can_moderate_waiting_room && room.waiting_room_enabled"
+            :room-public-id="room.public_id"
+            :entries="waitingRoomEntries"
+            @decided="removeWaitingRoomEntry"
         />
 
         <DeviceSetupPanel

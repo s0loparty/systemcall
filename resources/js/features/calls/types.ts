@@ -25,6 +25,31 @@ export type LiveKitTokenResponse = {
     };
 };
 
+export type WaitingRoomEntry = {
+    id: number;
+    room_public_id: string;
+    display_name: string;
+    status: 'pending' | 'approved' | 'rejected';
+    guest: boolean;
+    created_at?: string | null;
+    decided_at?: string | null;
+};
+
+export type JoinRoomResponse =
+    | {
+          member: {
+              id: number;
+              room_public_id: string;
+              display_name: string;
+              role: string;
+              livekit_identity: string;
+              guest: boolean;
+          };
+      }
+    | {
+          waiting_room: WaitingRoomEntry;
+      };
+
 export type ParticipantTile = {
     identity: string;
     name: string;
@@ -61,6 +86,21 @@ export type RoomMemberJoinedEvent = {
         role: string;
         guest: boolean;
     };
+    occurred_at: string;
+};
+
+export type WaitingRoomEntryRequestedEvent = {
+    type: 'waiting_room_entry_requested';
+    room_public_id: string;
+    waiting_room: WaitingRoomEntry;
+    occurred_at: string;
+};
+
+export type WaitingRoomEntryDecidedEvent = {
+    type: 'waiting_room_entry_decided';
+    room_public_id: string;
+    waiting_room: WaitingRoomEntry;
+    member: RoomMemberJoinedEvent['member'] | null;
     occurred_at: string;
 };
 
