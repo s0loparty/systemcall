@@ -46,6 +46,25 @@ LiveKit is authoritative for media/realtime media presence: audio, video, screen
 
 Reverb carries application-level realtime events.
 
+## Persistence Model
+Milestone 1 adds the Laravel-owned persistence layer:
+```text
+rooms
+room_members
+room_bans
+waiting_room_members
+room_messages
+room_subrooms
+```
+
+`rooms.public_id` and `room_subrooms.public_id` are public-facing identifiers. Numeric primary keys remain internal.
+
+`room_members.livekit_identity` is unique and is the backend-controlled identity that later LiveKit tokens must use.
+
+Guests are represented with nullable `user_id` plus server-issued `guest_id`. Browser-supplied arbitrary guest ids are still not trusted; Milestone 2 must add server-verifiable guest identity issuance.
+
+Role and status values are stored as strings and cast through PHP enums. Policies currently cover baseline owner/moderator/member checks; request/service-level authorization for create/join/moderation flows comes in later milestones.
+
 ## Join flow
 ```text
 Client -> Laravel

@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -31,6 +32,38 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    /**
+     * @return HasMany<Room, $this>
+     */
+    public function ownedRooms(): HasMany
+    {
+        return $this->hasMany(Room::class, 'owner_id');
+    }
+
+    /**
+     * @return HasMany<RoomMember, $this>
+     */
+    public function roomMemberships(): HasMany
+    {
+        return $this->hasMany(RoomMember::class);
+    }
+
+    /**
+     * @return HasMany<RoomBan, $this>
+     */
+    public function roomBans(): HasMany
+    {
+        return $this->hasMany(RoomBan::class);
+    }
+
+    /**
+     * @return HasMany<WaitingRoomMember, $this>
+     */
+    public function waitingRoomEntries(): HasMany
+    {
+        return $this->hasMany(WaitingRoomMember::class);
+    }
 
     /**
      * Get the attributes that should be cast.

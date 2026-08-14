@@ -109,8 +109,36 @@ Final local WSL2-safe Milestone 0 verification on 2026-08-14:
 
 Production VPS/Dokploy still must be verified with the full `LIVEKIT_RTC_UDP_PORT_RANGE=50000-60000`. Do not use the reduced WSL2 smoke-check range in production.
 
-### Milestone 1 — Domain model `[ ]`
+### Milestone 1 — Domain model `[x]`
 Room, RoomMember, RoomBan, WaitingRoomMember, RoomMessage, RoomSubroom; migrations, relations, indexes, enums, factories and policies.
+
+Implemented:
+- [x] `rooms` table with owner, public id, visibility, status, password hash placeholder, waiting-room flag, max participants, ended timestamp and indexes
+- [x] `room_members` table with user/guest identity fields, role, LiveKit identity, media publish permission flags, join/leave timestamps and indexes
+- [x] `room_bans` table with user/guest ban target, moderator reference, reason, expiry and indexes
+- [x] `waiting_room_members` table with user/guest identity fields, status, moderator decision fields and indexes
+- [x] `room_messages` table with room/subroom/member references, type, body, JSON metadata and edit/delete timestamps
+- [x] `room_subrooms` table with public id, LiveKit room name, position/default flag and indexes
+- [x] enum casts for room status, room visibility, room role and waiting-room status
+- [x] Eloquent relationships on video-call models plus inverse user relationships
+- [x] factories for all video-call domain models
+- [x] policies for baseline owner/moderator/member boundaries
+- [x] feature tests covering persistence, casts, relationships, cascade behavior and policies
+
+Milestone 1 verification on 2026-08-14:
+- `docker compose config --services` passed
+- `vendor/bin/pint --dirty --format agent` passed
+- `composer run types:check` passed
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/VideoCallDomainModelTest.php` passed: 2 tests, 37 assertions
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact` passed: 41 tests, 165 assertions
+- `composer validate --strict` passed
+- `npm run types:check` passed
+- `npm run lint:check` passed
+- `npm run build` passed
+
+Notes:
+- Room CRUD/access, password hashing behavior, server-verifiable guest sessions, LiveKit token issuance, waiting-room workflow and Reverb events remain in later milestones.
+- Policies for nested resources intentionally keep plain `create` denied until Milestone 2+ introduces room-scoped requests/services with explicit authorization context.
 
 ### Milestone 2 — Room CRUD/access `[ ]`
 Secure public IDs, public/private rooms, hashed password, owner authorization, server-verifiable guest identity.
