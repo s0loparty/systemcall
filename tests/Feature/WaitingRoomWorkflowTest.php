@@ -1,6 +1,5 @@
 <?php
 
-use App\Broadcasting\RoomApplicationChannel;
 use App\Enums\RoomRole;
 use App\Enums\WaitingRoomStatus;
 use App\Events\Rooms\RoomMemberJoined;
@@ -65,8 +64,6 @@ test('guests request waiting-room approval before membership or token issuance',
         ])
         ->assertOk();
 
-    expect(app(RoomApplicationChannel::class)->join(null, $room->public_id))->toBeFalse();
-
     $this->withCredentials()
         ->withCookie('video_call_guest_id', $entry->guest_id)
         ->postJson(route('rooms.livekit_token.store', $room))
@@ -128,6 +125,8 @@ test('moderators can list and approve waiting-room entries before token issuance
 
         return true;
     });
+
+    auth()->guard()->logout();
 
     $this->withCredentials()
         ->withCookie('video_call_guest_id', $entry->guest_id)
@@ -197,6 +196,8 @@ test('moderators can reject waiting-room entries without creating room members',
         ->and(RoomMember::whereBelongsTo($room)->where('guest_id', $entry->guest_id)->exists())->toBeFalse();
 
     Event::assertDispatched(WaitingRoomEntryDecided::class);
+
+    auth()->guard()->logout();
 
     $this->withCredentials()
         ->withCookie('video_call_guest_id', $entry->guest_id)

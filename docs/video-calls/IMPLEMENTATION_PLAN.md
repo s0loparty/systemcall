@@ -282,7 +282,7 @@ Milestone 5 verification on 2026-08-14:
 - `npm run types:check` passed
 - `npm run build` passed with existing Vite chunk-size warning for the call page bundle
 
-### Milestone 6 — Waiting room `[!]`
+### Milestone 6 — Waiting room `[x]`
 Request, realtime waiting list, approve/reject, token only after approval, stale cleanup and tests.
 
 Implemented:
@@ -307,10 +307,13 @@ Acceptance criteria:
 - [x] approved users can receive a LiveKit token; rejected users cannot
 - [x] waiting-room updates are broadcast over Reverb application channels
 - [x] stale pending entries have a scheduled cleanup command
-- [!] backend Pest/PHPStan checks could not be executed in this local state because Docker/Podman is not running and the host PHP has no PDO pgsql/sqlite drivers
+- [x] backend Pest/PHPStan checks pass through local Sail
 - [!] real browser waiting-room Reverb smoke test still requires running Reverb and two browser sessions
 
 Milestone 6 verification on 2026-08-14:
+- `./vendor/bin/sail artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` passed: 5 tests, 42 assertions
+- `./vendor/bin/sail artisan test --compact` passed: 58 tests, 293 assertions
+- `./vendor/bin/sail composer run types:check` passed: PHPStan, 0 errors
 - `vendor/bin/pint --dirty --format agent` passed
 - `php artisan route:list --except-vendor` passed and shows waiting-room routes
 - `php artisan list rooms` passed and shows `rooms:prune-stale-waiting-room-entries`
@@ -321,10 +324,7 @@ Milestone 6 verification on 2026-08-14:
 - `npm run lint:check` passed
 - `npm run types:check` passed
 - `npm run build` passed with existing Vite chunk-size warning for the call page bundle
-- `php artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` blocked: host PHP lacks PDO pgsql driver
-- `DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` blocked: host PHP lacks PDO sqlite driver
-- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` blocked: Docker or Podman is not running
-- `composer run types:check` blocked by the existing host PHPStan error: `Failed to listen on "tcp://127.0.0.1:0": Success`; Sail PHPStan could not be run because Docker is not running
+- Host `php artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` remains unavailable because host PHP lacks PDO pgsql/sqlite drivers; use Sail locally
 
 ### Milestone 7 — Roles/moderation `[ ]`
 Promote/demote, mute/mute-all, kick, ban, owner-only deletion and authorization tests. No silent remote unmute.
