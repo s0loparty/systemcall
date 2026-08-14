@@ -195,24 +195,76 @@ Vue components must have a single root element.
 
 </laravel-boost-guidelines>
 
+# Video Calls — Project-Specific Rules
 
-> Production target: one VPS managed by Dokploy.
-> Dokploy owns the host-level Traefik and public ports 80/443.
-> The project Docker Compose MUST NOT contain its own Traefik service.
+These rules extend the Laravel Boost guidelines above.
 
-## Stack
-Laravel 13, PHP 8.4, Vue 3, TypeScript, TailwindCSS, PostgreSQL, Redis, Laravel Reverb, LiveKit, Docker Compose, Dokploy, FrankenPHP + Laravel Octane.
+If a project-specific rule conflicts with a generic recommendation,
+these project-specific architectural decisions take precedence.
 
-## Agent workflow
-1. Read this file and every file in `docs/video-calls/`.
-2. Inspect the repository, `git status`, `git diff`, existing Docker and environment configuration.
-3. Update `IMPLEMENTATION_PLAN.md` to match reality.
-4. Work one milestone at a time.
-5. Run relevant tests/checks after every milestone.
-6. Update documentation and milestone status before continuing.
+Do not override version-specific Laravel/package guidance.
+Always verify installed package versions before using their APIs.
 
-## Production Compose services
-The project Compose contains:
+## Project Goal
+
+Build a production-oriented group audio/video calling service.
+
+Target stack:
+
+- Laravel
+- Vue 3
+- TypeScript
+- TailwindCSS
+- PostgreSQL
+- Redis
+- Laravel Reverb
+- LiveKit
+- Docker Compose
+- Dokploy
+- FrankenPHP + Laravel Octane
+
+Do not assume Laravel, PHP, Vue, LiveKit, or package versions.
+Inspect the repository and installed dependencies first.
+
+## Project Documentation
+
+Before implementing video-call functionality, read:
+
+- `docs/video-calls/IMPLEMENTATION_PLAN.md`
+- `docs/video-calls/ARCHITECTURE.md`
+- `docs/video-calls/LIVEKIT.md`
+- `docs/video-calls/DEPLOYMENT.md`
+- `docs/video-calls/QUALITY_CHECKLIST.md`
+
+The implementation plan defines the current milestone.
+
+Work one milestone at a time.
+
+Do not start the next milestone until the current milestone's
+acceptance criteria are satisfied.
+
+Update `IMPLEMENTATION_PLAN.md` after completing a milestone.
+
+## Production Target
+
+Initial production environment:
+
+ONE VPS managed by Dokploy.
+
+Dokploy owns:
+
+- Docker deployment/orchestration
+- host-level Traefik
+- HTTP/HTTPS routing
+- TLS certificates
+- public ports 80 and 443
+
+The application Docker Compose MUST NOT contain its own Traefik service.
+
+## Production Services
+
+The target Compose services are:
+
 - `app`
 - `worker`
 - `scheduler`
@@ -221,85 +273,275 @@ The project Compose contains:
 - `redis`
 - `livekit`
 
-`app`, `worker`, `scheduler`, and `reverb` use the same application image with different commands.
+`app`, `worker`, `scheduler`, and `reverb`
+should use the same Laravel application image with different commands.
 
-Do not add a `traefik` service. Dokploy already manages Traefik.
+Do not introduce additional infrastructure services unless required
+by the current milestone or approved by the user.
 
-## Dokploy routing
-Configure domains in Dokploy:
-```text
-call.example.com      -> app:<internal FrankenPHP/Octane port>
-ws.call.example.com   -> reverb:8080
-livekit.example.com   -> livekit:7880
-```
+## Dokploy Routing
 
-Do not publish those HTTP ports to the host merely for routing. Dokploy/Traefik reaches the services internally.
+Expected production routing:
 
-## LiveKit networking
-LiveKit signaling goes through Dokploy Traefik to internal port 7880.
+call.example.com
+    -> app:<internal application HTTP port>
 
-WebRTC media bypasses the HTTP proxy and is published directly:
-```text
-7881/TCP
-50000-60000/UDP
-3478/UDP
-```
+ws.call.example.com
+    -> reverb:8080
 
-Dokploy owns host `443/TCP`. Therefore LiveKit TURN/TLS MUST NOT bind host 443 in the initial single-VPS topology.
+livekit.example.com
+    -> livekit:7880
 
-If TURN/TLS is required before moving LiveKit to another VPS, evaluate `5349/TCP` only after checking the exact pinned LiveKit version and documenting the configuration.
+These ports are container/internal ports.
 
-## Architecture boundaries
-Laravel owns users, rooms, roles, permissions, guests, waiting room, bans, moderation, token issuance, chat persistence, global pin, raised hands, subrooms and business state.
+Do not publish application HTTP ports to the host solely for routing.
+Dokploy-managed Traefik handles routing.
 
-LiveKit owns audio/video, screen share, WebRTC/SFU, media tracks, realtime media presence and active-speaker/media adaptation.
+## LiveKit Networking
 
-Reverb carries application realtime events such as waiting room, moderation, chat, raised hands, global pin, subroom changes and room deletion.
+LiveKit signaling:
 
-Never send media through Laravel/Reverb. Do not duplicate ordinary LiveKit media events via Reverb.
+Browser
+    -> HTTPS/WSS
+    -> Dokploy Traefik
+    -> livekit:7880
 
-## Laravel runtime
-Production uses FrankenPHP + Laravel Octane. Never use `php artisan serve` in production.
+LiveKit WebRTC media bypasses the HTTP reverse proxy.
 
-Production image copies application code and built assets. Do not bind-mount source code in production.
+Expected directly published media ports:
 
-## LiveKit security
-All server-side LiveKit calls belong behind a `LiveKitService` or equivalent.
+- 7881/TCP
+- 50000-60000/UDP
+- 3478/UDP when TURN/UDP is enabled
 
-Before issuing a token verify room status, server-verifiable participant identity, password, ban, waiting-room approval, permissions and target room/subroom.
+Dokploy owns host 443/TCP.
 
-Never expose `LIVEKIT_API_SECRET` to frontend. LiveKit identity must map to a backend `RoomMember`.
+LiveKit TURN/TLS MUST NOT bind host 443 in the initial
+single-VPS architecture.
+
+TURN/TLS on another port such as 5349 may only be introduced after
+checking the documentation for the installed/pinned LiveKit version.
+
+## Architecture Boundaries
+
+### Laravel
+
+Laravel is authoritative for:
+
+- users
+- rooms
+- room settings
+- room members
+- roles
+- permissions
+- guest authorization
+- waiting room
+- bans
+- moderation
+- LiveKit token issuance
+- chat persistence
+- raised hands application state
+- global pin
+- subrooms
+- scheduled cleanup
+- business events
+
+### LiveKit
+
+LiveKit is authoritative for:
+
+- microphone media
+- camera media
+- screen sharing
+- WebRTC
+- SFU routing
+- media tracks
+- realtime media presence
+- active speaker
+- media subscriptions
+- adaptive media
+
+Never transport audio/video through Laravel or Reverb.
+
+Do not duplicate ordinary LiveKit media state through Reverb.
+
+### Laravel Reverb
+
+Reverb is used for application realtime events such as:
+
+- waiting-room updates
+- role changes
+- moderation notifications
+- chat
+- raised hands
+- global pin
+- subroom changes
+- room deletion
+
+## LiveKit Authorization
+
+Never expose `LIVEKIT_API_SECRET` to frontend code.
+
+All trusted LiveKit server operations must be encapsulated behind
+a dedicated service layer.
+
+Before issuing a LiveKit token validate:
+
+1. room exists;
+2. room is active;
+3. participant identity is valid;
+4. room password when required;
+5. participant is not banned;
+6. waiting-room approval when enabled;
+7. participant permissions;
+8. requested main room/subroom is authorized.
+
+LiveKit participant identity must be generated by the backend and
+must map to a backend RoomMember.
+
+Never trust a participant identity supplied directly by the browser.
 
 ## Guests
-Do not trust arbitrary browser-provided guest IDs. Bind guest identity to a signed/encrypted cookie, server session or signed temporary guest token.
 
-## Authorization
-Roles: `owner`, `moderator`, `participant`. Privileged actions require backend Policies/Gates.
+Guest identity must be server-verifiable.
 
-Remote force-mute may be supported. Never silently remote-unmute another participant.
+Use an approach such as:
+
+- signed/encrypted cookie;
+- server-side session;
+- signed temporary guest token.
+
+Do not trust an arbitrary browser-provided `guest_id`.
+
+## Roles
+
+Supported room roles:
+
+- owner
+- moderator
+- participant
+
+All privileged operations require backend authorization.
+
+A moderator may force-mute another participant when supported.
+
+Never silently enable another participant's microphone.
+
+## Production Laravel Runtime
+
+Production Laravel runs using FrankenPHP + Laravel Octane.
+
+Do not use:
+
+`php artisan serve`
+
+for production.
+
+Production images must contain application code and built frontend
+assets.
+
+Do not production-bind-mount the repository source code.
+
+## Dependencies
+
+Follow the Laravel Boost rule requiring approval before changing
+dependencies, with this project-specific exception:
+
+Dependencies explicitly required by the currently approved milestone
+in `IMPLEMENTATION_PLAN.md` may be installed or updated when necessary.
+
+Before installing anything:
+
+1. inspect existing dependencies;
+2. search version-specific documentation;
+3. prefer existing packages when suitable;
+4. avoid unrelated dependency upgrades.
 
 ## Redis
-Initially one Redis may serve Laravel cache/sessions/queues, Reverb and LiveKit. Keep configuration flexible enough to split later.
 
-## Tests/checks
-Run commands that actually exist:
-```bash
-composer validate
-php artisan test
-./vendor/bin/pint --test
-docker compose config
-```
-Also run frontend typecheck/lint/build and PHPStan/Larastan if configured.
+Initially one Redis instance may serve:
 
-Never run destructive DB commands against an unknown/production environment.
+- Laravel cache
+- Laravel sessions
+- Laravel queues
+- Reverb
+- LiveKit
 
-## Git
-Do not push, rewrite history, reset unrelated work, delete user changes or mass-format unrelated files.
+Do not hardcode assumptions preventing Redis from being split later.
 
-## Documentation
-Keep current:
-- `docs/video-calls/IMPLEMENTATION_PLAN.md`
-- `docs/video-calls/ARCHITECTURE.md`
-- `docs/video-calls/DEPLOYMENT.md`
-- `docs/video-calls/LIVEKIT.md`
-- `docs/video-calls/QUALITY_CHECKLIST.md`
+## Testing
+
+Follow the Laravel Boost testing rules.
+
+Every behavioral change requires an appropriate automated test.
+
+LiveKit server integration should be behind a service abstraction
+that can be faked/mocked in ordinary application tests.
+
+Real media sessions are not required for every backend test.
+
+## Verification
+
+Follow the verification commands defined by Laravel Boost
+and the actual repository.
+
+Additionally, after Docker changes run:
+
+`docker compose config`
+
+Run frontend typecheck/lint/build commands when they exist.
+
+Do not invent commands that are not configured in the repository.
+
+## Security
+
+Always consider:
+
+- validation
+- Policies/Gates
+- rate limiting
+- password hashing
+- CSRF
+- secure cookies
+- XSS-safe chat rendering
+- unpredictable public room IDs
+- environment-only secrets
+- LiveKit webhook verification
+- idempotent webhook processing
+
+Never trust frontend claims about:
+
+- role
+- ownership
+- participant identity
+- guest identity
+- waiting-room approval
+
+## Git Safety
+
+Before significant work inspect:
+
+- `git status`
+- `git diff`
+
+Do not:
+
+- push unless explicitly requested;
+- rewrite Git history;
+- reset unrelated changes;
+- delete user work;
+- mass-format unrelated files.
+
+## Milestone Completion
+
+A milestone is complete only when:
+
+- implementation is complete;
+- acceptance criteria are satisfied;
+- required tests pass;
+- relevant verification passes;
+- documentation reflects the implementation;
+- `IMPLEMENTATION_PLAN.md` is updated.
+
+If infrastructure or credentials prevent verification,
+document the exact blocker instead of pretending the check passed.
