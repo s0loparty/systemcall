@@ -50,9 +50,16 @@ class WaitingRoomEntryDecided implements ShouldBroadcast, ShouldDispatchAfterCom
             ],
             'member' => $this->member instanceof RoomMember ? [
                 'id' => $this->member->id,
+                'room_public_id' => $this->member->room->public_id,
                 'display_name' => $this->member->display_name,
                 'role' => $this->member->role->value,
+                'livekit_identity' => $this->member->livekit_identity,
                 'guest' => $this->member->user_id === null,
+                'can_publish_audio' => $this->member->can_publish_audio,
+                'can_publish_video' => $this->member->can_publish_video,
+                'can_publish_screen' => $this->member->can_publish_screen,
+                'hand_raised_at' => $this->member->hand_raised_at?->toISOString(),
+                'left_at' => $this->member->left_at?->toISOString(),
             ] : null,
             'occurred_at' => now()->toISOString(),
         ];

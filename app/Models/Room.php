@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $password_hash
  * @property bool $waiting_room_enabled
  * @property int|null $max_participants
+ * @property int|null $global_pinned_room_member_id
  * @property Carbon|null $ended_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -37,6 +38,7 @@ use Illuminate\Support\Carbon;
     'password_hash',
     'waiting_room_enabled',
     'max_participants',
+    'global_pinned_room_member_id',
     'ended_at',
 ])]
 class Room extends Model
@@ -64,6 +66,14 @@ class Room extends Model
     public function members(): HasMany
     {
         return $this->hasMany(RoomMember::class);
+    }
+
+    /**
+     * @return BelongsTo<RoomMember, $this>
+     */
+    public function globalPinnedMember(): BelongsTo
+    {
+        return $this->belongsTo(RoomMember::class, 'global_pinned_room_member_id');
     }
 
     /**
@@ -115,6 +125,7 @@ class Room extends Model
             'status' => RoomStatus::class,
             'waiting_room_enabled' => 'boolean',
             'max_participants' => 'integer',
+            'global_pinned_room_member_id' => 'integer',
             'ended_at' => 'datetime',
         ];
     }

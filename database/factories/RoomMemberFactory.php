@@ -32,6 +32,7 @@ class RoomMemberFactory extends Factory
             'can_publish_audio' => true,
             'can_publish_video' => true,
             'can_publish_screen' => true,
+            'hand_raised_at' => null,
             'joined_at' => now(),
             'left_at' => null,
         ];

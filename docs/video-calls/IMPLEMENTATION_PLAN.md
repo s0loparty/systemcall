@@ -361,8 +361,39 @@ Milestone 7 verification on 2026-08-14:
 - `./vendor/bin/sail composer validate --strict` passed
 - `docker compose config` passed
 
-### Milestone 8 — Chat/hands/pinning `[ ]`
+### Milestone 8 — Chat/hands/pinning `[x]`
 Safe rate-limited chat, raised hands, local personal pin and authorized Reverb-synchronized global pin.
+
+Implemented:
+- [x] active room members can send plain-text chat messages persisted in `room_messages`
+- [x] chat endpoint uses the named `room-chat` limiter, scoped by room and user/guest/ip
+- [x] active room members can raise/lower hands through Laravel-owned `room_members.hand_raised_at`
+- [x] local personal pin is browser-local frontend state and is not persisted or broadcast
+- [x] moderators/owners can set/clear `rooms.global_pinned_room_member_id`
+- [x] global pin updates are authorized server-side and broadcast over the private room application channel
+- [x] call page initializes recent messages, hand state, active members and global pin only for active members/moderators
+
+Acceptance criteria:
+- [x] chat messages are plain text, length-limited and rate-limited
+- [x] chat messages are persisted and broadcast over Reverb application channels
+- [x] raised hand state is server-owned and broadcast over Reverb
+- [x] personal pin remains local to the browser
+- [x] global pin requires moderator/owner rights and synchronizes through Reverb
+- [x] non-members cannot use chat, hands or global pin endpoints
+- [x] frontend typecheck/lint/build pass
+- [x] backend Pest/PHPStan checks pass through local Sail
+
+Milestone 8 verification on 2026-08-14:
+- `./vendor/bin/sail artisan test --compact tests/Feature/RoomApplicationStateTest.php` passed: 5 tests, 79 assertions
+- `./vendor/bin/sail artisan test --compact` passed: 70 tests, 417 assertions
+- `./vendor/bin/sail composer run types:check` passed: PHPStan, 0 errors
+- `./vendor/bin/sail pint --dirty --format agent` passed
+- `./vendor/bin/sail npm run lint:check` passed
+- `./vendor/bin/sail npm run types:check` passed
+- `./vendor/bin/sail npm run format:check` passed
+- `./vendor/bin/sail npm run build` passed with existing Vite chunk-size warning for the call page bundle
+- `./vendor/bin/sail composer validate --strict` passed
+- `docker compose config` passed
 
 ### Milestone 9 — Subrooms `[ ]`
 Maximum 5, separate LiveKit room per subroom, separately authorized target token and clean switching.

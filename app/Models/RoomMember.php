@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property bool $can_publish_audio
  * @property bool $can_publish_video
  * @property bool $can_publish_screen
+ * @property Carbon|null $hand_raised_at
  * @property Carbon|null $joined_at
  * @property Carbon|null $left_at
  * @property Carbon|null $created_at
@@ -39,6 +40,7 @@ use Illuminate\Support\Carbon;
     'can_publish_audio',
     'can_publish_video',
     'can_publish_screen',
+    'hand_raised_at',
     'joined_at',
     'left_at',
 ])]
@@ -98,6 +100,7 @@ class RoomMember extends Model
             'can_publish_audio' => 'boolean',
             'can_publish_video' => 'boolean',
             'can_publish_screen' => 'boolean',
+            'hand_raised_at' => 'datetime',
             'joined_at' => 'datetime',
             'left_at' => 'datetime',
         ];

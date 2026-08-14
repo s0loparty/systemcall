@@ -4,6 +4,8 @@ import type { ParticipantTile } from '../types';
 type Props = {
     tile: ParticipantTile;
     active: boolean;
+    personallyPinned: boolean;
+    globallyPinned: boolean;
 };
 
 defineProps<Props>();
@@ -17,9 +19,11 @@ const emit = defineEmits<{
     <article
         class="relative min-h-64 overflow-hidden rounded-3xl border bg-neutral-950 shadow-sm transition"
         :class="
-            tile.speaking
-                ? 'border-emerald-400 ring-2 ring-emerald-400/40'
-                : 'border-neutral-200 dark:border-neutral-800'
+            personallyPinned || globallyPinned
+                ? 'border-blue-400 ring-2 ring-blue-400/40'
+                : tile.speaking
+                  ? 'border-emerald-400 ring-2 ring-emerald-400/40'
+                  : 'border-neutral-200 dark:border-neutral-800'
         "
     >
         <div
@@ -55,6 +59,18 @@ const emit = defineEmits<{
                 </p>
             </div>
             <div class="flex flex-wrap justify-end gap-2">
+                <span
+                    v-if="personallyPinned"
+                    class="rounded-full bg-blue-300 px-2 py-1 text-xs font-medium text-blue-950"
+                >
+                    local pin
+                </span>
+                <span
+                    v-if="globallyPinned"
+                    class="rounded-full bg-indigo-300 px-2 py-1 text-xs font-medium text-indigo-950"
+                >
+                    global pin
+                </span>
                 <span
                     v-if="tile.screenShare"
                     class="rounded-full bg-sky-300 px-2 py-1 text-xs font-medium text-sky-950"

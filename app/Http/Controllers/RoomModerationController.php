@@ -82,10 +82,12 @@ class RoomModerationController extends Controller
             'room_public_id' => $member->room->public_id,
             'display_name' => $member->display_name,
             'role' => $member->role->value,
+            'livekit_identity' => $member->livekit_identity,
             'guest' => $member->user_id === null,
             'can_publish_audio' => $member->can_publish_audio,
             'can_publish_video' => $member->can_publish_video,
             'can_publish_screen' => $member->can_publish_screen,
+            'hand_raised_at' => $member->hand_raised_at?->toISOString(),
             'left_at' => $member->left_at?->toISOString(),
         ];
     }

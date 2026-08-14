@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\LiveKitTokenController;
+use App\Http\Controllers\RoomApplicationStateController;
 use App\Http\Controllers\RoomBroadcastAuthController;
 use App\Http\Controllers\RoomCallController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomMembershipController;
+use App\Http\Controllers\RoomMessageController;
 use App\Http\Controllers\RoomModerationController;
 use App\Http\Controllers\WaitingRoomController;
 use App\Http\Controllers\WaitingRoomDecisionController;
@@ -24,6 +26,15 @@ Route::post('rooms/{room}/memberships', [RoomMembershipController::class, 'store
 Route::post('rooms/{room}/livekit-token', [LiveKitTokenController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('rooms.livekit_token.store');
+Route::post('rooms/{room}/messages', [RoomMessageController::class, 'store'])
+    ->middleware('throttle:room-chat')
+    ->name('rooms.messages.store');
+Route::patch('rooms/{room}/hand', [RoomApplicationStateController::class, 'updateHand'])
+    ->middleware('throttle:room-state')
+    ->name('rooms.hand.update');
+Route::patch('rooms/{room}/global-pin', [RoomApplicationStateController::class, 'updateGlobalPin'])
+    ->middleware('throttle:room-state')
+    ->name('rooms.global_pin.update');
 Route::get('rooms/{room}/waiting-room', [WaitingRoomController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('rooms.waiting_room.index');

@@ -55,7 +55,7 @@ Auth endpoint:     /broadcasting/room-auth
 
 The room channel authorizes an active `RoomMember` resolved from an authenticated user or the server-issued guest identity cookie. For waiting-room-enabled rooms, pending waiting-room entries may also subscribe so they can receive approval/rejection events. Ordinary participants in waiting-room rooms require an approved waiting-room entry; owner/moderator members may subscribe for moderation updates.
 
-Current Reverb payloads are application activity only: `room.member.joined`, `waiting-room.entry.requested` and `waiting-room.entry.decided`. LiveKit remains the source of truth for media presence, tracks, screen share, active speaker and media reconnect state.
+Current Reverb payloads are application activity only: room member joins, waiting-room decisions, moderation actions, chat messages, raised hands and global pin updates. LiveKit remains the source of truth for media presence, tracks, screen share, active speaker and media reconnect state.
 
 ## Persistence Model
 Milestone 1 adds the Laravel-owned persistence layer:
@@ -150,6 +150,15 @@ Current moderation routes support owner-only role changes, force-mute, mute-all,
 Force-mute revokes `room_members.can_publish_audio` and updates the LiveKit participant permissions; it does not enable or silently unmute anyone. Kick removes the actual LiveKit participant. Ban persists `room_bans`, marks the member as left, removes the LiveKit participant and blocks future rejoin/token issuance while the ban is active.
 
 Moderation events are broadcast over the private `room.{public_id}` Reverb channel for application state synchronization. Audio/video media state remains LiveKit-owned.
+
+## Chat, Hands And Pins
+Chat messages are Laravel-owned plain text records in `room_messages`. The frontend renders them with Vue text interpolation, not raw HTML. The message endpoint is rate-limited with the named `room-chat` limiter and requires an active authorized `RoomMember`.
+
+Raised hands are persisted on `room_members.hand_raised_at` and broadcast as application state. This state is independent from LiveKit media tracks.
+
+Personal pin is local browser state only. It changes the local media grid ordering and is never persisted or broadcast.
+
+Global pin is persisted on `rooms.global_pinned_room_member_id`. Only owners/moderators can set or clear it, and every change is broadcast over the private room application channel.
 
 ## Subrooms
 Each subroom is a distinct LiveKit room. Switching disconnects current media room, requests a separately authorized target token and connects to target.

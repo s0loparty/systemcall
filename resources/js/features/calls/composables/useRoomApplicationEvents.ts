@@ -2,12 +2,16 @@ import { useConnectionStatus, useEcho } from '@laravel/echo-vue';
 import { ref } from 'vue';
 import type {
     RoomApplicationActivity,
+    RoomGlobalPinUpdatedEvent,
     RoomMemberBannedEvent,
+    RoomMemberHandUpdatedEvent,
     RoomMemberJoinedEvent,
     RoomMemberMutedEvent,
     RoomMemberRemovedEvent,
     RoomMemberRoleChangedEvent,
     RoomMemberSummary,
+    RoomMessageCreatedEvent,
+    RoomMessageSummary,
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
     WaitingRoomEntryRequestedEvent,
@@ -15,6 +19,8 @@ import type {
 
 type UseRoomApplicationEventsOptions = {
     roomMembers?: RoomMemberSummary[];
+    roomMessages?: RoomMessageSummary[];
+    globalPinnedRoomMemberId?: number | null;
     waitingRoomEntries?: WaitingRoomEntry[];
     onWaitingRoomDecision?: (event: WaitingRoomEntryDecidedEvent) => void;
 };
@@ -26,6 +32,10 @@ export function useRoomApplicationEvents(
     const echoConnectionStatus = useConnectionStatus();
     const activities = ref<RoomApplicationActivity[]>([]);
     const roomMembers = ref<RoomMemberSummary[]>(options.roomMembers ?? []);
+    const roomMessages = ref<RoomMessageSummary[]>(options.roomMessages ?? []);
+    const globalPinnedRoomMemberId = ref<number | null>(
+        options.globalPinnedRoomMemberId ?? null,
+    );
     const waitingRoomEntries = ref<WaitingRoomEntry[]>(
         options.waitingRoomEntries ?? [],
     );
@@ -34,16 +44,48 @@ export function useRoomApplicationEvents(
         `room.${roomPublicId}`,
         '.room.member.joined',
         (event) => {
-            upsertRoomMember({
-                room_public_id: event.room_public_id,
-                can_publish_audio: true,
-                can_publish_video: true,
-                can_publish_screen: true,
-                ...event.member,
-            });
+            upsertRoomMember(event.member);
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
                 `${event.member.display_name} joined the room`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMessageCreatedEvent>(
+        `room.${roomPublicId}`,
+        '.room.message.created',
+        (event) => {
+            appendRoomMessage(event.message);
+        },
+    );
+
+    useEcho<RoomMemberHandUpdatedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.hand-updated',
+        (event) => {
+            upsertRoomMember(event.member);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                event.member.hand_raised_at
+                    ? `${event.member.display_name} raised a hand`
+                    : `${event.member.display_name} lowered a hand`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomGlobalPinUpdatedEvent>(
+        `room.${roomPublicId}`,
+        '.room.global-pin.updated',
+        (event) => {
+            globalPinnedRoomMemberId.value = event.global_pinned_room_member_id;
+            addActivity(
+                `${event.type}:${event.global_pinned_room_member_id ?? 'none'}:${event.occurred_at}`,
+                event.member
+                    ? `${event.member.display_name} was globally pinned`
+                    : 'Global pin was cleared',
                 event.occurred_at,
             );
         },
@@ -119,6 +161,11 @@ export function useRoomApplicationEvents(
         '.waiting-room.entry.decided',
         (event) => {
             removeWaitingRoomEntry(event.waiting_room.id);
+
+            if (event.member) {
+                upsertRoomMember(event.member);
+            }
+
             addActivity(
                 `${event.type}:${event.waiting_room.id}:${event.occurred_at}`,
                 `${event.waiting_room.display_name} was ${event.waiting_room.status}`,
@@ -169,6 +216,22 @@ export function useRoomApplicationEvents(
         roomMembers.value = roomMembers.value.filter(
             (member) => member.id !== memberId,
         );
+
+        if (globalPinnedRoomMemberId.value === memberId) {
+            globalPinnedRoomMemberId.value = null;
+        }
+    }
+
+    function appendRoomMessage(message: RoomMessageSummary): void {
+        if (roomMessages.value.some((current) => current.id === message.id)) {
+            return;
+        }
+
+        roomMessages.value = [...roomMessages.value, message].slice(-50);
+    }
+
+    function setGlobalPinnedRoomMemberId(memberId: number | null): void {
+        globalPinnedRoomMemberId.value = memberId;
     }
 
     return {
@@ -177,6 +240,10 @@ export function useRoomApplicationEvents(
         roomMembers,
         upsertRoomMember,
         removeRoomMember,
+        roomMessages,
+        appendRoomMessage,
+        globalPinnedRoomMemberId,
+        setGlobalPinnedRoomMemberId,
         waitingRoomEntries,
         removeWaitingRoomEntry,
     };

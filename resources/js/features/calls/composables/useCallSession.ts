@@ -1,5 +1,9 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
-import type { WaitingRoomEntry, WaitingRoomEntryDecidedEvent } from '../types';
+import type {
+    RoomMemberSummary,
+    WaitingRoomEntry,
+    WaitingRoomEntryDecidedEvent,
+} from '../types';
 import { useLiveKit } from './useLiveKit';
 import { useMediaDevices } from './useMediaDevices';
 import { useRoomJoin } from './useRoomJoin';
@@ -16,6 +20,7 @@ export function useCallSession(options: UseCallSessionOptions) {
     const connecting = ref(false);
     const errorMessage = ref<string | null>(null);
     const waitingRoomEntry = ref<WaitingRoomEntry | null>(null);
+    const joinedMember = ref<RoomMemberSummary | null>(null);
     const deviceErrorMessage = computed(
         () =>
             mediaDevices.deviceErrorMessage.value ??
@@ -46,6 +51,8 @@ export function useCallSession(options: UseCallSessionOptions) {
 
                 return;
             }
+
+            joinedMember.value = response.member;
 
             await liveKit.connect(
                 response.response.livekit.url,
@@ -96,6 +103,7 @@ export function useCallSession(options: UseCallSessionOptions) {
                 response.response.livekit.token,
                 mediaDevices.selectedDevices.value,
             );
+            joinedMember.value = event.member;
         } catch (error) {
             errorMessage.value =
                 error instanceof Error
@@ -115,6 +123,7 @@ export function useCallSession(options: UseCallSessionOptions) {
         joinRequest: roomJoin.joinRequest,
         tokenRequest: roomJoin.tokenRequest,
         waitingRoomEntry,
+        joinedMember,
         connected: liveKit.connected,
         connectionState: liveKit.connectionState,
         connecting,

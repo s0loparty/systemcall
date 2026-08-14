@@ -5,6 +5,7 @@ import type {
     JoinForm,
     JoinRoomResponse,
     LiveKitTokenResponse,
+    RoomMemberSummary,
     WaitingRoomEntry,
 } from '../types';
 
@@ -22,7 +23,11 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
     );
 
     async function joinAndIssueToken(): Promise<
-        | { kind: 'livekit'; response: LiveKitTokenResponse }
+        | {
+              kind: 'livekit';
+              response: LiveKitTokenResponse;
+              member: RoomMemberSummary;
+          }
         | { kind: 'waiting-room'; response: WaitingRoomJoinResponse }
     > {
         const joinResponse = await joinRequest.post(joinRoom.url(roomPublicId));
@@ -34,7 +39,10 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
             };
         }
 
-        return issueToken();
+        return {
+            ...(await issueToken()),
+            member: joinResponse.member,
+        };
     }
 
     async function issueToken(): Promise<{

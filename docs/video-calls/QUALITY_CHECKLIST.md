@@ -42,7 +42,7 @@
 - [ ] token checks room/password/ban/waiting/target
 - [ ] LiveKit identity maps to RoomMember
 - [ ] webhook signature/idempotency
-- [ ] safe/rate-limited chat
+- [x] safe/rate-limited chat
 
 ## Media/UI
 - [ ] mic/camera
@@ -58,8 +58,8 @@
 - [x] moderation authorization
 - [x] kick removes LiveKit participant
 - [x] ban blocks rejoin/token
-- [ ] raised hands
-- [ ] personal/global pin
+- [x] raised hands
+- [x] personal/global pin
 - [ ] max 5 subrooms server-side
 - [ ] clean subroom switching
 

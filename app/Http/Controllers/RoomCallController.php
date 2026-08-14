@@ -7,6 +7,7 @@ use App\Enums\RoomVisibility;
 use App\Enums\WaitingRoomStatus;
 use App\Models\Room;
 use App\Models\RoomMember;
+use App\Models\RoomMessage;
 use App\Models\User;
 use App\Models\WaitingRoomMember;
 use App\Services\LiveKit\LiveKitTokenService;
@@ -23,6 +24,8 @@ class RoomCallController extends Controller
         abort_unless($this->canOpen($request, $room), 403);
 
         $canModerateWaitingRoom = $this->canModerateWaitingRoom($request, $room);
+        $currentRoomMemberId = $this->currentRoomMemberId($request, $room, $guestIdentity);
+        $canSeeRoomMembers = $canModerateWaitingRoom || $currentRoomMemberId !== null;
 
         return Inertia::render('rooms/Call', [
             'room' => [
@@ -37,10 +40,12 @@ class RoomCallController extends Controller
             'can_join_without_password' => $this->canJoinWithoutPassword($request, $room),
             'can_moderate_waiting_room' => $canModerateWaitingRoom,
             'can_moderate_members' => $canModerateWaitingRoom,
-            'current_room_member_id' => $this->currentRoomMemberId($request, $room, $guestIdentity),
-            'room_members' => $canModerateWaitingRoom
+            'current_room_member_id' => $currentRoomMemberId,
+            'global_pinned_room_member_id' => $room->global_pinned_room_member_id,
+            'room_members' => $canSeeRoomMembers
                 ? $this->activeRoomMembers($room)
                 : [],
+            'room_messages' => $currentRoomMemberId !== null ? $this->recentMessages($room) : [],
             'waiting_room_entries' => $canModerateWaitingRoom
                 ? $this->pendingWaitingRoomEntries($room)
                 : [],
@@ -119,10 +124,39 @@ class RoomCallController extends Controller
                 'room_public_id' => $member->room->public_id,
                 'display_name' => $member->display_name,
                 'role' => $member->role->value,
+                'livekit_identity' => $member->livekit_identity,
                 'guest' => $member->user_id === null,
                 'can_publish_audio' => $member->can_publish_audio,
                 'can_publish_video' => $member->can_publish_video,
                 'can_publish_screen' => $member->can_publish_screen,
+                'hand_raised_at' => $member->hand_raised_at?->toISOString(),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function recentMessages(Room $room): array
+    {
+        return $room->messages()
+            ->with('member')
+            ->whereNull('deleted_at')
+            ->latest()
+            ->limit(50)
+            ->get()
+            ->reverse()
+            ->values()
+            ->map(fn (RoomMessage $message): array => [
+                'id' => $message->id,
+                'room_public_id' => $room->public_id,
+                'room_member_id' => $message->room_member_id,
+                'display_name' => $message->room_member_id === null
+                    ? 'System'
+                    : $message->member->display_name,
+                'body' => $message->body,
+                'message_type' => $message->type,
+                'created_at' => $message->created_at?->toISOString(),
             ])
             ->all();
     }

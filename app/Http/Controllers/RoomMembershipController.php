@@ -53,6 +53,11 @@ class RoomMembershipController extends Controller
             'role' => $member->role->value,
             'livekit_identity' => $member->livekit_identity,
             'guest' => $member->user_id === null,
+            'can_publish_audio' => $member->can_publish_audio,
+            'can_publish_video' => $member->can_publish_video,
+            'can_publish_screen' => $member->can_publish_screen,
+            'hand_raised_at' => $member->hand_raised_at?->toISOString(),
+            'left_at' => $member->left_at?->toISOString(),
         ];
     }
 

@@ -40,23 +40,28 @@ export type RoomMemberSummary = {
     room_public_id: string;
     display_name: string;
     role: 'owner' | 'moderator' | 'participant';
+    livekit_identity: string;
     guest: boolean;
     can_publish_audio: boolean;
     can_publish_video: boolean;
     can_publish_screen: boolean;
+    hand_raised_at?: string | null;
     left_at?: string | null;
+};
+
+export type RoomMessageSummary = {
+    id: number;
+    room_public_id: string;
+    room_member_id: number | null;
+    display_name: string;
+    body: string;
+    message_type: 'text' | 'system';
+    created_at: string | null;
 };
 
 export type JoinRoomResponse =
     | {
-          member: {
-              id: number;
-              room_public_id: string;
-              display_name: string;
-              role: string;
-              livekit_identity: string;
-              guest: boolean;
-          };
+          member: RoomMemberSummary;
       }
     | {
           waiting_room: WaitingRoomEntry;
@@ -92,7 +97,33 @@ export type EchoConnectionState =
 export type RoomMemberJoinedEvent = {
     type: 'member_joined';
     room_public_id: string;
-    member: Pick<RoomMemberSummary, 'id' | 'display_name' | 'role' | 'guest'>;
+    member: RoomMemberSummary;
+    occurred_at: string;
+};
+
+export type RoomMessageCreatedEvent = {
+    type: 'message_created';
+    room_public_id: string;
+    message: RoomMessageSummary;
+    occurred_at: string;
+};
+
+export type RoomMemberHandUpdatedEvent = {
+    type: 'member_hand_updated';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    occurred_at: string;
+};
+
+export type RoomGlobalPinUpdatedEvent = {
+    type: 'global_pin_updated';
+    room_public_id: string;
+    global_pinned_room_member_id: number | null;
+    member: {
+        id: number;
+        display_name: string;
+    } | null;
+    moderator_room_member_id: number;
     occurred_at: string;
 };
 
@@ -144,7 +175,7 @@ export type WaitingRoomEntryDecidedEvent = {
     type: 'waiting_room_entry_decided';
     room_public_id: string;
     waiting_room: WaitingRoomEntry;
-    member: RoomMemberJoinedEvent['member'] | null;
+    member: RoomMemberSummary | null;
     occurred_at: string;
 };
 
