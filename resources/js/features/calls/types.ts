@@ -32,10 +32,19 @@ export type ParticipantTile = {
     camera: boolean;
     microphone: boolean;
     speaking: boolean;
+    screenShare: boolean;
 };
 
 export type AttachableTrack = {
     kind: Track.Kind;
     attach(): HTMLMediaElement;
     detach(): HTMLMediaElement[];
+};
+
+export type CallConnectionState =
+    'disconnected' | 'connecting' | 'connected' | 'reconnecting';
+
+export type SelectedDevices = {
+    audioInputId: string;
+    videoInputId: string;
 };

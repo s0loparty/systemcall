@@ -194,7 +194,7 @@ Acceptance:
 - [x] unauthorized users cannot obtain a token
 - [x] backend token payload maps to the expected LiveKit room and RoomMember identity
 - [x] frontend contains connect/disconnect, mic, camera and participant grid vertical slice
-- [!] two independent browser sessions can see/hear each other: implemented but requires a running LiveKit server and manual two-browser smoke test in local/prod environment
+- [!] two independent browser sessions can see/hear each other: implemented and frontend audio attach corrected in Milestone 4, but still requires a running LiveKit server and manual two-browser smoke test in local/prod environment
 
 Milestone 3 verification on 2026-08-14:
 - `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/LiveKitVerticalSliceTest.php` passed: 5 tests, 37 assertions
@@ -209,10 +209,43 @@ Milestone 3 verification on 2026-08-14:
 
 Notes:
 - Local host `composer run types:check` currently fails before analysis with `Failed to listen on "tcp://127.0.0.1:0": Success`; the same PHPStan script passes inside Sail.
-- LiveKit token issuance is ready for Milestone 4 media UX work, but screen sharing/device selection/error states remain in later milestones.
+- LiveKit token issuance is ready for media UX. Real audio/video verification still requires running LiveKit and a manual two-browser smoke test.
 
-### Milestone 4 — Media UX `[ ]`
+### Milestone 4 — Media UX `[x]`
 Device selection, preview, screen share, active speaker, adaptive layout, permission/device errors, reconnect UI, adaptive stream/simulcast/dynacast review.
+
+Implemented:
+- [x] device selection UI for microphone and camera before joining
+- [x] local camera preview using LiveKit local tracks without publishing to the room
+- [x] selected microphone/camera are used when publishing local tracks after token issuance
+- [x] screen share toggle using LiveKit `setScreenShareEnabled`
+- [x] active speaker state is tracked from LiveKit and highlighted in the participant grid
+- [x] adaptive participant layout gives the active speaker a larger tile when multiple participants are present
+- [x] permission/device errors from preview and LiveKit room events are surfaced in the call UI
+- [x] reconnect UI displays LiveKit connection state, including reconnecting
+- [x] LiveKit room uses `adaptiveStream` and `dynacast`; camera and screen publish paths request simulcast
+- [x] remote audio elements are no longer muted during media attach
+
+Acceptance criteria:
+- [x] user can choose microphone and camera before joining
+- [x] user can start/stop local preview before joining
+- [x] user can join with selected devices
+- [x] user can toggle microphone, camera and screen share after joining
+- [x] active speaker and screen share state are visible in the participant grid
+- [x] reconnect/device error states are represented in UI
+- [x] frontend typecheck, lint and production build pass
+- [!] real two-browser media, screen share and reconnect smoke test requires a running LiveKit server and browser permissions; automated checks cannot prove WebRTC media flow in this repository
+
+Milestone 4 verification on 2026-08-14:
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact` passed: 49 tests, 235 assertions
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail composer run types:check` passed: PHPStan, 0 errors
+- `composer validate --strict` passed
+- `docker compose config` passed
+- `npm run format:check` passed
+- `npm run lint:check` passed
+- `npm run types:check` passed
+- `npm run build` passed with existing Vite chunk-size warning for the call page bundle
+- `npm run types` is not configured in `package.json`
 
 ### Milestone 5 — Reverb `[ ]`
 Authorized application channels, frontend Echo, application events and reconnect. Never replace LiveKit media presence with Reverb.

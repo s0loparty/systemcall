@@ -94,7 +94,9 @@ Use backend-controlled RoomMember-based identity, e.g. `room-member:123`. Never 
 Centralize token creation, participant removal, force-mute and media-room operations behind `LiveKitService`.
 
 ## Frontend/media
-Use LiveKit SDK for mic, camera, screen share, active speaker and media connection state. Review adaptive stream, simulcast, dynacast and selective subscriptions for larger rooms.
+Use LiveKit SDK for mic, camera, screen share, active speaker and media connection state. The current call page uses LiveKit local tracks for pre-join preview, publishes the selected microphone/camera after Laravel issues a token, and surfaces LiveKit media-device and reconnect events in the UI.
+
+Current room options enable `adaptiveStream` and `dynacast`. Camera and screen-share publication request simulcast. Revisit selective subscriptions and publish presets when large-room limits are defined.
 
 ## Webhooks
 Verify signatures and process idempotently. Webhooks are not frontend media realtime.

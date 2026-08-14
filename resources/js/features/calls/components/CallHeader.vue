@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import type { CallRoom } from '../types';
+import type { CallConnectionState, CallRoom } from '../types';
 
 type Props = {
     room: CallRoom;
     connected: boolean;
+    connectionState: CallConnectionState;
     busy: boolean;
     microphoneEnabled: boolean;
     cameraEnabled: boolean;
+    screenShareEnabled: boolean;
 };
 
 const props = defineProps<Props>();
@@ -17,6 +19,8 @@ const emit = defineEmits<{
     unmute: [];
     'start-camera': [];
     'stop-camera': [];
+    'start-screen-share': [];
+    'stop-screen-share': [];
     leave: [];
 }>();
 
@@ -39,6 +43,16 @@ function emitCameraIntent(): void {
 
     emit('start-camera');
 }
+
+function emitScreenShareIntent(): void {
+    if (props.screenShareEnabled) {
+        emit('stop-screen-share');
+
+        return;
+    }
+
+    emit('start-screen-share');
+}
 </script>
 
 <template>
@@ -52,9 +66,23 @@ function emitCameraIntent(): void {
             class="relative flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between"
         >
             <div class="space-y-2">
-                <p class="text-sm text-neutral-300">
-                    LiveKit room: {{ room.livekit_room_name }}
-                </p>
+                <div class="flex flex-wrap items-center gap-2">
+                    <p class="text-sm text-neutral-300">
+                        LiveKit room: {{ room.livekit_room_name }}
+                    </p>
+                    <span
+                        class="rounded-full px-2.5 py-1 text-xs font-medium"
+                        :class="
+                            connectionState === 'connected'
+                                ? 'bg-emerald-400 text-emerald-950'
+                                : connectionState === 'reconnecting'
+                                  ? 'bg-amber-300 text-amber-950'
+                                  : 'bg-white/10 text-neutral-200 ring-1 ring-white/15'
+                        "
+                    >
+                        {{ connectionState }}
+                    </span>
+                </div>
                 <h1 class="text-2xl font-semibold tracking-tight">
                     {{ room.name }}
                 </h1>
@@ -90,6 +118,15 @@ function emitCameraIntent(): void {
                         @click="emitCameraIntent"
                     >
                         {{ cameraEnabled ? 'Stop camera' : 'Start camera' }}
+                    </button>
+                    <button
+                        class="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/20"
+                        type="button"
+                        @click="emitScreenShareIntent"
+                    >
+                        {{
+                            screenShareEnabled ? 'Stop sharing' : 'Share screen'
+                        }}
                     </button>
                     <button
                         class="rounded-full bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-400"

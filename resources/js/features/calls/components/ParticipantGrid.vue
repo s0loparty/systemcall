@@ -4,6 +4,7 @@ import ParticipantTile from './ParticipantTile.vue';
 
 type Props = {
     tiles: ParticipantTileData[];
+    activeSpeakerIdentity: string | null;
 };
 
 defineProps<Props>();
@@ -21,6 +22,12 @@ const emit = defineEmits<{
             v-for="tile in tiles"
             :key="tile.identity"
             :tile="tile"
+            :active="tile.identity === activeSpeakerIdentity"
+            :class="
+                tile.identity === activeSpeakerIdentity && tiles.length > 1
+                    ? 'md:col-span-2 md:row-span-2'
+                    : ''
+            "
             @media-host="
                 (identity, element) => emit('media-host', identity, element)
             "

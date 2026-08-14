@@ -3,6 +3,7 @@ import type { ParticipantTile } from '../types';
 
 type Props = {
     tile: ParticipantTile;
+    active: boolean;
 };
 
 defineProps<Props>();
@@ -53,12 +54,20 @@ const emit = defineEmits<{
                     {{ tile.microphone ? 'mic on' : 'mic off' }}
                 </p>
             </div>
-            <span
-                v-if="tile.speaking"
-                class="rounded-full bg-emerald-400 px-2 py-1 text-xs font-medium text-emerald-950"
-            >
-                speaking
-            </span>
+            <div class="flex flex-wrap justify-end gap-2">
+                <span
+                    v-if="tile.screenShare"
+                    class="rounded-full bg-sky-300 px-2 py-1 text-xs font-medium text-sky-950"
+                >
+                    sharing
+                </span>
+                <span
+                    v-if="active || tile.speaking"
+                    class="rounded-full bg-emerald-400 px-2 py-1 text-xs font-medium text-emerald-950"
+                >
+                    speaking
+                </span>
+            </div>
         </div>
     </article>
 </template>

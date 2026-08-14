@@ -108,6 +108,8 @@ POST /rooms/{public_id}/livekit-token
 
 The call page is an Inertia/Vue page. It first uses the existing membership endpoint, then requests a LiveKit token through Laravel, then connects directly to LiveKit using `livekit-client`.
 
+The frontend media UX is intentionally local to LiveKit: device selection, pre-join preview, microphone/camera publication, screen share, active speaker highlighting and reconnect/device error state are handled by `livekit-client` composables. Laravel still remains authoritative for room membership and token authorization; the browser never selects its LiveKit identity.
+
 Laravel issues tokens only for an active `RoomMember` resolved from the authenticated user or the encrypted/httpOnly guest cookie. The browser cannot choose the LiveKit identity. Non-members, banned participants, inactive rooms and rooms that still require waiting-room approval are denied before token signing.
 
 The LiveKit room name is currently `room-{rooms.public_id}`. Token grants include `roomJoin`, subscribe permission, publish permission and `canPublishSources` derived from `room_members.can_publish_audio`, `can_publish_video` and `can_publish_screen`.

@@ -1,5 +1,6 @@
 import { Room, RoomEvent, Track } from 'livekit-client';
 import type {
+    ConnectionState,
     LocalTrackPublication,
     Participant,
     RemoteParticipant,
@@ -7,18 +8,31 @@ import type {
     RemoteTrackPublication,
 } from 'livekit-client';
 import { markRaw, nextTick, ref, shallowRef } from 'vue';
-import type { AttachableTrack, ParticipantTile } from '../types';
+import type {
+    AttachableTrack,
+    CallConnectionState,
+    ParticipantTile,
+    SelectedDevices,
+} from '../types';
 
 export function useLiveKit() {
     const activeRoom = shallowRef<Room | null>(null);
     const connected = ref(false);
+    const connectionState = ref<CallConnectionState>('disconnected');
     const microphoneEnabled = ref(false);
     const cameraEnabled = ref(false);
+    const screenShareEnabled = ref(false);
+    const activeSpeakerIdentity = ref<string | null>(null);
+    const deviceErrorMessage = ref<string | null>(null);
     const tiles = ref<ParticipantTile[]>([]);
     const mediaHosts = new Map<string, HTMLElement>();
     const mediaElements = new Map<string, HTMLMediaElement[]>();
 
-    async function connect(url: string, token: string): Promise<void> {
+    async function connect(
+        url: string,
+        token: string,
+        selectedDevices: SelectedDevices,
+    ): Promise<void> {
         const liveKitRoom = new Room({
             adaptiveStream: true,
             dynacast: true,
@@ -26,9 +40,11 @@ export function useLiveKit() {
 
         bindRoomEvents(liveKitRoom);
         activeRoom.value = markRaw(liveKitRoom);
+        connectionState.value = 'connecting';
 
         await liveKitRoom.connect(url, token);
         connected.value = true;
+        connectionState.value = 'connected';
 
         upsertParticipant(liveKitRoom.localParticipant);
         liveKitRoom.remoteParticipants.forEach((participant) => {
@@ -36,10 +52,27 @@ export function useLiveKit() {
             attachExistingTracks(participant);
         });
 
-        await liveKitRoom.localParticipant.enableCameraAndMicrophone();
+        await Promise.all([
+            liveKitRoom.localParticipant.setMicrophoneEnabled(
+                true,
+                selectedDevices.audioInputId
+                    ? { deviceId: selectedDevices.audioInputId }
+                    : undefined,
+            ),
+            liveKitRoom.localParticipant.setCameraEnabled(
+                true,
+                selectedDevices.videoInputId
+                    ? { deviceId: selectedDevices.videoInputId }
+                    : undefined,
+                { simulcast: true },
+            ),
+        ]);
+
         microphoneEnabled.value =
             liveKitRoom.localParticipant.isMicrophoneEnabled;
         cameraEnabled.value = liveKitRoom.localParticipant.isCameraEnabled;
+        screenShareEnabled.value =
+            liveKitRoom.localParticipant.isScreenShareEnabled;
         syncParticipantState(liveKitRoom.localParticipant);
     }
 
@@ -66,8 +99,28 @@ export function useLiveKit() {
         }
 
         const enabled = !cameraEnabled.value;
-        await activeRoom.value.localParticipant.setCameraEnabled(enabled);
+        await activeRoom.value.localParticipant.setCameraEnabled(
+            enabled,
+            undefined,
+            { simulcast: true },
+        );
         cameraEnabled.value = activeRoom.value.localParticipant.isCameraEnabled;
+        syncParticipantState(activeRoom.value.localParticipant);
+    }
+
+    async function toggleScreenShare(): Promise<void> {
+        if (!activeRoom.value) {
+            return;
+        }
+
+        const enabled = !screenShareEnabled.value;
+        await activeRoom.value.localParticipant.setScreenShareEnabled(
+            enabled,
+            { audio: true },
+            { simulcast: true },
+        );
+        screenShareEnabled.value =
+            activeRoom.value.localParticipant.isScreenShareEnabled;
         syncParticipantState(activeRoom.value.localParticipant);
     }
 
@@ -162,10 +215,24 @@ export function useLiveKit() {
                     speakers.map((participant) => participant.identity),
                 );
 
+                activeSpeakerIdentity.value = speakers[0]?.identity ?? null;
                 tiles.value = tiles.value.map((tile) => ({
                     ...tile,
                     speaking: activeIdentities.has(tile.identity),
                 }));
+            })
+            .on(RoomEvent.ConnectionStateChanged, (state: ConnectionState) => {
+                connectionState.value = normalizeConnectionState(state);
+                connected.value = state !== 'disconnected';
+            })
+            .on(RoomEvent.Reconnecting, () => {
+                connectionState.value = 'reconnecting';
+            })
+            .on(RoomEvent.Reconnected, () => {
+                connectionState.value = 'connected';
+            })
+            .on(RoomEvent.MediaDevicesError, (error: Error) => {
+                deviceErrorMessage.value = error.message;
             })
             .on(RoomEvent.Disconnected, () => {
                 clearState();
@@ -188,6 +255,7 @@ export function useLiveKit() {
             camera: participant.isCameraEnabled,
             microphone: participant.isMicrophoneEnabled,
             speaking: participant.isSpeaking,
+            screenShare: participant.isScreenShareEnabled,
         };
 
         const index = tiles.value.findIndex(
@@ -230,7 +298,7 @@ export function useLiveKit() {
             element.playsInline = true;
         }
 
-        element.muted = muted || track.kind === Track.Kind.Audio;
+        element.muted = muted;
         element.dataset.identity = identity;
 
         mediaElements.set(identity, [
@@ -285,21 +353,47 @@ export function useLiveKit() {
     function clearState(): void {
         activeRoom.value = null;
         connected.value = false;
+        connectionState.value = 'disconnected';
         microphoneEnabled.value = false;
         cameraEnabled.value = false;
+        screenShareEnabled.value = false;
+        activeSpeakerIdentity.value = null;
         tiles.value = [];
         detachAllMedia();
     }
 
+    function normalizeConnectionState(
+        state: ConnectionState,
+    ): CallConnectionState {
+        if (state === 'connected') {
+            return 'connected';
+        }
+
+        if (state === 'connecting') {
+            return 'connecting';
+        }
+
+        if (state === 'disconnected') {
+            return 'disconnected';
+        }
+
+        return 'reconnecting';
+    }
+
     return {
         connected,
+        connectionState,
         microphoneEnabled,
         cameraEnabled,
+        screenShareEnabled,
+        activeSpeakerIdentity,
+        deviceErrorMessage,
         tiles,
         connect,
         disconnect,
         toggleMicrophone,
         toggleCamera,
+        toggleScreenShare,
         setMediaHost,
     };
 }
