@@ -557,3 +557,605 @@ A milestone is complete only when:
 
 If infrastructure or credentials prevent verification,
 document the exact blocker instead of pretending the check passed.
+
+# Frontend Architecture — Inertia + Vue 3
+
+These rules apply to all frontend work in this project and extend the existing
+Laravel Boost / Inertia / Vue guidelines.
+
+Frontend code must be treated as production application code, not as disposable
+UI glue. The same standards applied to backend architecture must also be
+applied to frontend architecture.
+
+Before creating or modifying frontend code:
+
+1. inspect existing frontend structure;
+2. inspect sibling components;
+3. inspect existing composables;
+4. inspect existing stores;
+5. inspect existing types;
+6. inspect existing reusable UI components;
+7. inspect established naming conventions;
+8. use the project's Laravel Boost / Inertia documentation tools before relying
+   on framework APIs.
+
+Do not introduce a new frontend architectural pattern when an existing project
+pattern already solves the problem.
+
+## Separation of Responsibilities
+
+Separate:
+
+- page orchestration;
+- presentation;
+- domain/business logic;
+- server communication;
+- realtime communication;
+- media logic;
+- reusable state;
+- local UI state.
+
+Do not mix all of these responsibilities inside one Vue component. A Vue
+component should have a clear reason to change.
+
+## Inertia Pages
+
+Files under `resources/js/pages` are route-level views.
+
+Pages should primarily:
+
+- receive Inertia props;
+- compose feature components;
+- initialize page-level composables;
+- connect page sections;
+- provide high-level layout;
+- handle route/page-specific orchestration.
+
+Pages should not contain large amounts of:
+
+- business logic;
+- LiveKit implementation details;
+- Reverb implementation details;
+- fetch/request implementation;
+- complex state machines;
+- media-device logic;
+- large transformation algorithms;
+- reusable domain logic.
+
+A page should normally be understandable as composition/orchestration. Avoid
+turning pages into god-components. If a page grows substantially, identify
+independent features/sections and extract them.
+
+## Presentational Components
+
+Presentation components should focus on rendering UI. Prefer components that
+receive typed props and emit meaningful events.
+
+Examples:
+
+```text
+ParticipantTile.vue
+ParticipantGrid.vue
+CallControls.vue
+MicrophoneButton.vue
+CameraButton.vue
+ChatMessage.vue
+WaitingParticipantRow.vue
+```
+
+Presentation components should not directly know about application
+infrastructure unless their responsibility explicitly requires it. For example,
+`MicrophoneButton.vue` should ideally not create a LiveKit Room instance or call
+backend APIs directly. It should receive state and emit user intent.
+
+## Smart vs Presentational Components
+
+Prefer a clear distinction between feature/container components and
+presentational components.
+
+Feature/container components may:
+
+- connect composables;
+- read application state;
+- coordinate feature behavior;
+- handle domain-specific actions.
+
+Presentational components should mostly:
+
+- receive props;
+- render state;
+- emit user intentions.
+
+Do not force every component into a rigid pattern, but maintain clear
+boundaries.
+
+## No God Components
+
+Do not create Vue components that simultaneously:
+
+- connect to LiveKit;
+- subscribe to Reverb;
+- fetch backend data;
+- manage permissions;
+- manage devices;
+- render participant grid;
+- render chat;
+- render waiting room;
+- implement moderation;
+- manage dialogs;
+- handle routing.
+
+Warning signs include:
+
+- very large `<script setup>`;
+- dozens of refs/computed values;
+- many unrelated watchers;
+- many unrelated event handlers;
+- several independent feature areas;
+- complex lifecycle hooks;
+- direct usage of multiple infrastructure SDKs.
+
+Do not split purely by line count. Split by responsibility and domain
+boundaries.
+
+## Composables
+
+Use composables for reusable behavior and feature logic.
+
+Examples:
+
+```text
+useLiveKit
+useCall
+useParticipants
+useMediaDevices
+useScreenShare
+useRoom
+useRoomPermissions
+useRoomChat
+useWaitingRoom
+useModeration
+useSubrooms
+```
+
+Each composable must have a focused responsibility. Do not create a single
+`useVideoCallEverything()` that owns all application logic. Composables should
+expose a small, intentional public API and keep internal implementation details
+private.
+
+Example boundaries:
+
+- `useLiveKit`: LiveKit Room lifecycle, connect, disconnect, LiveKit events and
+  media connection state. It is not responsible for Laravel room authorization,
+  chat persistence, waiting-room business rules or route navigation.
+- `useMediaDevices`: available cameras, microphones, supported output devices,
+  selected devices, browser media permissions and device changes.
+- `useRoomPermissions`: client-side interpretation of application permissions.
+  Backend authorization remains authoritative.
+- `useRoomChat`: loading/sending room messages, chat application events and chat
+  feature state. It must not own LiveKit media.
+
+## Business Logic
+
+Frontend business/domain rules must not be hidden inside template conditions.
+Avoid scattering rules such as:
+
+```vue
+v-if="user.id === room.ownerId || member.role === 'moderator' && ..."
+```
+
+Instead expose meaningful derived state:
+
+```ts
+const canKickParticipant = computed(...)
+const canManageWaitingRoom = computed(...)
+```
+
+Frontend permission checks improve UX only. Backend authorization remains
+mandatory and authoritative.
+
+## Server Communication
+
+Do not scatter raw network requests throughout arbitrary Vue components. Use the
+project's established Inertia patterns.
+
+Where standalone HTTP requests are appropriate, encapsulate them in:
+
+- feature composables;
+- dedicated action/service modules;
+- existing project abstractions.
+
+Follow the installed Inertia version's supported APIs. Do not assume Axios
+exists. Do not introduce Axios unless required and approved.
+
+Avoid duplicating endpoint paths as raw strings throughout the application. Use
+Laravel Wayfinder / generated route actions when available and consistent with
+the project.
+
+For API routes intended for mobile or third-party clients, use Laravel Sanctum
+as the authentication mechanism for `api.php` routes and protect them with the
+appropriate Sanctum middleware/guards.
+
+## Inertia Responsibilities
+
+Use Inertia for application/page communication where it makes sense. Do not
+treat Inertia props as a global mutable application store. Inertia props
+represent server-provided page state.
+
+For highly realtime state such as call participants/media tracks, use the
+appropriate realtime system rather than forcing updates through Inertia
+navigation.
+
+Use:
+
+- Laravel/Inertia for page/business state;
+- Reverb for application realtime events;
+- LiveKit for media realtime state.
+
+## State Ownership
+
+Every piece of state should have a clear owner.
+
+Use component-local state when state belongs only to one component/feature
+instance. Examples:
+
+- dialog open state;
+- local menu state;
+- hovered participant;
+- personal pin.
+
+Use composable state when behavior/state belongs to a reusable feature.
+
+Use Pinia only for genuinely shared application state spanning multiple
+unrelated component branches or routes/features. Do not use Pinia automatically
+for every piece of state. Do not copy all Inertia props or all LiveKit
+participant/track state into Pinia.
+
+## LiveKit State
+
+LiveKit SDK is the source of truth for realtime media state. Do not manually
+recreate LiveKit's internal participant/track state in a parallel store. Derive
+UI state from LiveKit APIs/events.
+
+LiveKit owns:
+
+- connected participants;
+- tracks;
+- microphone state;
+- camera state;
+- screen share;
+- active speaker;
+- connection quality.
+
+Laravel/application owns:
+
+- participant role;
+- ban state;
+- waiting-room approval;
+- global pin;
+- moderation permissions.
+
+## Reverb State
+
+Reverb is a transport for application events. Do not create a second copy of
+business state solely because an event arrived through Reverb.
+
+When appropriate:
+
+1. receive event;
+2. update the correct feature state;
+3. invalidate/reload server state when necessary.
+
+Manage subscriptions carefully. Always unsubscribe/cleanup listeners when
+component/composable lifecycle ends. Avoid duplicate subscriptions after
+navigation/reconnect.
+
+## Feature-Based Organization
+
+Prefer organizing complex frontend code by feature/domain rather than placing
+everything in generic folders.
+
+For the video-call feature, an acceptable structure may look like:
+
+```text
+resources/js/
+├── pages/
+│   └── calls/
+│       └── Show.vue
+├── features/
+│   └── calls/
+│       ├── components/
+│       │   ├── ParticipantGrid.vue
+│       │   ├── ParticipantTile.vue
+│       │   ├── CallControls.vue
+│       │   ├── ParticipantsSidebar.vue
+│       │   ├── ChatSidebar.vue
+│       │   └── WaitingRoomPanel.vue
+│       ├── composables/
+│       │   ├── useCall.ts
+│       │   ├── useLiveKit.ts
+│       │   ├── useMediaDevices.ts
+│       │   ├── useRoomChat.ts
+│       │   ├── useWaitingRoom.ts
+│       │   └── useModeration.ts
+│       ├── types/
+│       └── utils/
+├── components/
+└── layouts/
+```
+
+Do not blindly create this exact structure if the repository already follows
+another established convention. First inspect the existing project. Follow the
+existing structure unless there is a strong reason to evolve it.
+
+## View vs Business Logic
+
+Vue templates should remain declarative. Complex calculations,
+transformations and domain rules belong in script/composables, not inline
+templates.
+
+Prefer:
+
+```ts
+const canModerateParticipant = computed(() => ...)
+```
+
+and:
+
+```vue
+<button v-if="canModerateParticipant">
+```
+
+over large inline boolean expressions in templates.
+
+## TypeScript
+
+Do not use `any` unless there is a documented unavoidable reason.
+
+Prefer:
+
+- explicit interfaces/types;
+- discriminated unions;
+- typed emits;
+- typed props;
+- typed API payloads;
+- typed composable return values where useful.
+
+Reuse types generated from backend where the project already provides that
+capability. Do not manually duplicate backend enums/types if the project already
+has a reliable generation mechanism. Avoid unsafe casts used merely to silence
+TypeScript.
+
+## Props and Emits
+
+Keep component APIs intentional. Avoid passing enormous domain objects when the
+component only needs a few values, unless passing the domain object itself is
+the established project pattern and improves maintainability.
+
+Do not use excessive prop drilling when shared feature state has a more
+appropriate owner. At the same time, do not introduce Pinia merely to avoid
+passing two props.
+
+Emit semantic user intentions. Prefer:
+
+```text
+mute
+unmute
+kick
+approve
+reject
+select
+leave
+```
+
+rather than tightly coupling children to parent implementation details. Type all
+emits.
+
+## Events, Watchers and Lifecycle
+
+Use watchers carefully. Do not use watchers as a substitute for clear data
+flow. Avoid chains of watchers that indirectly mutate each other. Prefer
+computed values, explicit actions and lifecycle-aware composables.
+
+Every watcher/subscription/listener that needs cleanup must have cleanup.
+
+When a page/component is destroyed or navigated away from:
+
+- remove event listeners;
+- unsubscribe Reverb channels when appropriate;
+- remove browser event listeners;
+- stop temporary media tracks when owned by that feature;
+- disconnect LiveKit when the call session ends;
+- clear timers;
+- cancel pending feature work when possible.
+
+Do not leak listeners after repeated Inertia navigation.
+
+## Async State and Error Handling
+
+For asynchronous operations expose clear states when needed:
+
+```text
+idle
+loading
+success
+error
+```
+
+For call connectivity:
+
+```text
+connecting
+connected
+reconnecting
+disconnected
+kicked
+banned
+room-ended
+```
+
+Do not reduce every async operation to a single global `loading` boolean.
+Prevent accidental duplicate requests/actions where necessary.
+
+Do not silently swallow errors. Handle expected errors near the feature that can
+meaningfully present them, such as microphone permission denied, camera
+unavailable, room password invalid, waiting-room rejection, room ended,
+connection failed or moderation action failure.
+
+Infrastructure details should not be dumped directly to users. Unexpected
+errors should still be observable/loggable.
+
+## TailwindCSS and Accessibility
+
+Use existing design-system/UI conventions. Reuse existing UI primitives and
+components before inventing new ones.
+
+Do not create enormous unreadable class lists when a reusable UI component or
+existing abstraction already solves the problem. Avoid extracting trivial
+one-use wrappers solely to reduce Tailwind line length. Do not introduce custom
+CSS unnecessarily when Tailwind utilities cleanly solve the problem.
+
+Interactive components should support appropriate:
+
+- semantic HTML;
+- buttons for actions;
+- labels;
+- keyboard interaction;
+- focus management;
+- disabled states;
+- ARIA attributes when required.
+
+Do not implement clickable `<div>` elements when a semantic button/link is
+appropriate. Dialogs and menus should follow existing accessible project
+components/primitives.
+
+## Performance
+
+Avoid premature optimization, but design the call UI with realtime performance
+in mind.
+
+Do not:
+
+- deeply watch huge participant collections unnecessarily;
+- recreate expensive objects on every render;
+- render invisible participant video at full quality;
+- subscribe every client to all streams at maximum resolution;
+- perform expensive transforms directly in templates.
+
+For many participants, prioritize visible tiles, active speaker, pinned
+participant and screen share. Use LiveKit adaptive media capabilities
+appropriately.
+
+## Component Extraction and Reusability
+
+Extract a component/composable when doing so creates a meaningful responsibility
+boundary. Do not fragment a simple component into dozens of tiny files merely to
+satisfy line-count targets. There is no strict maximum number of lines.
+Architecture is based on cohesion and responsibilities, not arbitrary file
+size.
+
+Do not make everything generic prematurely. First identify whether something is:
+
+- application-specific;
+- call-feature-specific;
+- genuinely reusable globally.
+
+For example, `ParticipantTile.vue` belongs to the call domain. A generic
+`BaseButton.vue` may belong to shared UI if the project already uses such a
+design system. Avoid creating generic abstractions before multiple real use
+cases exist.
+
+## Testing Frontend Logic
+
+Frontend business-critical behavior should be testable. When frontend tests
+exist, cover important behavior such as:
+
+- permission-derived UI;
+- call state transitions;
+- waiting-room behavior;
+- moderation UI;
+- reconnect handling;
+- device errors.
+
+Keep business logic outside templates so it can be tested more easily. Backend
+authorization tests remain mandatory even if frontend permission UI is tested.
+
+## Frontend Code Review Checklist
+
+Before considering frontend work complete, inspect:
+
+- Did the page become a god-component?
+- Is business logic buried in the template?
+- Are network requests scattered through UI components?
+- Does any component directly combine Laravel API, Reverb and LiveKit without a
+  clear orchestration responsibility?
+- Is shared state stored in the correct place?
+- Is LiveKit state unnecessarily duplicated?
+- Are subscriptions/listeners cleaned up?
+- Are props/emits typed?
+- Is `any` being used unnecessarily?
+- Are backend permission checks still present?
+- Are error/loading/reconnect states represented?
+- Are existing UI components reused?
+- Is the resulting structure easier to maintain than before?
+
+If not, refactor before marking the task complete.
+
+## Video Call UI Specific Rules
+
+The call page must be composed from focused feature components.
+
+A target conceptual structure:
+
+```text
+CallPage
+ |
+ +-- CallLayout
+      |
+      +-- ParticipantGrid
+      |    +-- ParticipantTile
+      |
+      +-- ScreenShareView
+      |
+      +-- CallControls
+      |
+      +-- ParticipantsSidebar
+      |
+      +-- ChatSidebar
+      |
+      +-- WaitingRoomPanel
+```
+
+Feature logic should be separated conceptually:
+
+```text
+useCall
+ |
+ +-- useLiveKit
+ +-- useMediaDevices
+ +-- useRoomPermissions
+ +-- useRoomChat
+ +-- useWaitingRoom
+ +-- useModeration
+```
+
+This diagram is guidance, not a requirement to create exactly these files.
+Preserve existing project conventions.
+
+## Final Frontend Rule
+
+Frontend architecture must receive the same level of care as backend
+architecture.
+
+Do not choose the fastest implementation if it creates:
+
+- tightly coupled Vue components;
+- duplicated state;
+- infrastructure logic embedded in presentation components;
+- untestable business rules;
+- god-components;
+- hidden side effects;
+- unmanaged realtime subscriptions.
+
+Prefer small, cohesive architectural steps that keep the application
+maintainable as the call feature grows.
