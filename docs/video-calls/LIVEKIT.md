@@ -73,6 +73,20 @@ Browser requests access from Laravel. Laravel validates room/member/password/ban
 
 Never expose API secret.
 
+Implemented token endpoint:
+```text
+POST /rooms/{public_id}/livekit-token
+```
+
+Current token service:
+- uses `agence104/livekit-server-sdk`;
+- reads `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` and optional `LIVEKIT_TOKEN_TTL` from Laravel config/environment;
+- signs room-scoped tokens for LiveKit room `room-{public_id}`;
+- uses `room_members.livekit_identity` as JWT identity;
+- denies token issuance unless Laravel resolves an active room member from authenticated user or server-issued guest cookie;
+- denies banned participants and waiting-room rooms until a later waiting-room approval workflow exists;
+- maps RoomMember publish flags to LiveKit `canPublishSources`.
+
 ## Identity
 Use backend-controlled RoomMember-based identity, e.g. `room-member:123`. Never use display name as security identity.
 

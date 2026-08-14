@@ -99,6 +99,19 @@ Client -> Laravel
         LiveKit
 ```
 
+Milestone 3 implements the first media vertical slice:
+```text
+GET  /rooms/{public_id}/call
+POST /rooms/{public_id}/memberships
+POST /rooms/{public_id}/livekit-token
+```
+
+The call page is an Inertia/Vue page. It first uses the existing membership endpoint, then requests a LiveKit token through Laravel, then connects directly to LiveKit using `livekit-client`.
+
+Laravel issues tokens only for an active `RoomMember` resolved from the authenticated user or the encrypted/httpOnly guest cookie. The browser cannot choose the LiveKit identity. Non-members, banned participants, inactive rooms and rooms that still require waiting-room approval are denied before token signing.
+
+The LiveKit room name is currently `room-{rooms.public_id}`. Token grants include `roomJoin`, subscribe permission, publish permission and `canPublishSources` derived from `room_members.can_publish_audio`, `can_publish_video` and `can_publish_screen`.
+
 ## Identity
 LiveKit identity is backend-controlled and maps to RoomMember. Display name is not a security identity.
 

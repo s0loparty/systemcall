@@ -14,9 +14,9 @@ class GuestIdentity
 
     public function getOrCreate(Request $request): string
     {
-        $guestId = $request->cookie(self::CookieName);
+        $guestId = $this->current($request);
 
-        if (is_string($guestId) && Str::startsWith($guestId, 'guest_')) {
+        if ($guestId !== null) {
             return $guestId;
         }
 
@@ -37,5 +37,16 @@ class GuestIdentity
         );
 
         return $guestId;
+    }
+
+    public function current(Request $request): ?string
+    {
+        $guestId = $request->cookie(self::CookieName);
+
+        if (is_string($guestId) && Str::startsWith($guestId, 'guest_')) {
+            return $guestId;
+        }
+
+        return null;
     }
 }

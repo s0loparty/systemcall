@@ -111,6 +111,7 @@ VITE_REVERB_SCHEME=https
 LIVEKIT_URL=https://livekit.example.com
 LIVEKIT_API_KEY
 LIVEKIT_API_SECRET
+LIVEKIT_TOKEN_TTL=3600
 ```
 
 ## Firewall

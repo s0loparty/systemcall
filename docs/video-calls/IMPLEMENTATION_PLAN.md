@@ -174,10 +174,42 @@ Notes:
 - Endpoints currently return JSON and are ready for later Inertia/frontend integration.
 - LiveKit token issuance, media connection, waiting-room workflow, moderation operations and Reverb events remain in later milestones.
 
-### Milestone 3 — Basic LiveKit vertical slice `[ ]`
+### Milestone 3 — Basic LiveKit vertical slice `[x]`
 Backend LiveKit service/token issuance plus frontend connect/disconnect, mic, camera and participant grid.
 
-Acceptance: two independent browser sessions can see/hear each other and unauthorized users cannot obtain a token.
+Implemented:
+- [x] installed PHP LiveKit token SDK `agence104/livekit-server-sdk`
+- [x] installed browser SDK `livekit-client`
+- [x] central `LiveKitTokenService` signs room-scoped JWTs from environment-only credentials
+- [x] token endpoint `POST /rooms/{public_id}/livekit-token`
+- [x] token issuance requires an active `RoomMember` resolved from authenticated user or server-issued guest cookie
+- [x] token issuance rejects inactive rooms, non-members, banned participants and waiting-room rooms
+- [x] LiveKit identity uses backend-controlled `room_members.livekit_identity`
+- [x] token grant uses `roomJoin`, room name `room-{public_id}`, subscribe permission and publish-source restrictions from `RoomMember`
+- [x] Inertia page `GET /rooms/{public_id}/call`
+- [x] frontend joins membership, requests token, connects to LiveKit, publishes mic/camera, disconnects, toggles mic/camera and renders participant media grid
+- [x] frontend uses Wayfinder-generated route URLs and Inertia `useHttp` for JSON requests
+
+Acceptance:
+- [x] unauthorized users cannot obtain a token
+- [x] backend token payload maps to the expected LiveKit room and RoomMember identity
+- [x] frontend contains connect/disconnect, mic, camera and participant grid vertical slice
+- [!] two independent browser sessions can see/hear each other: implemented but requires a running LiveKit server and manual two-browser smoke test in local/prod environment
+
+Milestone 3 verification on 2026-08-14:
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/LiveKitVerticalSliceTest.php` passed: 5 tests, 37 assertions
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact` passed: 49 tests, 235 assertions
+- `vendor/bin/pint --dirty --format agent` passed
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail composer run types:check` passed
+- `npm run types:check` passed
+- `npm run lint:check` passed after eslint autofix
+- `npm run build` passed
+- `docker compose config --services` passed
+- `composer validate --strict` passed
+
+Notes:
+- Local host `composer run types:check` currently fails before analysis with `Failed to listen on "tcp://127.0.0.1:0": Success`; the same PHPStan script passes inside Sail.
+- LiveKit token issuance is ready for Milestone 4 media UX work, but screen sharing/device selection/error states remain in later milestones.
 
 ### Milestone 4 — Media UX `[ ]`
 Device selection, preview, screen share, active speaker, adaptive layout, permission/device errors, reconnect UI, adaptive stream/simulcast/dynacast review.
