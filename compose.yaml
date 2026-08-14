@@ -1,74 +1,204 @@
+x-laravel-image: &laravel-image
+    build:
+        context: .
+        dockerfile: Dockerfile
+    image: '${APP_IMAGE:-systemcall-app:production}'
+    restart: unless-stopped
+    networks:
+        - backend
+    depends_on:
+        postgres:
+            condition: service_healthy
+        redis:
+            condition: service_healthy
+
+x-laravel-environment: &laravel-environment
+    APP_NAME: '${APP_NAME:-Systemcall}'
+    APP_ENV: production
+    APP_KEY: '${APP_KEY:-}'
+    APP_DEBUG: '${APP_DEBUG:-false}'
+    APP_URL: '${APP_URL:-https://call.example.com}'
+    APP_LOCALE: '${APP_LOCALE:-en}'
+    APP_FALLBACK_LOCALE: '${APP_FALLBACK_LOCALE:-en}'
+    APP_FAKER_LOCALE: '${APP_FAKER_LOCALE:-en_US}'
+    APP_MAINTENANCE_DRIVER: '${APP_MAINTENANCE_DRIVER:-file}'
+    BCRYPT_ROUNDS: '${BCRYPT_ROUNDS:-12}'
+    LOG_CHANNEL: '${LOG_CHANNEL:-stderr}'
+    LOG_LEVEL: '${LOG_LEVEL:-info}'
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: '5432'
+    DB_DATABASE: '${DB_DATABASE:-systemcall}'
+    DB_USERNAME: '${DB_USERNAME:-systemcall}'
+    DB_PASSWORD: '${DB_PASSWORD:-}'
+    SESSION_DRIVER: redis
+    SESSION_LIFETIME: '${SESSION_LIFETIME:-120}'
+    SESSION_ENCRYPT: 'true'
+    SESSION_PATH: '${SESSION_PATH:-/}'
+    SESSION_DOMAIN: '${SESSION_DOMAIN:-}'
+    CACHE_STORE: redis
+    QUEUE_CONNECTION: redis
+    BROADCAST_CONNECTION: reverb
+    FILESYSTEM_DISK: '${FILESYSTEM_DISK:-local}'
+    REDIS_CLIENT: phpredis
+    REDIS_HOST: redis
+    REDIS_PORT: '6379'
+    REDIS_PASSWORD: ''
+    MAIL_MAILER: '${MAIL_MAILER:-log}'
+    OCTANE_SERVER: frankenphp
+    OCTANE_HTTPS: 'true'
+    REVERB_SERVER_HOST: 0.0.0.0
+    REVERB_SERVER_PORT: '8080'
+    REVERB_HOST: '${REVERB_HOST:-ws.call.example.com}'
+    REVERB_PORT: '${REVERB_PORT:-443}'
+    REVERB_SCHEME: '${REVERB_SCHEME:-https}'
+    REVERB_APP_ID: '${REVERB_APP_ID:-}'
+    REVERB_APP_KEY: '${REVERB_APP_KEY:-}'
+    REVERB_APP_SECRET: '${REVERB_APP_SECRET:-}'
+    REVERB_SCALING_ENABLED: 'true'
+    VITE_APP_NAME: '${VITE_APP_NAME:-Systemcall}'
+    VITE_REVERB_APP_KEY: '${VITE_REVERB_APP_KEY:-}'
+    VITE_REVERB_HOST: '${VITE_REVERB_HOST:-ws.call.example.com}'
+    VITE_REVERB_PORT: '${VITE_REVERB_PORT:-443}'
+    VITE_REVERB_SCHEME: '${VITE_REVERB_SCHEME:-https}'
+    LIVEKIT_URL: '${LIVEKIT_URL:-https://livekit.example.com}'
+    LIVEKIT_API_KEY: '${LIVEKIT_API_KEY:-}'
+    LIVEKIT_API_SECRET: '${LIVEKIT_API_SECRET:-}'
+
 services:
-    laravel.test:
-        build:
-            context: './vendor/laravel/sail/runtimes/8.5'
-            dockerfile: Dockerfile
-            args:
-                WWWGROUP: '${WWWGROUP}'
-        image: 'sail-8.5/app'
-        extra_hosts:
-            - 'host.docker.internal:host-gateway'
-        ports:
-            - '${APP_PORT:-80}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
+    app:
+        <<: *laravel-image
         environment:
-            WWWUSER: '${WWWUSER}'
-            LARAVEL_SAIL: 1
-            XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
-            XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
-            IGNITION_LOCAL_SITES_PATH: '${PWD}'
-        volumes:
-            - '.:/var/www/html'
-        networks:
-            - sail
-        depends_on:
-            - pgsql
-            - redis
-    pgsql:
-        image: 'postgres:18-alpine'
-        ports:
-            - '${FORWARD_DB_PORT:-5432}:5432'
-        environment:
-            PGPASSWORD: '${DB_PASSWORD:-secret}'
-            POSTGRES_DB: '${DB_DATABASE}'
-            POSTGRES_USER: '${DB_USERNAME}'
-            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
-        volumes:
-            - 'sail-pgsql:/var/lib/postgresql'
-            - './vendor/laravel/sail/database/pgsql/create-testing-database.sql:/docker-entrypoint-initdb.d/10-create-testing-database.sql'
-        networks:
-            - sail
+            <<: *laravel-environment
+        expose:
+            - '8000'
         healthcheck:
             test:
-                - CMD
-                - pg_isready
-                - '-q'
-                - '-d'
-                - '${DB_DATABASE}'
-                - '-U'
-                - '${DB_USERNAME}'
-            retries: 3
+                - CMD-SHELL
+                - 'curl -fsS http://127.0.0.1:8000/up || exit 1'
+            interval: 30s
             timeout: 5s
-    redis:
-        image: 'redis:alpine'
-        ports:
-            - '${FORWARD_REDIS_PORT:-6379}:6379'
+            retries: 3
+            start_period: 30s
+
+    worker:
+        <<: *laravel-image
+        command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --max-time=3600
+        environment:
+            <<: *laravel-environment
+        healthcheck:
+            disable: true
+
+    scheduler:
+        <<: *laravel-image
+        command: php artisan schedule:work
+        environment:
+            <<: *laravel-environment
+        healthcheck:
+            disable: true
+
+    reverb:
+        <<: *laravel-image
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
+        environment:
+            <<: *laravel-environment
+        expose:
+            - '8080'
+        healthcheck:
+            disable: true
+
+    postgres:
+        image: 'postgres:18-alpine'
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: '${DB_DATABASE:-systemcall}'
+            POSTGRES_USER: '${DB_USERNAME:-systemcall}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-}'
         volumes:
-            - 'sail-redis:/data'
+            - 'postgres-data:/var/lib/postgresql'
         networks:
-            - sail
+            - backend
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    redis:
+        image: 'redis:8.2-alpine'
+        restart: unless-stopped
+        command: redis-server --appendonly yes
+        volumes:
+            - 'redis-data:/data'
+        networks:
+            - backend
         healthcheck:
             test:
                 - CMD
                 - redis-cli
                 - ping
-            retries: 3
+            interval: 10s
             timeout: 5s
+            retries: 5
+
+    livekit:
+        image: 'livekit/livekit-server:v1.13.4'
+        restart: unless-stopped
+        entrypoint:
+            - /bin/sh
+            - -ec
+        command:
+            - |
+                test -n "$$LIVEKIT_API_KEY"
+                test -n "$$LIVEKIT_API_SECRET"
+                LIVEKIT_RTC_UDP_RANGE_START="$${LIVEKIT_RTC_UDP_PORT_RANGE%-*}"
+                LIVEKIT_RTC_UDP_RANGE_END="$${LIVEKIT_RTC_UDP_PORT_RANGE#*-}"
+                test -n "$$LIVEKIT_RTC_UDP_RANGE_START"
+                test -n "$$LIVEKIT_RTC_UDP_RANGE_END"
+                {
+                  printf 'keys:\n  "%s": "%s"\n' "$$LIVEKIT_API_KEY" "$$LIVEKIT_API_SECRET"
+                  printf 'port: 7880\n'
+                  printf 'log_level: info\n'
+                  printf 'rtc:\n'
+                  printf '  tcp_port: %s\n' "$$LIVEKIT_RTC_TCP_PORT"
+                  printf '  port_range_start: %s\n' "$$LIVEKIT_RTC_UDP_RANGE_START"
+                  printf '  port_range_end: %s\n' "$$LIVEKIT_RTC_UDP_RANGE_END"
+                  printf '  use_external_ip: %s\n' "$$LIVEKIT_USE_EXTERNAL_IP"
+                  printf 'redis:\n'
+                  printf '  address: redis:6379\n'
+                  printf 'turn:\n'
+                  printf '  enabled: %s\n' "$$LIVEKIT_TURN_ENABLED"
+                  printf '  udp_port: %s\n' "$$LIVEKIT_TURN_UDP_PORT"
+                } > /tmp/livekit.yaml
+                exec /livekit-server --config /tmp/livekit.yaml
+        environment:
+            LIVEKIT_API_KEY: '${LIVEKIT_API_KEY:-}'
+            LIVEKIT_API_SECRET: '${LIVEKIT_API_SECRET:-}'
+            LIVEKIT_RTC_TCP_PORT: '${LIVEKIT_RTC_TCP_PORT:-7881}'
+            LIVEKIT_RTC_UDP_PORT_RANGE: '${LIVEKIT_RTC_UDP_PORT_RANGE:-50000-60000}'
+            LIVEKIT_TURN_ENABLED: '${LIVEKIT_TURN_ENABLED:-true}'
+            LIVEKIT_TURN_UDP_PORT: '${LIVEKIT_TURN_UDP_PORT:-3478}'
+            LIVEKIT_USE_EXTERNAL_IP: '${LIVEKIT_USE_EXTERNAL_IP:-true}'
+        networks:
+            - backend
+        depends_on:
+            redis:
+                condition: service_healthy
+        expose:
+            - '7880'
+        ports:
+            - '${LIVEKIT_RTC_TCP_PORT:-7881}:7881/tcp'
+            - '${LIVEKIT_RTC_UDP_PORT_RANGE:-50000-60000}:${LIVEKIT_RTC_UDP_PORT_RANGE:-50000-60000}/udp'
+            - '${LIVEKIT_TURN_UDP_PORT:-3478}:3478/udp'
+
 networks:
-    sail:
+    backend:
         driver: bridge
+
 volumes:
-    sail-pgsql:
+    postgres-data:
         driver: local
-    sail-redis:
+    redis-data:
         driver: local

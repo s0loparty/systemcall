@@ -23,7 +23,7 @@ Browser ===== direct WebRTC =+
 ## Routing
 Dokploy domain configuration:
 ```text
-call.example.com      -> app:<internal app port>
+call.example.com      -> app:8000
 ws.call.example.com   -> reverb:8080
 livekit.example.com   -> livekit:7880
 ```
@@ -36,6 +36,8 @@ LiveKit direct media:
 ```
 
 Do not host-publish app/Reverb/LiveKit signaling ports solely for HTTP routing.
+
+The project Compose now follows this boundary: only LiveKit media/TURN ports are published directly on the host. PostgreSQL, Redis, app HTTP, Reverb, and LiveKit signaling remain internal to the Docker network for Dokploy routing.
 
 ## Responsibilities
 Laravel is authoritative for business state and authorization: rooms, members, roles, waiting room, bans, moderation, tokens, chat, global pin and subrooms.
