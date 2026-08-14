@@ -140,8 +140,39 @@ Notes:
 - Room CRUD/access, password hashing behavior, server-verifiable guest sessions, LiveKit token issuance, waiting-room workflow and Reverb events remain in later milestones.
 - Policies for nested resources intentionally keep plain `create` denied until Milestone 2+ introduces room-scoped requests/services with explicit authorization context.
 
-### Milestone 2 — Room CRUD/access `[ ]`
+### Milestone 2 — Room CRUD/access `[x]`
 Secure public IDs, public/private rooms, hashed password, owner authorization, server-verifiable guest identity.
+
+Implemented:
+- [x] public-id route model binding for `Room`; numeric ids remain internal
+- [x] authenticated room CRUD endpoints: `rooms.index`, `rooms.store`, `rooms.update`, `rooms.destroy`
+- [x] public room show endpoint: `rooms.show`
+- [x] room membership join endpoint: `rooms.memberships.store`
+- [x] room creation generates unpredictable `public_id`
+- [x] owner membership is created automatically with `owner` role
+- [x] room passwords are stored only as hashes
+- [x] public rooms can be viewed by guests
+- [x] private rooms cannot be viewed by guests
+- [x] private/password-protected rooms can be joined only with correct password
+- [x] private rooms without password remain members-only
+- [x] guests receive a server-issued encrypted/httpOnly cookie identity
+- [x] browser-supplied `guest_id` input is ignored
+- [x] owner-only update/delete authorization enforced
+
+Milestone 2 verification on 2026-08-14:
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact tests/Feature/RoomCrudAccessTest.php` passed: 3 tests, 33 assertions
+- `SAIL_FILES=compose.sail.yaml ./vendor/bin/sail artisan test --compact` passed: 44 tests, 198 assertions
+- `vendor/bin/pint --dirty --format agent` passed
+- `composer run types:check` passed
+- `composer validate --strict` passed
+- `npm run types:check` passed
+- `npm run lint:check` passed
+- `npm run build` passed
+- `docker compose config --services` passed
+
+Notes:
+- Endpoints currently return JSON and are ready for later Inertia/frontend integration.
+- LiveKit token issuance, media connection, waiting-room workflow, moderation operations and Reverb events remain in later milestones.
 
 ### Milestone 3 — Basic LiveKit vertical slice `[ ]`
 Backend LiveKit service/token issuance plus frontend connect/disconnect, mic, camera and participant grid.

@@ -103,6 +103,11 @@ class Room extends Model
         return $this->owner_id === $user->id;
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
+
     protected function casts(): array
     {
         return [

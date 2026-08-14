@@ -18,6 +18,7 @@ class RoomPolicy
     {
         return ($room->visibility === RoomVisibility::Public
             && $room->status === RoomStatus::Active)
+            || $room->isOwnedBy($user)
             || $this->isRoomMember($user, $room);
     }
 

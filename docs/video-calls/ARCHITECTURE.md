@@ -63,7 +63,24 @@ room_subrooms
 
 Guests are represented with nullable `user_id` plus server-issued `guest_id`. Browser-supplied arbitrary guest ids are still not trusted; Milestone 2 must add server-verifiable guest identity issuance.
 
-Role and status values are stored as strings and cast through PHP enums. Policies currently cover baseline owner/moderator/member checks; request/service-level authorization for create/join/moderation flows comes in later milestones.
+Role and status values are stored as strings and cast through PHP enums. Policies and form requests cover current owner/member checks; moderation-specific operations remain in later milestones.
+
+## Room CRUD / Access
+Milestone 2 exposes JSON endpoints for room CRUD and join/access:
+```text
+GET    /rooms
+POST   /rooms
+GET    /rooms/{public_id}
+PATCH  /rooms/{public_id}
+DELETE /rooms/{public_id}
+POST   /rooms/{public_id}/memberships
+```
+
+Only authenticated verified users create/update/delete rooms. Room route binding uses `rooms.public_id`; database ids are not public route identifiers.
+
+Room creation hashes `password` into `password_hash` and creates the owner `RoomMember`. Public rooms are viewable by guests. Private rooms are not publicly viewable; private password-protected rooms may be joined through the join endpoint with the correct password.
+
+Guest membership uses an encrypted/httpOnly Laravel cookie named `video_call_guest_id`. The browser never chooses the stored `guest_id`; any submitted `guest_id` field is ignored.
 
 ## Join flow
 ```text
