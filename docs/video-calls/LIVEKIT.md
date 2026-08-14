@@ -92,7 +92,12 @@ Current token service:
 Use backend-controlled RoomMember-based identity, e.g. `room-member:123`. Never use display name as security identity.
 
 ## Service layer
-Centralize token creation, participant removal, force-mute and media-room operations behind `LiveKitService`.
+Centralize trusted LiveKit operations behind Laravel services:
+
+- `LiveKitTokenService` signs room-scoped participant tokens.
+- `LiveKitRoomService` removes participants and updates participant publish permissions for force-mute/mute-all.
+
+Force-mute only revokes the microphone publish source. Remote unmute is intentionally not implemented.
 
 ## Frontend/media
 Use LiveKit SDK for mic, camera, screen share, active speaker and media connection state. The current call page uses LiveKit local tracks for pre-join preview, publishes the selected microphone/camera after Laravel issues a token, and surfaces LiveKit media-device and reconnect events in the UI.

@@ -36,6 +36,11 @@ class RoomCallController extends Controller
             ],
             'can_join_without_password' => $this->canJoinWithoutPassword($request, $room),
             'can_moderate_waiting_room' => $canModerateWaitingRoom,
+            'can_moderate_members' => $canModerateWaitingRoom,
+            'current_room_member_id' => $this->currentRoomMemberId($request, $room, $guestIdentity),
+            'room_members' => $canModerateWaitingRoom
+                ? $this->activeRoomMembers($room)
+                : [],
             'waiting_room_entries' => $canModerateWaitingRoom
                 ? $this->pendingWaitingRoomEntries($room)
                 : [],
@@ -98,6 +103,54 @@ class RoomCallController extends Controller
             ->get()
             ->map(fn (WaitingRoomMember $entry): array => $this->waitingRoomEntryPayload($entry))
             ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function activeRoomMembers(Room $room): array
+    {
+        return $room->members()
+            ->whereNull('left_at')
+            ->latest()
+            ->get()
+            ->map(fn (RoomMember $member): array => [
+                'id' => $member->id,
+                'room_public_id' => $member->room->public_id,
+                'display_name' => $member->display_name,
+                'role' => $member->role->value,
+                'guest' => $member->user_id === null,
+                'can_publish_audio' => $member->can_publish_audio,
+                'can_publish_video' => $member->can_publish_video,
+                'can_publish_screen' => $member->can_publish_screen,
+            ])
+            ->all();
+    }
+
+    private function currentRoomMemberId(Request $request, Room $room, GuestIdentity $guestIdentity): ?int
+    {
+        $user = $request->user();
+        $guestId = $user instanceof User ? null : $guestIdentity->current($request);
+
+        if (! $user instanceof User && $guestId === null) {
+            return null;
+        }
+
+        $member = $room->members()
+            ->whereNull('left_at')
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
+            })
+            ->latest()
+            ->first();
+
+        return $member instanceof RoomMember ? $member->id : null;
     }
 
     /**

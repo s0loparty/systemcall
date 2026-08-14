@@ -326,8 +326,40 @@ Milestone 6 verification on 2026-08-14:
 - `npm run build` passed with existing Vite chunk-size warning for the call page bundle
 - Host `php artisan test --compact tests/Feature/WaitingRoomWorkflowTest.php` remains unavailable because host PHP lacks PDO pgsql/sqlite drivers; use Sail locally
 
-### Milestone 7 — Roles/moderation `[ ]`
+### Milestone 7 — Roles/moderation `[x]`
 Promote/demote, mute/mute-all, kick, ban, owner-only deletion and authorization tests. No silent remote unmute.
+
+Implemented:
+- [x] owner-only role changes between `moderator` and `participant`
+- [x] moderators/owners can force-mute active ordinary participants by revoking `can_publish_audio`
+- [x] mute-all affects active ordinary participants and leaves owners/moderators protected
+- [x] kick marks a member as left and removes the corresponding LiveKit participant
+- [x] ban persists `room_bans`, marks the member as left, removes the LiveKit participant and blocks rejoin/token issuance
+- [x] owner-only room deletion remains enforced by `RoomPolicy`
+- [x] moderation events are broadcast on the private room application channel
+- [x] call page exposes an owner/moderator moderation panel backed by Wayfinder routes and `useHttp`
+
+Acceptance criteria:
+- [x] owner can promote/demote moderators
+- [x] moderators cannot promote/demote roles
+- [x] moderators cannot moderate owners or other moderators
+- [x] force mute never silently unmutes a participant
+- [x] kicked participants cannot receive LiveKit tokens
+- [x] banned participants cannot rejoin or receive LiveKit tokens
+- [x] frontend typecheck/lint/build pass
+- [x] backend Pest/PHPStan checks pass through local Sail
+
+Milestone 7 verification on 2026-08-14:
+- `./vendor/bin/sail artisan test --compact tests/Feature/RoomModerationTest.php` passed: 7 tests, 45 assertions
+- `./vendor/bin/sail artisan test --compact` passed: 65 tests, 338 assertions
+- `./vendor/bin/sail composer run types:check` passed: PHPStan, 0 errors
+- `./vendor/bin/sail pint --dirty --format agent` passed
+- `./vendor/bin/sail npm run lint:check` passed
+- `./vendor/bin/sail npm run types:check` passed
+- `./vendor/bin/sail npm run build` passed with existing Vite chunk-size warning for the call page bundle
+- `./vendor/bin/sail npm run format:check` passed after targeted Prettier on the two changed frontend files
+- `./vendor/bin/sail composer validate --strict` passed
+- `docker compose config` passed
 
 ### Milestone 8 — Chat/hands/pinning `[ ]`
 Safe rate-limited chat, raised hands, local personal pin and authorized Reverb-synchronized global pin.

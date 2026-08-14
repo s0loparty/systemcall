@@ -51,13 +51,13 @@
 - [ ] adaptive layout/media
 - [ ] permission/device errors
 - [ ] reconnect/kicked/banned/room-ended states
-- [ ] no silent remote unmute
+- [x] no silent remote unmute
 
 ## Features
 - [ ] waiting room cannot be bypassed
-- [ ] moderation authorization
-- [ ] kick removes LiveKit participant
-- [ ] ban blocks rejoin/token
+- [x] moderation authorization
+- [x] kick removes LiveKit participant
+- [x] ban blocks rejoin/token
 - [ ] raised hands
 - [ ] personal/global pin
 - [ ] max 5 subrooms server-side

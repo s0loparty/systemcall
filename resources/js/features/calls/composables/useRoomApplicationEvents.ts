@@ -2,13 +2,19 @@ import { useConnectionStatus, useEcho } from '@laravel/echo-vue';
 import { ref } from 'vue';
 import type {
     RoomApplicationActivity,
+    RoomMemberBannedEvent,
     RoomMemberJoinedEvent,
+    RoomMemberMutedEvent,
+    RoomMemberRemovedEvent,
+    RoomMemberRoleChangedEvent,
+    RoomMemberSummary,
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
     WaitingRoomEntryRequestedEvent,
 } from '../types';
 
 type UseRoomApplicationEventsOptions = {
+    roomMembers?: RoomMemberSummary[];
     waitingRoomEntries?: WaitingRoomEntry[];
     onWaitingRoomDecision?: (event: WaitingRoomEntryDecidedEvent) => void;
 };
@@ -19,6 +25,7 @@ export function useRoomApplicationEvents(
 ) {
     const echoConnectionStatus = useConnectionStatus();
     const activities = ref<RoomApplicationActivity[]>([]);
+    const roomMembers = ref<RoomMemberSummary[]>(options.roomMembers ?? []);
     const waitingRoomEntries = ref<WaitingRoomEntry[]>(
         options.waitingRoomEntries ?? [],
     );
@@ -27,14 +34,70 @@ export function useRoomApplicationEvents(
         `room.${roomPublicId}`,
         '.room.member.joined',
         (event) => {
-            activities.value = [
-                {
-                    id: `${event.type}:${event.member.id}:${event.occurred_at}`,
-                    message: `${event.member.display_name} joined the room`,
-                    occurredAt: event.occurred_at,
-                },
-                ...activities.value,
-            ].slice(0, 5);
+            upsertRoomMember({
+                room_public_id: event.room_public_id,
+                can_publish_audio: true,
+                can_publish_video: true,
+                can_publish_screen: true,
+                ...event.member,
+            });
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                `${event.member.display_name} joined the room`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMemberRoleChangedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.role-changed',
+        (event) => {
+            upsertRoomMember(event.member);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                `${event.member.display_name} is now ${event.member.role}`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMemberMutedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.muted',
+        (event) => {
+            upsertRoomMember(event.member);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                `${event.member.display_name} was muted by a moderator`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMemberRemovedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.removed',
+        (event) => {
+            removeRoomMember(event.member.id);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                `${event.member.display_name} was removed from the room`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMemberBannedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.banned',
+        (event) => {
+            removeRoomMember(event.member.id);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                `${event.member.display_name} was banned from the room`,
+                event.occurred_at,
+            );
         },
     );
 
@@ -95,9 +158,25 @@ export function useRoomApplicationEvents(
         );
     }
 
+    function upsertRoomMember(member: RoomMemberSummary): void {
+        roomMembers.value = [
+            member,
+            ...roomMembers.value.filter((current) => current.id !== member.id),
+        ];
+    }
+
+    function removeRoomMember(memberId: number): void {
+        roomMembers.value = roomMembers.value.filter(
+            (member) => member.id !== memberId,
+        );
+    }
+
     return {
         echoConnectionStatus,
         activities,
+        roomMembers,
+        upsertRoomMember,
+        removeRoomMember,
         waitingRoomEntries,
         removeWaitingRoomEntry,
     };

@@ -74,7 +74,7 @@ room_subrooms
 
 Guests are represented with nullable `user_id` plus server-issued `guest_id`. Browser-supplied arbitrary guest ids are still not trusted; Milestone 2 must add server-verifiable guest identity issuance.
 
-Role and status values are stored as strings and cast through PHP enums. Policies and form requests cover current owner/member checks; moderation-specific operations remain in later milestones.
+Role and status values are stored as strings and cast through PHP enums. Policies, form requests and action classes cover current owner/member checks and moderation-specific operations.
 
 ## Room CRUD / Access
 Milestone 2 exposes JSON endpoints for room CRUD and join/access:
@@ -143,9 +143,13 @@ The LiveKit room name is currently `room-{rooms.public_id}`. Token grants includ
 LiveKit identity is backend-controlled and maps to RoomMember. Display name is not a security identity.
 
 ## Moderation
-Privileged request -> Laravel Policy -> application/LiveKit service action -> application realtime notification.
+Privileged request -> Laravel route middleware -> moderation action authorization -> application/LiveKit service action -> application realtime notification.
 
-Kick removes the actual LiveKit participant. Ban persists and blocks future token issuance. Silent remote-unmute is forbidden.
+Current moderation routes support owner-only role changes, force-mute, mute-all, kick and ban. Moderators may act on ordinary participants, but owners and other moderators are protected from moderator actions. Room deletion remains owner-only through `RoomPolicy`.
+
+Force-mute revokes `room_members.can_publish_audio` and updates the LiveKit participant permissions; it does not enable or silently unmute anyone. Kick removes the actual LiveKit participant. Ban persists `room_bans`, marks the member as left, removes the LiveKit participant and blocks future rejoin/token issuance while the ban is active.
+
+Moderation events are broadcast over the private `room.{public_id}` Reverb channel for application state synchronization. Audio/video media state remains LiveKit-owned.
 
 ## Subrooms
 Each subroom is a distinct LiveKit room. Switching disconnects current media room, requests a separately authorized target token and connects to target.

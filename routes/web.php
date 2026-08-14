@@ -5,6 +5,7 @@ use App\Http\Controllers\RoomBroadcastAuthController;
 use App\Http\Controllers\RoomCallController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomMembershipController;
+use App\Http\Controllers\RoomModerationController;
 use App\Http\Controllers\WaitingRoomController;
 use App\Http\Controllers\WaitingRoomDecisionController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -32,6 +33,19 @@ Route::post('rooms/{room}/waiting-room/{waitingRoomMember}/approve', [WaitingRoo
 Route::post('rooms/{room}/waiting-room/{waitingRoomMember}/reject', [WaitingRoomDecisionController::class, 'reject'])
     ->middleware(['auth', 'verified', 'throttle:60,1'])
     ->name('rooms.waiting_room.reject');
+
+Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
+    Route::patch('rooms/{room}/members/{roomMember}/role', [RoomModerationController::class, 'updateRole'])
+        ->name('rooms.members.role.update');
+    Route::post('rooms/{room}/members/{roomMember}/mute', [RoomModerationController::class, 'mute'])
+        ->name('rooms.members.mute');
+    Route::post('rooms/{room}/members/mute-all', [RoomModerationController::class, 'muteAll'])
+        ->name('rooms.members.mute_all');
+    Route::delete('rooms/{room}/members/{roomMember}', [RoomModerationController::class, 'kick'])
+        ->name('rooms.members.kick');
+    Route::post('rooms/{room}/members/{roomMember}/ban', [RoomModerationController::class, 'ban'])
+        ->name('rooms.members.ban');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

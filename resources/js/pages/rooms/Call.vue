@@ -6,17 +6,25 @@ import CallError from '@/features/calls/components/CallError.vue';
 import CallHeader from '@/features/calls/components/CallHeader.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
+import RoomModerationPanel from '@/features/calls/components/RoomModerationPanel.vue';
 import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
 import WaitingRoomModeratorPanel from '@/features/calls/components/WaitingRoomModeratorPanel.vue';
 import WaitingRoomStatusPanel from '@/features/calls/components/WaitingRoomStatusPanel.vue';
 import { useCallSession } from '@/features/calls/composables/useCallSession';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
-import type { CallRoom, WaitingRoomEntry } from '@/features/calls/types';
+import type {
+    CallRoom,
+    RoomMemberSummary,
+    WaitingRoomEntry,
+} from '@/features/calls/types';
 
 type RoomPageProps = {
     room: CallRoom;
     can_join_without_password: boolean;
     can_moderate_waiting_room: boolean;
+    can_moderate_members: boolean;
+    current_room_member_id: number | null;
+    room_members: RoomMemberSummary[];
     waiting_room_entries: WaitingRoomEntry[];
     current_waiting_room_entry: WaitingRoomEntry | null;
 };
@@ -32,6 +40,7 @@ const call = useCallSession({
 call.waitingRoomEntry.value = props.current_waiting_room_entry;
 
 const realtime = useRoomApplicationEvents(props.room.public_id, {
+    roomMembers: props.room_members,
     waitingRoomEntries: props.waiting_room_entries,
     onWaitingRoomDecision: (event) => {
         void call.handleWaitingRoomDecision(event);
@@ -71,6 +80,9 @@ const {
 const {
     echoConnectionStatus,
     activities,
+    roomMembers,
+    upsertRoomMember,
+    removeRoomMember,
     waitingRoomEntries,
     removeWaitingRoomEntry,
 } = realtime;
@@ -115,6 +127,15 @@ const needsPassword = computed(
             :room-public-id="room.public_id"
             :entries="waitingRoomEntries"
             @decided="removeWaitingRoomEntry"
+        />
+
+        <RoomModerationPanel
+            v-if="can_moderate_members"
+            :room-public-id="room.public_id"
+            :current-member-id="current_room_member_id"
+            :members="roomMembers"
+            @updated="upsertRoomMember"
+            @removed="removeRoomMember"
         />
 
         <DeviceSetupPanel

@@ -35,6 +35,10 @@ class JoinRoomAction
             ]);
         }
 
+        if ($this->isBanned($room, $user, $guestId)) {
+            throw new AuthorizationException('This participant is banned from the room.');
+        }
+
         $attributes = [
             'room_id' => $room->id,
             'left_at' => null,
@@ -98,5 +102,24 @@ class JoinRoomAction
         }
 
         return (string) ($data['display_name'] ?? 'Guest');
+    }
+
+    private function isBanned(Room $room, ?User $user, ?string $guestId): bool
+    {
+        return $room->bans()
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
+            })
+            ->where(function ($query): void {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->exists();
     }
 }

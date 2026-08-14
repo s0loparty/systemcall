@@ -35,6 +35,18 @@ export type WaitingRoomEntry = {
     decided_at?: string | null;
 };
 
+export type RoomMemberSummary = {
+    id: number;
+    room_public_id: string;
+    display_name: string;
+    role: 'owner' | 'moderator' | 'participant';
+    guest: boolean;
+    can_publish_audio: boolean;
+    can_publish_video: boolean;
+    can_publish_screen: boolean;
+    left_at?: string | null;
+};
+
 export type JoinRoomResponse =
     | {
           member: {
@@ -80,12 +92,44 @@ export type EchoConnectionState =
 export type RoomMemberJoinedEvent = {
     type: 'member_joined';
     room_public_id: string;
-    member: {
+    member: Pick<RoomMemberSummary, 'id' | 'display_name' | 'role' | 'guest'>;
+    occurred_at: string;
+};
+
+export type RoomMemberRoleChangedEvent = {
+    type: 'member_role_changed';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    moderator_user_id: number;
+    occurred_at: string;
+};
+
+export type RoomMemberMutedEvent = {
+    type: 'member_muted';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    moderator_user_id: number;
+    occurred_at: string;
+};
+
+export type RoomMemberRemovedEvent = {
+    type: 'member_removed';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    moderator_user_id: number;
+    occurred_at: string;
+};
+
+export type RoomMemberBannedEvent = {
+    type: 'member_banned';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    ban: {
         id: number;
-        display_name: string;
-        role: string;
-        guest: boolean;
+        reason: string | null;
+        expires_at: string | null;
     };
+    moderator_user_id: number;
     occurred_at: string;
 };
 
