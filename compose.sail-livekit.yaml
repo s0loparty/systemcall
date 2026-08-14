@@ -1,0 +1,104 @@
+services:
+    laravel.test:
+        environment:
+            BROADCAST_CONNECTION: reverb
+            QUEUE_CONNECTION: sync
+            REVERB_SERVER_HOST: 0.0.0.0
+            REVERB_SERVER_PORT: 8080
+            REVERB_HOST: '${LOCAL_REVERB_HOST:-host.docker.internal}'
+            REVERB_PORT: '${LOCAL_REVERB_PORT:-8080}'
+            REVERB_SCHEME: '${LOCAL_REVERB_SCHEME:-http}'
+            REVERB_APP_ID: '${LOCAL_REVERB_APP_ID:-local-app}'
+            REVERB_APP_KEY: '${LOCAL_REVERB_APP_KEY:-local-key}'
+            REVERB_APP_SECRET: '${LOCAL_REVERB_APP_SECRET:-local-secret}'
+            REVERB_SCALING_ENABLED: 'false'
+            VITE_REVERB_APP_KEY: '${LOCAL_REVERB_APP_KEY:-local-key}'
+            VITE_REVERB_HOST: '${LOCAL_VITE_REVERB_HOST:-localhost}'
+            VITE_REVERB_PORT: '${LOCAL_VITE_REVERB_PORT:-8080}'
+            VITE_REVERB_SCHEME: '${LOCAL_VITE_REVERB_SCHEME:-http}'
+            LIVEKIT_URL: '${LOCAL_LIVEKIT_URL:-ws://localhost:7880}'
+            LIVEKIT_API_KEY: '${LOCAL_LIVEKIT_API_KEY:-devkey}'
+            LIVEKIT_API_SECRET: '${LOCAL_LIVEKIT_API_SECRET:-secret}'
+
+    reverb:
+        build:
+            context: './vendor/laravel/sail/runtimes/8.5'
+            dockerfile: Dockerfile
+            args:
+                WWWGROUP: '${WWWGROUP}'
+        image: 'sail-8.5/app'
+        extra_hosts:
+            - 'host.docker.internal:host-gateway'
+        command: php artisan reverb:start --host=0.0.0.0 --port=8080
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+            APP_ENV: local
+            APP_KEY: '${APP_KEY}'
+            APP_DEBUG: '${APP_DEBUG:-true}'
+            APP_URL: '${APP_URL:-http://localhost}'
+            DB_CONNECTION: '${DB_CONNECTION:-pgsql}'
+            DB_HOST: '${DB_HOST:-pgsql}'
+            DB_PORT: '${DB_PORT:-5432}'
+            DB_DATABASE: '${DB_DATABASE}'
+            DB_USERNAME: '${DB_USERNAME}'
+            DB_PASSWORD: '${DB_PASSWORD:-secret}'
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            REVERB_SERVER_HOST: 0.0.0.0
+            REVERB_SERVER_PORT: 8080
+            REVERB_HOST: '${LOCAL_REVERB_PUBLIC_HOST:-localhost}'
+            REVERB_PORT: '${LOCAL_REVERB_PUBLIC_PORT:-8080}'
+            REVERB_SCHEME: '${LOCAL_REVERB_PUBLIC_SCHEME:-http}'
+            REVERB_APP_ID: '${LOCAL_REVERB_APP_ID:-local-app}'
+            REVERB_APP_KEY: '${LOCAL_REVERB_APP_KEY:-local-key}'
+            REVERB_APP_SECRET: '${LOCAL_REVERB_APP_SECRET:-local-secret}'
+            REVERB_SCALING_ENABLED: 'false'
+        volumes:
+            - '.:/var/www/html'
+        ports:
+            - '${REVERB_LOCAL_PORT:-8080}:8080'
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
+            - redis
+
+    livekit:
+        image: 'livekit/livekit-server:v1.13.4'
+        entrypoint:
+            - /bin/sh
+            - -ec
+        command:
+            - |
+                {
+                  printf 'keys:\n  "%s": "%s"\n' "$$LIVEKIT_API_KEY" "$$LIVEKIT_API_SECRET"
+                  printf 'port: 7880\n'
+                  printf 'bind_addresses:\n  - "0.0.0.0"\n'
+                  printf 'log_level: info\n'
+                  printf 'rtc:\n'
+                  printf '  tcp_port: 7881\n'
+                  printf '  port_range_start: 50000\n'
+                  printf '  port_range_end: 50020\n'
+                  printf '  use_external_ip: false\n'
+                  printf '  node_ip: "%s"\n' "$$LIVEKIT_NODE_IP"
+                  printf 'redis:\n'
+                  printf '  address: redis:6379\n'
+                  printf 'turn:\n'
+                  printf '  enabled: true\n'
+                  printf '  udp_port: 3478\n'
+                } > /tmp/livekit-local.yaml
+                exec /livekit-server --config /tmp/livekit-local.yaml
+        environment:
+            LIVEKIT_API_KEY: '${LOCAL_LIVEKIT_API_KEY:-devkey}'
+            LIVEKIT_API_SECRET: '${LOCAL_LIVEKIT_API_SECRET:-secret}'
+            LIVEKIT_NODE_IP: '${LIVEKIT_NODE_IP:-127.0.0.1}'
+        ports:
+            - '${LIVEKIT_LOCAL_PORT:-7880}:7880'
+            - '${LIVEKIT_RTC_TCP_PORT:-7881}:7881/tcp'
+            - '${LIVEKIT_TURN_UDP_PORT:-3478}:3478/udp'
+            - '${LIVEKIT_RTC_UDP_PORT_RANGE:-50000-50020}:${LIVEKIT_RTC_UDP_PORT_RANGE:-50000-50020}/udp'
+        networks:
+            - sail
+        depends_on:
+            - redis

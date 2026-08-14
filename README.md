@@ -2,7 +2,7 @@
 
 Сервис групповых аудио- и видеозвонков на Laravel, Vue 3, TypeScript, PostgreSQL, Redis, Laravel Reverb и LiveKit.
 
-Проект сейчас находится на этапе инфраструктуры для Dokploy. Функциональность комнат, LiveKit frontend, waiting room и модерация ещё не реализованы. Текущий статус milestones см. в `docs/video-calls/IMPLEMENTATION_PLAN.md`.
+Проект сейчас реализует базовый vertical slice видеозвонков: комнаты, участники, LiveKit token issuance, media UI, Reverb application events, waiting room, модерация, чат, raised hands, pinning и subrooms. Текущий статус milestones см. в `docs/video-calls/IMPLEMENTATION_PLAN.md`.
 
 ## Стек
 
@@ -51,6 +51,53 @@ APP_SERVICE=laravel.test
 ```
 
 Локальный адрес приложения зависит от `APP_PORT`; по умолчанию Sail публикует приложение на `http://localhost`.
+
+## Локальная проверка видеозвонков
+
+Для проверки Reverb и LiveKit локально используйте дополнительный Sail override:
+
+```env
+SAIL_FILES=compose.sail.yaml:compose.sail-livekit.yaml
+APP_SERVICE=laravel.test
+APP_URL=http://localhost
+```
+
+Override добавляет:
+
+- `reverb` на `localhost:8080`;
+- `livekit` signaling на `ws://localhost:7880`;
+- LiveKit media ports `7881/tcp`, `3478/udp`, `50000-50020/udp`;
+- локальные Reverb credentials `local-app` / `local-key` / `local-secret`;
+- локальные LiveKit credentials `devkey` / `secret`;
+- `QUEUE_CONNECTION=sync`, чтобы application events сразу уходили в Reverb без отдельного queue worker.
+
+Запуск:
+
+```bash
+./vendor/bin/sail up -d --build
+./vendor/bin/sail artisan optimize:clear
+./vendor/bin/sail artisan migrate
+./vendor/bin/sail npm run dev
+```
+
+Проверка сервисов:
+
+```bash
+./vendor/bin/sail ps
+curl -I http://localhost
+curl -I http://localhost:7880
+curl -I http://localhost:8080
+```
+
+Создать локальную demo-комнату можно через `tinker`:
+
+```bash
+./vendor/bin/sail artisan tinker --execute '$user = \App\Models\User::firstOrCreate(["email" => "demo@example.com"], ["name" => "Demo Owner", "password" => \Illuminate\Support\Facades\Hash::make("password")]); $room = app(\App\Actions\Rooms\CreateRoomAction::class)->handle($user, ["name" => "Local demo call", "visibility" => "public", "waiting_room_enabled" => false]); echo route("rooms.call.show", $room).PHP_EOL;'
+```
+
+Откройте выведенный URL в двух разных браузерах или в обычном и private window. В первом браузере войдите как `demo@example.com` / `password`; во втором можно зайти как guest. Для проверки subrooms создайте subroom owner-ом в панели `Subrooms`, затем переключайтесь между `Main room` и subroom.
+
+Если Docker Desktop/WSL2 начинает подвисать на UDP-портах, оставьте локальный диапазон `50000-50020/udp`. Production должен использовать полный диапазон из `compose.yaml`: `50000-60000/udp`.
 
 ## Локальные проверки
 

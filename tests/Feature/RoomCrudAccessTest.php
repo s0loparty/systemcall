@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\RoomMember;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Testing\AssertableInertia as Assert;
 use Symfony\Component\HttpFoundation\Cookie;
 
 test('authenticated owners can manage rooms using public ids', function () {
@@ -61,6 +62,47 @@ test('authenticated owners can manage rooms using public ids', function () {
         ->assertNoContent();
 
     $this->assertModelMissing($room);
+});
+
+test('authenticated users can manage rooms through Inertia pages', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create([
+            'name' => 'Existing call',
+        ]);
+
+    RoomMember::factory()
+        ->for($room)
+        ->for($owner)
+        ->owner()
+        ->create();
+
+    $this->actingAs($owner)
+        ->get(route('rooms.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Index')
+            ->where('rooms.0.public_id', $room->public_id)
+            ->where('rooms.0.name', 'Existing call'));
+
+    $response = $this->actingAs($owner)
+        ->post(route('rooms.store'), [
+            'name' => 'Browser-created room',
+            'description' => 'Created from the Vue UI',
+            'visibility' => RoomVisibility::Public->value,
+            'waiting_room_enabled' => '1',
+            'max_participants' => '8',
+        ]);
+
+    $createdRoom = Room::query()
+        ->where('name', 'Browser-created room')
+        ->firstOrFail();
+
+    $response->assertRedirect(route('rooms.call.show', $createdRoom));
+    expect($createdRoom->waiting_room_enabled)->toBeTrue()
+        ->and($createdRoom->max_participants)->toBe(8);
 });
 
 test('public and private room access rules are enforced', function () {

@@ -11,12 +11,15 @@ use App\Http\Requests\Rooms\UpdateRoomRequest;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class RoomController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): JsonResponse|Response
     {
         $user = $request->user();
         abort_unless($user instanceof User, 403);
@@ -32,22 +35,36 @@ class RoomController extends Controller
             ->get()
             ->map(fn (Room $room): array => $this->roomPayload($room));
 
+        if (! $request->expectsJson()) {
+            return Inertia::render('rooms/Index', [
+                'rooms' => $rooms,
+            ]);
+        }
+
         return response()->json(['rooms' => $rooms]);
     }
 
-    public function store(StoreRoomRequest $request, CreateRoomAction $createRoom): JsonResponse
+    public function store(StoreRoomRequest $request, CreateRoomAction $createRoom): JsonResponse|RedirectResponse
     {
         $user = $request->user();
         abort_unless($user instanceof User, 403);
 
         $room = $createRoom->handle($user, $request->roomData());
 
+        if (! $request->expectsJson()) {
+            return to_route('rooms.call.show', $room);
+        }
+
         return response()->json(['room' => $this->roomPayload($room->load('members'))], 201);
     }
 
-    public function show(Request $request, Room $room): JsonResponse
+    public function show(Request $request, Room $room): JsonResponse|RedirectResponse
     {
         abort_unless($this->canView($request, $room), 403);
+
+        if (! $request->expectsJson()) {
+            return to_route('rooms.call.show', $room);
+        }
 
         return response()->json(['room' => $this->roomPayload($room)]);
     }
