@@ -1,0 +1,76 @@
+# Video Calls — Architecture
+
+> Production target: one VPS managed by Dokploy.
+> Dokploy owns the host-level Traefik and public ports 80/443.
+> The project Docker Compose MUST NOT contain its own Traefik service.
+
+## Topology
+```text
+Internet
+   |
+ 80/443
+   |
+Dokploy-managed Traefik
+   |----------|-------------|
+   v          v             v
+ app       reverb        livekit:7880
+   |                         |
+Postgres/Redis               |
+                             |
+Browser ===== direct WebRTC =+
+```
+
+## Routing
+Dokploy domain configuration:
+```text
+call.example.com      -> app:<internal app port>
+ws.call.example.com   -> reverb:8080
+livekit.example.com   -> livekit:7880
+```
+
+LiveKit direct media:
+```text
+7881/TCP
+50000-60000/UDP
+3478/UDP
+```
+
+Do not host-publish app/Reverb/LiveKit signaling ports solely for HTTP routing.
+
+## Responsibilities
+Laravel is authoritative for business state and authorization: rooms, members, roles, waiting room, bans, moderation, tokens, chat, global pin and subrooms.
+
+LiveKit is authoritative for media/realtime media presence: audio, video, screen share, tracks, SFU/WebRTC and active speaker.
+
+Reverb carries application-level realtime events.
+
+## Join flow
+```text
+Client -> Laravel
+          |- room active?
+          |- identity valid?
+          |- password?
+          |- banned?
+          |- waiting approval?
+          |- target allowed?
+          v
+        RoomMember
+          v
+        signed LiveKit token
+          v
+        LiveKit
+```
+
+## Identity
+LiveKit identity is backend-controlled and maps to RoomMember. Display name is not a security identity.
+
+## Moderation
+Privileged request -> Laravel Policy -> application/LiveKit service action -> application realtime notification.
+
+Kick removes the actual LiveKit participant. Ban persists and blocks future token issuance. Silent remote-unmute is forbidden.
+
+## Subrooms
+Each subroom is a distinct LiveKit room. Switching disconnects current media room, requests a separately authorized target token and connects to target.
+
+## Scaling path
+Start with all services on one Dokploy VPS. Later move PostgreSQL/Redis and especially LiveKit/TURN independently. A dedicated LiveKit VPS allows TURN/TLS to use public 443 without conflicting with Dokploy.

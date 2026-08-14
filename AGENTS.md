@@ -194,3 +194,112 @@ Vue components must have a single root element.
 - IMPORTANT: Activate `inertia-vue-development` when working with Inertia Vue client-side patterns.
 
 </laravel-boost-guidelines>
+
+
+> Production target: one VPS managed by Dokploy.
+> Dokploy owns the host-level Traefik and public ports 80/443.
+> The project Docker Compose MUST NOT contain its own Traefik service.
+
+## Stack
+Laravel 13, PHP 8.4, Vue 3, TypeScript, TailwindCSS, PostgreSQL, Redis, Laravel Reverb, LiveKit, Docker Compose, Dokploy, FrankenPHP + Laravel Octane.
+
+## Agent workflow
+1. Read this file and every file in `docs/video-calls/`.
+2. Inspect the repository, `git status`, `git diff`, existing Docker and environment configuration.
+3. Update `IMPLEMENTATION_PLAN.md` to match reality.
+4. Work one milestone at a time.
+5. Run relevant tests/checks after every milestone.
+6. Update documentation and milestone status before continuing.
+
+## Production Compose services
+The project Compose contains:
+- `app`
+- `worker`
+- `scheduler`
+- `reverb`
+- `postgres`
+- `redis`
+- `livekit`
+
+`app`, `worker`, `scheduler`, and `reverb` use the same application image with different commands.
+
+Do not add a `traefik` service. Dokploy already manages Traefik.
+
+## Dokploy routing
+Configure domains in Dokploy:
+```text
+call.example.com      -> app:<internal FrankenPHP/Octane port>
+ws.call.example.com   -> reverb:8080
+livekit.example.com   -> livekit:7880
+```
+
+Do not publish those HTTP ports to the host merely for routing. Dokploy/Traefik reaches the services internally.
+
+## LiveKit networking
+LiveKit signaling goes through Dokploy Traefik to internal port 7880.
+
+WebRTC media bypasses the HTTP proxy and is published directly:
+```text
+7881/TCP
+50000-60000/UDP
+3478/UDP
+```
+
+Dokploy owns host `443/TCP`. Therefore LiveKit TURN/TLS MUST NOT bind host 443 in the initial single-VPS topology.
+
+If TURN/TLS is required before moving LiveKit to another VPS, evaluate `5349/TCP` only after checking the exact pinned LiveKit version and documenting the configuration.
+
+## Architecture boundaries
+Laravel owns users, rooms, roles, permissions, guests, waiting room, bans, moderation, token issuance, chat persistence, global pin, raised hands, subrooms and business state.
+
+LiveKit owns audio/video, screen share, WebRTC/SFU, media tracks, realtime media presence and active-speaker/media adaptation.
+
+Reverb carries application realtime events such as waiting room, moderation, chat, raised hands, global pin, subroom changes and room deletion.
+
+Never send media through Laravel/Reverb. Do not duplicate ordinary LiveKit media events via Reverb.
+
+## Laravel runtime
+Production uses FrankenPHP + Laravel Octane. Never use `php artisan serve` in production.
+
+Production image copies application code and built assets. Do not bind-mount source code in production.
+
+## LiveKit security
+All server-side LiveKit calls belong behind a `LiveKitService` or equivalent.
+
+Before issuing a token verify room status, server-verifiable participant identity, password, ban, waiting-room approval, permissions and target room/subroom.
+
+Never expose `LIVEKIT_API_SECRET` to frontend. LiveKit identity must map to a backend `RoomMember`.
+
+## Guests
+Do not trust arbitrary browser-provided guest IDs. Bind guest identity to a signed/encrypted cookie, server session or signed temporary guest token.
+
+## Authorization
+Roles: `owner`, `moderator`, `participant`. Privileged actions require backend Policies/Gates.
+
+Remote force-mute may be supported. Never silently remote-unmute another participant.
+
+## Redis
+Initially one Redis may serve Laravel cache/sessions/queues, Reverb and LiveKit. Keep configuration flexible enough to split later.
+
+## Tests/checks
+Run commands that actually exist:
+```bash
+composer validate
+php artisan test
+./vendor/bin/pint --test
+docker compose config
+```
+Also run frontend typecheck/lint/build and PHPStan/Larastan if configured.
+
+Never run destructive DB commands against an unknown/production environment.
+
+## Git
+Do not push, rewrite history, reset unrelated work, delete user changes or mass-format unrelated files.
+
+## Documentation
+Keep current:
+- `docs/video-calls/IMPLEMENTATION_PLAN.md`
+- `docs/video-calls/ARCHITECTURE.md`
+- `docs/video-calls/DEPLOYMENT.md`
+- `docs/video-calls/LIVEKIT.md`
+- `docs/video-calls/QUALITY_CHECKLIST.md`
