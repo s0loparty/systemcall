@@ -9,6 +9,7 @@ import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
 import RoomApplicationStatePanel from '@/features/calls/components/RoomApplicationStatePanel.vue';
 import RoomModerationPanel from '@/features/calls/components/RoomModerationPanel.vue';
 import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
+import RoomSubroomPanel from '@/features/calls/components/RoomSubroomPanel.vue';
 import WaitingRoomModeratorPanel from '@/features/calls/components/WaitingRoomModeratorPanel.vue';
 import WaitingRoomStatusPanel from '@/features/calls/components/WaitingRoomStatusPanel.vue';
 import { useCallSession } from '@/features/calls/composables/useCallSession';
@@ -17,6 +18,7 @@ import type {
     CallRoom,
     RoomMessageSummary,
     RoomMemberSummary,
+    RoomSubroomSummary,
     WaitingRoomEntry,
 } from '@/features/calls/types';
 
@@ -28,6 +30,7 @@ type RoomPageProps = {
     current_room_member_id: number | null;
     global_pinned_room_member_id: number | null;
     room_members: RoomMemberSummary[];
+    room_subrooms: RoomSubroomSummary[];
     room_messages: RoomMessageSummary[];
     waiting_room_entries: WaitingRoomEntry[];
     current_waiting_room_entry: WaitingRoomEntry | null;
@@ -47,6 +50,7 @@ call.waitingRoomEntry.value = props.current_waiting_room_entry;
 const realtime = useRoomApplicationEvents(props.room.public_id, {
     roomMembers: props.room_members,
     roomMessages: props.room_messages,
+    roomSubrooms: props.room_subrooms,
     globalPinnedRoomMemberId: props.global_pinned_room_member_id,
     waitingRoomEntries: props.waiting_room_entries,
     onWaitingRoomDecision: (event) => {
@@ -57,6 +61,7 @@ const {
     joinRequest,
     connected,
     connectionState,
+    switchingSubroom,
     busy,
     microphoneEnabled,
     cameraEnabled,
@@ -79,6 +84,7 @@ const {
     setAudioInput,
     setVideoInput,
     connect,
+    switchSubroom,
     disconnect,
     toggleMicrophone,
     toggleCamera,
@@ -93,6 +99,8 @@ const {
     removeRoomMember,
     roomMessages,
     appendRoomMessage,
+    roomSubrooms,
+    upsertRoomSubroom,
     globalPinnedRoomMemberId,
     setGlobalPinnedRoomMemberId,
     waitingRoomEntries,
@@ -128,6 +136,22 @@ async function connectToCall(): Promise<void> {
 
 function setPersonalPin(memberId: number | null): void {
     personalPinnedRoomMemberId.value = memberId;
+}
+
+async function switchCallSubroom(
+    subroomPublicId: string | null,
+): Promise<void> {
+    const response = await switchSubroom(subroomPublicId);
+
+    if (!response) {
+        return;
+    }
+
+    upsertRoomMember(response.member);
+
+    if (response.subroom) {
+        upsertRoomSubroom(response.subroom);
+    }
 }
 </script>
 
@@ -173,6 +197,18 @@ function setPersonalPin(memberId: number | null): void {
             @member="upsertRoomMember"
             @global-pin="setGlobalPinnedRoomMemberId"
             @personal-pin="setPersonalPin"
+        />
+
+        <RoomSubroomPanel
+            :room-public-id="room.public_id"
+            :current-member-id="currentRoomMemberId"
+            :connected="connected"
+            :switching="switchingSubroom"
+            :can-moderate-members="can_moderate_members"
+            :members="roomMembers"
+            :subrooms="roomSubrooms"
+            @created="upsertRoomSubroom"
+            @switch="switchCallSubroom"
         />
 
         <WaitingRoomModeratorPanel

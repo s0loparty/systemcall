@@ -8,6 +8,7 @@ use App\Enums\WaitingRoomStatus;
 use App\Models\Room;
 use App\Models\RoomMember;
 use App\Models\RoomMessage;
+use App\Models\RoomSubroom;
 use App\Models\User;
 use App\Models\WaitingRoomMember;
 use App\Services\LiveKit\LiveKitTokenService;
@@ -44,6 +45,9 @@ class RoomCallController extends Controller
             'global_pinned_room_member_id' => $room->global_pinned_room_member_id,
             'room_members' => $canSeeRoomMembers
                 ? $this->activeRoomMembers($room)
+                : [],
+            'room_subrooms' => $canSeeRoomMembers
+                ? $this->subrooms($room)
                 : [],
             'room_messages' => $currentRoomMemberId !== null ? $this->recentMessages($room) : [],
             'waiting_room_entries' => $canModerateWaitingRoom
@@ -122,6 +126,7 @@ class RoomCallController extends Controller
             ->map(fn (RoomMember $member): array => [
                 'id' => $member->id,
                 'room_public_id' => $member->room->public_id,
+                'room_subroom_id' => $member->room_subroom_id,
                 'display_name' => $member->display_name,
                 'role' => $member->role->value,
                 'livekit_identity' => $member->livekit_identity,
@@ -130,6 +135,25 @@ class RoomCallController extends Controller
                 'can_publish_video' => $member->can_publish_video,
                 'can_publish_screen' => $member->can_publish_screen,
                 'hand_raised_at' => $member->hand_raised_at?->toISOString(),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    private function subrooms(Room $room): array
+    {
+        return $room->subrooms()
+            ->orderBy('position')
+            ->get()
+            ->map(fn (RoomSubroom $subroom): array => [
+                'id' => $subroom->id,
+                'room_public_id' => $room->public_id,
+                'public_id' => $subroom->public_id,
+                'name' => $subroom->name,
+                'position' => $subroom->position,
+                'is_default' => $subroom->is_default,
             ])
             ->all();
     }

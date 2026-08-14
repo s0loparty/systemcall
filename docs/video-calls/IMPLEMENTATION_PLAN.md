@@ -395,8 +395,47 @@ Milestone 8 verification on 2026-08-14:
 - `./vendor/bin/sail composer validate --strict` passed
 - `docker compose config` passed
 
-### Milestone 9 — Subrooms `[ ]`
+### Milestone 9 — Subrooms `[x]`
 Maximum 5, separate LiveKit room per subroom, separately authorized target token and clean switching.
+
+Implemented:
+- [x] moderators/owners can create room-scoped subrooms
+- [x] ordinary participants cannot create subrooms
+- [x] subroom creation is capped at 5 per room server-side
+- [x] each subroom has a dedicated `livekit_room_name`
+- [x] `POST /rooms/{public_id}/subroom-token` validates the active member and target subroom before issuing a token
+- [x] switching to a subroom updates `room_members.room_subroom_id`
+- [x] switching back to the main room clears `room_members.room_subroom_id`
+- [x] target subroom tokens use the subroom `livekit_room_name`; main-room tokens keep `room-{public_id}`
+- [x] LiveKit token metadata includes the selected subroom id/public id when present
+- [x] subroom created/member moved events broadcast over the private room Reverb channel
+- [x] call page shows `Main room + subrooms`, supports moderator creation and reconnects media with the separately authorized target token
+- [x] current microphone/camera enabled state is preserved while switching subrooms
+
+Acceptance criteria:
+- [x] max 5 subrooms enforced server-side
+- [x] each subroom maps to a separate LiveKit room name
+- [x] target token is separately authorized and rejects foreign subrooms/non-members
+- [x] switching disconnects the current LiveKit room and connects with the target token
+- [x] frontend typecheck/lint/build pass
+- [x] backend Pest/PHPStan checks pass through local Sail
+- [!] real browser subroom media switching smoke test still requires running LiveKit and two browser sessions
+
+Milestone 9 verification on 2026-08-14:
+- `./vendor/bin/sail artisan test --compact tests/Feature/RoomSubroomWorkflowTest.php` passed: 6 tests, 60 assertions
+- `./vendor/bin/sail artisan test --compact` passed: 76 tests, 477 assertions
+- `./vendor/bin/sail composer run types:check` passed: PHPStan, 0 errors
+- `./vendor/bin/sail pint --dirty --format agent` passed
+- `./vendor/bin/sail npm run lint:check` passed
+- `./vendor/bin/sail npm run types:check` passed
+- `./vendor/bin/sail npm run format:check` passed after formatting `useRoomApplicationEvents.ts`
+- `./vendor/bin/sail npm run build` passed with existing Vite chunk-size warning for the call page bundle
+- `./vendor/bin/sail composer validate --strict` passed
+- `docker compose config` passed
+
+Notes:
+- Automated checks do not require local LiveKit because they verify backend authorization, JWT grants and frontend type/build behavior.
+- For manual local WSL2 LiveKit smoke tests, use the reduced `LIVEKIT_RTC_UDP_PORT_RANGE=50000-50020`; production must keep the documented full media range.
 
 ### Milestone 10 — Production hardening `[ ]`
 Rate limits, LiveKit webhook verification/idempotency, scheduler cleanup, health checks, reconnect edge cases, security audit, Dokploy deployment verification, firewall, backup/rollback and TURN testing.

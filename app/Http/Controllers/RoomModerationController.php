@@ -80,6 +80,7 @@ class RoomModerationController extends Controller
         return [
             'id' => $member->id,
             'room_public_id' => $member->room->public_id,
+            'room_subroom_id' => $member->room_subroom_id,
             'display_name' => $member->display_name,
             'role' => $member->role->value,
             'livekit_identity' => $member->livekit_identity,

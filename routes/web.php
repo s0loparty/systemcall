@@ -8,6 +8,8 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomMembershipController;
 use App\Http\Controllers\RoomMessageController;
 use App\Http\Controllers\RoomModerationController;
+use App\Http\Controllers\RoomSubroomController;
+use App\Http\Controllers\RoomSubroomTokenController;
 use App\Http\Controllers\WaitingRoomController;
 use App\Http\Controllers\WaitingRoomDecisionController;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -26,6 +28,9 @@ Route::post('rooms/{room}/memberships', [RoomMembershipController::class, 'store
 Route::post('rooms/{room}/livekit-token', [LiveKitTokenController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('rooms.livekit_token.store');
+Route::post('rooms/{room}/subroom-token', [RoomSubroomTokenController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('rooms.subroom_token.store');
 Route::post('rooms/{room}/messages', [RoomMessageController::class, 'store'])
     ->middleware('throttle:room-chat')
     ->name('rooms.messages.store');
@@ -56,6 +61,8 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
         ->name('rooms.members.kick');
     Route::post('rooms/{room}/members/{roomMember}/ban', [RoomModerationController::class, 'ban'])
         ->name('rooms.members.ban');
+    Route::post('rooms/{room}/subrooms', [RoomSubroomController::class, 'store'])
+        ->name('rooms.subrooms.store');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

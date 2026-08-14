@@ -78,12 +78,20 @@ Implemented token endpoint:
 POST /rooms/{public_id}/livekit-token
 ```
 
+Implemented subroom switch token endpoint:
+```text
+POST /rooms/{public_id}/subroom-token
+```
+
 Current token service:
 - uses `agence104/livekit-server-sdk`;
 - reads `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET` and optional `LIVEKIT_TOKEN_TTL` from Laravel config/environment;
-- signs room-scoped tokens for LiveKit room `room-{public_id}`;
+- signs room-scoped tokens for LiveKit room `room-{public_id}` when no subroom target is selected;
+- signs room-scoped tokens for `room_subrooms.livekit_room_name` when a target subroom is selected;
 - uses `room_members.livekit_identity` as JWT identity;
+- includes `room_subroom_id` and `room_subroom_public_id` in token metadata when the token targets a subroom;
 - denies token issuance unless Laravel resolves an active room member from authenticated user or server-issued guest cookie;
+- denies subroom switching when the target subroom does not belong to the room;
 - denies banned participants;
 - for waiting-room-enabled rooms, ordinary participants need an approved waiting-room entry before media token issuance; owner/moderator members may request tokens directly;
 - maps RoomMember publish flags to LiveKit `canPublishSources`.
@@ -101,6 +109,8 @@ Force-mute only revokes the microphone publish source. Remote unmute is intentio
 
 ## Frontend/media
 Use LiveKit SDK for mic, camera, screen share, active speaker and media connection state. The current call page uses LiveKit local tracks for pre-join preview, publishes the selected microphone/camera after Laravel issues a token, and surfaces LiveKit media-device and reconnect events in the UI.
+
+Subroom switching requests a fresh Laravel-authorized LiveKit token, disconnects from the current LiveKit room, and connects to the target LiveKit room. The frontend preserves the current microphone/camera enabled state across this reconnect. Screen sharing is not automatically resumed.
 
 Current room options enable `adaptiveStream` and `dynacast`. Camera and screen-share publication request simulcast. Revisit selective subscriptions and publish presets when large-room limits are defined.
 

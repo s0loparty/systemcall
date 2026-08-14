@@ -60,16 +60,16 @@
 - [x] ban blocks rejoin/token
 - [x] raised hands
 - [x] personal/global pin
-- [ ] max 5 subrooms server-side
-- [ ] clean subroom switching
+- [x] max 5 subrooms server-side
+- [x] clean subroom switching
 
 ## Checks
-- [ ] composer validate
-- [ ] Laravel tests
-- [ ] Pint
-- [ ] PHPStan/Larastan if installed
-- [ ] frontend typecheck/lint/build
-- [ ] docker compose config
+- [x] composer validate
+- [x] Laravel tests
+- [x] Pint
+- [x] PHPStan/Larastan if installed
+- [x] frontend typecheck/lint/build
+- [x] docker compose config
 
 ## Production
 - [ ] PostgreSQL backup/restore

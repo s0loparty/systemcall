@@ -25,6 +25,20 @@ export type LiveKitTokenResponse = {
     };
 };
 
+export type RoomSubroomSummary = {
+    id: number;
+    room_public_id: string;
+    public_id: string;
+    name: string;
+    position: number;
+    is_default: boolean;
+};
+
+export type SubroomTokenResponse = LiveKitTokenResponse & {
+    member: RoomMemberSummary;
+    subroom: RoomSubroomSummary | null;
+};
+
 export type WaitingRoomEntry = {
     id: number;
     room_public_id: string;
@@ -38,6 +52,7 @@ export type WaitingRoomEntry = {
 export type RoomMemberSummary = {
     id: number;
     room_public_id: string;
+    room_subroom_id: number | null;
     display_name: string;
     role: 'owner' | 'moderator' | 'participant';
     livekit_identity: string;
@@ -161,6 +176,21 @@ export type RoomMemberBannedEvent = {
         expires_at: string | null;
     };
     moderator_user_id: number;
+    occurred_at: string;
+};
+
+export type RoomSubroomCreatedEvent = {
+    type: 'subroom_created';
+    room_public_id: string;
+    subroom: RoomSubroomSummary;
+    occurred_at: string;
+};
+
+export type RoomMemberSubroomChangedEvent = {
+    type: 'member_subroom_changed';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    subroom: RoomSubroomSummary | null;
     occurred_at: string;
 };
 

@@ -7,6 +7,7 @@ use Agence104\LiveKit\AccessTokenOptions;
 use Agence104\LiveKit\VideoGrant;
 use App\Models\Room;
 use App\Models\RoomMember;
+use App\Models\RoomSubroom;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
 
@@ -15,13 +16,13 @@ class LiveKitTokenService
     /**
      * @throws \Exception
      */
-    public function issueToken(Room $room, RoomMember $member): LiveKitToken
+    public function issueToken(Room $room, RoomMember $member, ?RoomSubroom $subroom = null): LiveKitToken
     {
         $url = $this->configString('url');
         $apiKey = $this->configString('api_key');
         $apiSecret = $this->configString('api_secret');
         $ttl = max(60, (int) Config::get('services.livekit.token_ttl', 3600));
-        $roomName = $this->roomName($room);
+        $roomName = $this->roomName($room, $subroom);
 
         $tokenOptions = (new AccessTokenOptions)
             ->setIdentity($member->livekit_identity)
@@ -30,6 +31,8 @@ class LiveKitTokenService
             ->setMetadata(json_encode([
                 'room_member_id' => $member->id,
                 'room_public_id' => $room->public_id,
+                'room_subroom_id' => $subroom?->id,
+                'room_subroom_public_id' => $subroom?->public_id,
                 'role' => $member->role->value,
             ], JSON_THROW_ON_ERROR));
 
@@ -49,8 +52,12 @@ class LiveKitTokenService
         return new LiveKitToken($url, $token, $roomName, $member->livekit_identity, $ttl);
     }
 
-    public function roomName(Room $room): string
+    public function roomName(Room $room, ?RoomSubroom $subroom = null): string
     {
+        if ($subroom instanceof RoomSubroom) {
+            return $subroom->livekit_room_name;
+        }
+
         return 'room-'.$room->public_id;
     }
 

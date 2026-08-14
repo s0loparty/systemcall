@@ -39,6 +39,11 @@ class RoomSubroom extends Model
         'is_default' => false,
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'public_id';
+    }
+
     /**
      * @return BelongsTo<Room, $this>
      */

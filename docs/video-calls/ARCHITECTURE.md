@@ -161,7 +161,11 @@ Personal pin is local browser state only. It changes the local media grid orderi
 Global pin is persisted on `rooms.global_pinned_room_member_id`. Only owners/moderators can set or clear it, and every change is broadcast over the private room application channel.
 
 ## Subrooms
-Each subroom is a distinct LiveKit room. Switching disconnects current media room, requests a separately authorized target token and connects to target.
+Laravel owns subroom membership state through `room_subrooms` and `room_members.room_subroom_id`. A `null` `room_subroom_id` means the participant is in the main room.
+
+Each subroom is a distinct LiveKit room using `room_subrooms.livekit_room_name`. The main room keeps the LiveKit room name `room-{public_id}`.
+
+Switching disconnects the current media room, requests a separately authorized target token from Laravel, updates `room_members.room_subroom_id`, and connects to the target LiveKit room. Subroom creation and member movement are application state events broadcast over Reverb; media presence and tracks remain LiveKit-owned.
 
 ## Scaling path
 Start with all services on one Dokploy VPS. Later move PostgreSQL/Redis and especially LiveKit/TURN independently. A dedicated LiveKit VPS allows TURN/TLS to use public 443 without conflicting with Dokploy.

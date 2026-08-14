@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 import type {
     RoomMemberSummary,
+    SubroomTokenResponse,
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
 } from '../types';
@@ -21,6 +22,7 @@ export function useCallSession(options: UseCallSessionOptions) {
     const errorMessage = ref<string | null>(null);
     const waitingRoomEntry = ref<WaitingRoomEntry | null>(null);
     const joinedMember = ref<RoomMemberSummary | null>(null);
+    const switchingSubroom = ref(false);
     const deviceErrorMessage = computed(
         () =>
             mediaDevices.deviceErrorMessage.value ??
@@ -31,7 +33,9 @@ export function useCallSession(options: UseCallSessionOptions) {
         () =>
             connecting.value ||
             roomJoin.joinRequest.processing ||
-            roomJoin.tokenRequest.processing,
+            roomJoin.tokenRequest.processing ||
+            roomJoin.subroomTokenRequest.processing ||
+            switchingSubroom.value,
     );
 
     async function connect(): Promise<void> {
@@ -115,6 +119,46 @@ export function useCallSession(options: UseCallSessionOptions) {
         }
     }
 
+    async function switchSubroom(
+        subroomPublicId: string | null,
+    ): Promise<SubroomTokenResponse | null> {
+        if (!liveKit.connected.value || switchingSubroom.value) {
+            return null;
+        }
+
+        switchingSubroom.value = true;
+        errorMessage.value = null;
+
+        const currentMediaState = {
+            microphone: liveKit.microphoneEnabled.value,
+            camera: liveKit.cameraEnabled.value,
+        };
+
+        try {
+            const response = await roomJoin.issueSubroomToken(subroomPublicId);
+
+            await liveKit.disconnect();
+            await liveKit.connect(
+                response.livekit.url,
+                response.livekit.token,
+                mediaDevices.selectedDevices.value,
+                currentMediaState,
+            );
+            joinedMember.value = response.member;
+
+            return response;
+        } catch (error) {
+            errorMessage.value =
+                error instanceof Error
+                    ? error.message
+                    : 'Could not switch subrooms.';
+
+            return null;
+        } finally {
+            switchingSubroom.value = false;
+        }
+    }
+
     onBeforeUnmount(() => {
         void liveKit.disconnect();
     });
@@ -127,6 +171,7 @@ export function useCallSession(options: UseCallSessionOptions) {
         connected: liveKit.connected,
         connectionState: liveKit.connectionState,
         connecting,
+        switchingSubroom,
         busy,
         microphoneEnabled: liveKit.microphoneEnabled,
         cameraEnabled: liveKit.cameraEnabled,
@@ -147,6 +192,7 @@ export function useCallSession(options: UseCallSessionOptions) {
         setAudioInput: mediaDevices.setAudioInput,
         setVideoInput: mediaDevices.setVideoInput,
         connect,
+        switchSubroom,
         handleWaitingRoomDecision,
         disconnect: liveKit.disconnect,
         toggleMicrophone: liveKit.toggleMicrophone,

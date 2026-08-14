@@ -9,9 +9,12 @@ import type {
     RoomMemberMutedEvent,
     RoomMemberRemovedEvent,
     RoomMemberRoleChangedEvent,
+    RoomMemberSubroomChangedEvent,
     RoomMemberSummary,
     RoomMessageCreatedEvent,
     RoomMessageSummary,
+    RoomSubroomCreatedEvent,
+    RoomSubroomSummary,
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
     WaitingRoomEntryRequestedEvent,
@@ -20,6 +23,7 @@ import type {
 type UseRoomApplicationEventsOptions = {
     roomMembers?: RoomMemberSummary[];
     roomMessages?: RoomMessageSummary[];
+    roomSubrooms?: RoomSubroomSummary[];
     globalPinnedRoomMemberId?: number | null;
     waitingRoomEntries?: WaitingRoomEntry[];
     onWaitingRoomDecision?: (event: WaitingRoomEntryDecidedEvent) => void;
@@ -33,6 +37,7 @@ export function useRoomApplicationEvents(
     const activities = ref<RoomApplicationActivity[]>([]);
     const roomMembers = ref<RoomMemberSummary[]>(options.roomMembers ?? []);
     const roomMessages = ref<RoomMessageSummary[]>(options.roomMessages ?? []);
+    const roomSubrooms = ref<RoomSubroomSummary[]>(options.roomSubrooms ?? []);
     const globalPinnedRoomMemberId = ref<number | null>(
         options.globalPinnedRoomMemberId ?? null,
     );
@@ -143,6 +148,34 @@ export function useRoomApplicationEvents(
         },
     );
 
+    useEcho<RoomSubroomCreatedEvent>(
+        `room.${roomPublicId}`,
+        '.room.subroom.created',
+        (event) => {
+            upsertRoomSubroom(event.subroom);
+            addActivity(
+                `${event.type}:${event.subroom.id}:${event.occurred_at}`,
+                `${event.subroom.name} subroom was created`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMemberSubroomChangedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.subroom-changed',
+        (event) => {
+            upsertRoomMember(event.member);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                event.subroom
+                    ? `${event.member.display_name} moved to ${event.subroom.name}`
+                    : `${event.member.display_name} returned to main room`,
+                event.occurred_at,
+            );
+        },
+    );
+
     useEcho<WaitingRoomEntryRequestedEvent>(
         `room.${roomPublicId}`,
         '.waiting-room.entry.requested',
@@ -230,6 +263,15 @@ export function useRoomApplicationEvents(
         roomMessages.value = [...roomMessages.value, message].slice(-50);
     }
 
+    function upsertRoomSubroom(subroom: RoomSubroomSummary): void {
+        roomSubrooms.value = [
+            subroom,
+            ...roomSubrooms.value.filter(
+                (current) => current.id !== subroom.id,
+            ),
+        ].sort((left, right) => left.position - right.position);
+    }
+
     function setGlobalPinnedRoomMemberId(memberId: number | null): void {
         globalPinnedRoomMemberId.value = memberId;
     }
@@ -242,6 +284,8 @@ export function useRoomApplicationEvents(
         removeRoomMember,
         roomMessages,
         appendRoomMessage,
+        roomSubrooms,
+        upsertRoomSubroom,
         globalPinnedRoomMemberId,
         setGlobalPinnedRoomMemberId,
         waitingRoomEntries,

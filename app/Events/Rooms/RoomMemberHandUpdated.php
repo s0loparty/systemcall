@@ -41,6 +41,7 @@ class RoomMemberHandUpdated implements ShouldBroadcast, ShouldDispatchAfterCommi
             'member' => [
                 'id' => $this->member->id,
                 'room_public_id' => $this->member->room->public_id,
+                'room_subroom_id' => $this->member->room_subroom_id,
                 'display_name' => $this->member->display_name,
                 'role' => $this->member->role->value,
                 'livekit_identity' => $this->member->livekit_identity,

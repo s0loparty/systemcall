@@ -15,6 +15,11 @@ import type {
     SelectedDevices,
 } from '../types';
 
+type InitialMediaState = {
+    microphone?: boolean;
+    camera?: boolean;
+};
+
 export function useLiveKit() {
     const activeRoom = shallowRef<Room | null>(null);
     const connected = ref(false);
@@ -32,6 +37,7 @@ export function useLiveKit() {
         url: string,
         token: string,
         selectedDevices: SelectedDevices,
+        initialMedia: InitialMediaState = {},
     ): Promise<void> {
         const liveKitRoom = new Room({
             adaptiveStream: true,
@@ -54,13 +60,13 @@ export function useLiveKit() {
 
         await Promise.all([
             liveKitRoom.localParticipant.setMicrophoneEnabled(
-                true,
+                initialMedia.microphone ?? true,
                 selectedDevices.audioInputId
                     ? { deviceId: selectedDevices.audioInputId }
                     : undefined,
             ),
             liveKitRoom.localParticipant.setCameraEnabled(
-                true,
+                initialMedia.camera ?? true,
                 selectedDevices.videoInputId
                     ? { deviceId: selectedDevices.videoInputId }
                     : undefined,
