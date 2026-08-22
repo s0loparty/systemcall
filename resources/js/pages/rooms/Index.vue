@@ -52,8 +52,8 @@ const waitingRoomCount = computed(
 <template>
     <Head title="Rooms" />
 
-    <div class="min-h-full bg-neutral-50 p-4 dark:bg-neutral-950">
-        <div class="mx-auto flex max-w-7xl flex-col gap-5">
+    <div class="p-5">
+        <div class="grid grid-cols-2 gap-5">
             <section
                 class="relative overflow-hidden rounded-[2rem] border border-neutral-200 bg-neutral-950 p-6 text-white shadow-sm md:p-8 dark:border-neutral-800"
             >

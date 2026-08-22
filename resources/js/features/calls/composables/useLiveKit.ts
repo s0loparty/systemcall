@@ -47,6 +47,7 @@ export function useLiveKit() {
         bindRoomEvents(liveKitRoom);
         activeRoom.value = markRaw(liveKitRoom);
         connectionState.value = 'connecting';
+        deviceErrorMessage.value = null;
 
         await liveKitRoom.connect(url, token);
         connected.value = true;
@@ -58,7 +59,7 @@ export function useLiveKit() {
             attachExistingTracks(participant);
         });
 
-        await Promise.all([
+        const mediaResults = await Promise.allSettled([
             liveKitRoom.localParticipant.setMicrophoneEnabled(
                 initialMedia.microphone ?? true,
                 selectedDevices.audioInputId
@@ -73,6 +74,20 @@ export function useLiveKit() {
                 { simulcast: true },
             ),
         ]);
+
+        if (activeRoom.value !== liveKitRoom) {
+            return;
+        }
+
+        const failedMediaRequest = mediaResults.find(
+            (result) => result.status === 'rejected',
+        );
+
+        if (failedMediaRequest) {
+            deviceErrorMessage.value = mediaErrorMessage(
+                failedMediaRequest.reason,
+            );
+        }
 
         microphoneEnabled.value =
             liveKitRoom.localParticipant.isMicrophoneEnabled;
@@ -384,6 +399,14 @@ export function useLiveKit() {
         }
 
         return 'reconnecting';
+    }
+
+    function mediaErrorMessage(error: unknown): string {
+        if (error instanceof Error) {
+            return error.message;
+        }
+
+        return 'Connected to the room, but could not enable camera or microphone.';
     }
 
     return {

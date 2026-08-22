@@ -68,7 +68,7 @@ Override добавляет:
 - `livekit` signaling на `ws://localhost:7880`;
 - LiveKit media ports `7881/tcp`, `3478/udp`, `50000-50020/udp`;
 - локальные Reverb credentials `local-app` / `local-key` / `local-secret`;
-- локальные LiveKit credentials `devkey` / `secret`;
+- локальные LiveKit credentials `devkey` / `local-livekit-secret-local-livekit-secret`;
 - `QUEUE_CONNECTION=sync`, чтобы application events сразу уходили в Reverb без отдельного queue worker.
 
 Запуск:

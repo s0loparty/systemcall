@@ -159,7 +159,8 @@ async function switchCallSubroom(
     <Head :title="`${room.name} call`" />
 
     <div class="flex h-full flex-1 flex-col gap-4 overflow-hidden p-4">
-        <CallHeader
+        <div class="grid md:grid-cols-2 gap-4">
+            <CallHeader
             :room="room"
             :connected="connected"
             :connection-state="connectionState"
@@ -182,6 +183,7 @@ async function switchCallSubroom(
             :connection-state="echoConnectionStatus"
             :activities="activities"
         />
+        </div>
 
         <WaitingRoomStatusPanel :entry="waitingRoomEntry" />
 

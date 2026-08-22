@@ -18,7 +18,7 @@ services:
             VITE_REVERB_SCHEME: '${LOCAL_VITE_REVERB_SCHEME:-http}'
             LIVEKIT_URL: '${LOCAL_LIVEKIT_URL:-ws://localhost:7880}'
             LIVEKIT_API_KEY: '${LOCAL_LIVEKIT_API_KEY:-devkey}'
-            LIVEKIT_API_SECRET: '${LOCAL_LIVEKIT_API_SECRET:-secret}'
+            LIVEKIT_API_SECRET: '${LOCAL_LIVEKIT_API_SECRET:-local-livekit-secret-local-livekit-secret}'
 
     reverb:
         build:
@@ -91,7 +91,7 @@ services:
                 exec /livekit-server --config /tmp/livekit-local.yaml
         environment:
             LIVEKIT_API_KEY: '${LOCAL_LIVEKIT_API_KEY:-devkey}'
-            LIVEKIT_API_SECRET: '${LOCAL_LIVEKIT_API_SECRET:-secret}'
+            LIVEKIT_API_SECRET: '${LOCAL_LIVEKIT_API_SECRET:-local-livekit-secret-local-livekit-secret}'
             LIVEKIT_NODE_IP: '${LIVEKIT_NODE_IP:-127.0.0.1}'
         ports:
             - '${LIVEKIT_LOCAL_PORT:-7880}:7880'
