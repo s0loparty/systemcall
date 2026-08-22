@@ -96,8 +96,9 @@ export function useLiveKit() {
         microphoneEnabled.value =
             liveKitRoom.localParticipant.isMicrophoneEnabled;
         cameraEnabled.value = liveKitRoom.localParticipant.isCameraEnabled;
-        screenShareEnabled.value =
-            liveKitRoom.localParticipant.isScreenShareEnabled;
+        screenShareEnabled.value = hasActiveScreenShare(
+            liveKitRoom.localParticipant,
+        );
         syncParticipantState(liveKitRoom.localParticipant);
     }
 
@@ -144,8 +145,9 @@ export function useLiveKit() {
             { audio: true },
             { simulcast: true },
         );
-        screenShareEnabled.value =
-            activeRoom.value.localParticipant.isScreenShareEnabled;
+        screenShareEnabled.value = hasActiveScreenShare(
+            activeRoom.value.localParticipant,
+        );
         syncParticipantState(activeRoom.value.localParticipant);
     }
 
@@ -178,10 +180,15 @@ export function useLiveKit() {
                 RoomEvent.TrackSubscribed,
                 (
                     track: RemoteTrack,
-                    _publication: RemoteTrackPublication,
+                    publication: RemoteTrackPublication,
                     participant: RemoteParticipant,
                 ) => {
-                    attachMedia(participant.identity, track);
+                    attachMedia(
+                        participant.identity,
+                        track,
+                        false,
+                        publication.source,
+                    );
                     syncParticipantState(participant);
                 },
             )
@@ -189,10 +196,14 @@ export function useLiveKit() {
                 RoomEvent.TrackUnsubscribed,
                 (
                     track: RemoteTrack,
-                    _publication: RemoteTrackPublication,
+                    publication: RemoteTrackPublication,
                     participant: RemoteParticipant,
                 ) => {
-                    detachMedia(participant.identity, track);
+                    detachMedia(
+                        participant.identity,
+                        track,
+                        publication.source,
+                    );
                     syncParticipantState(participant);
                 },
             )
@@ -210,6 +221,7 @@ export function useLiveKit() {
                             participant.identity,
                             publication.track,
                             true,
+                            publication.source,
                         );
                     }
 
@@ -222,14 +234,24 @@ export function useLiveKit() {
                     publication: LocalTrackPublication,
                     participant: Participant,
                 ) => {
-                    if (publication.track) {
-                        detachMedia(participant.identity, publication.track);
-                    }
+                    detachMedia(
+                        participant.identity,
+                        publication.track,
+                        publication.source,
+                    );
 
                     syncParticipantState(participant);
                 },
             )
-            .on(RoomEvent.TrackMuted, (_publication, participant) => {
+            .on(RoomEvent.TrackMuted, (publication, participant) => {
+                if (publication.source === Track.Source.ScreenShare) {
+                    detachMedia(
+                        participant.identity,
+                        publication.track,
+                        publication.source,
+                    );
+                }
+
                 syncParticipantState(participant);
             })
             .on(RoomEvent.TrackUnmuted, (_publication, participant) => {
@@ -267,7 +289,12 @@ export function useLiveKit() {
     function attachExistingTracks(participant: Participant): void {
         participant.getTrackPublications().forEach((publication) => {
             if (publication.track) {
-                attachMedia(participant.identity, publication.track);
+                attachMedia(
+                    participant.identity,
+                    publication.track,
+                    false,
+                    publication.source,
+                );
             }
         });
     }
@@ -280,7 +307,7 @@ export function useLiveKit() {
             camera: participant.isCameraEnabled,
             microphone: participant.isMicrophoneEnabled,
             speaking: participant.isSpeaking,
-            screenShare: participant.isScreenShareEnabled,
+            screenShare: hasActiveScreenShare(participant),
         };
 
         const index = tiles.value.findIndex(
@@ -299,6 +326,10 @@ export function useLiveKit() {
     }
 
     function syncParticipantState(participant: Participant): void {
+        if (participant.isLocal) {
+            screenShareEnabled.value = hasActiveScreenShare(participant);
+        }
+
         upsertParticipant(participant);
     }
 
@@ -311,6 +342,7 @@ export function useLiveKit() {
         identity: string,
         track: AttachableTrack | null | undefined,
         muted = false,
+        source = track?.source,
     ): void {
         if (!track) {
             return;
@@ -326,6 +358,10 @@ export function useLiveKit() {
         element.muted = muted;
         element.dataset.identity = identity;
 
+        if (source) {
+            element.dataset.source = source.replaceAll('_', '-');
+        }
+
         mediaElements.set(identity, [
             ...(mediaElements.get(identity) ?? []),
             element,
@@ -337,18 +373,39 @@ export function useLiveKit() {
     function detachMedia(
         identity: string,
         track: AttachableTrack | null | undefined,
+        source = track?.source,
     ): void {
-        if (!track) {
-            return;
+        const normalizedSource = source?.replaceAll('_', '-');
+        const currentElements = mediaElements.get(identity) ?? [];
+        const detachedElements = track?.detach() ?? [];
+        const detachedSet = new Set(detachedElements);
+
+        detachedElements.forEach((element) => element.remove());
+
+        if (normalizedSource) {
+            currentElements
+                .filter(
+                    (element) => element.dataset.source === normalizedSource,
+                )
+                .forEach((element) => {
+                    element.remove();
+                    detachedSet.add(element);
+                });
         }
 
-        const detachedElements = track.detach();
-        detachedElements.forEach((element) => element.remove());
         mediaElements.set(
             identity,
-            (mediaElements.get(identity) ?? []).filter(
-                (element) => !detachedElements.includes(element),
-            ),
+            currentElements.filter((element) => !detachedSet.has(element)),
+        );
+    }
+
+    function hasActiveScreenShare(participant: Participant): boolean {
+        const publication = participant.getTrackPublication(
+            Track.Source.ScreenShare,
+        );
+
+        return Boolean(
+            publication && !publication.isMuted && publication.track,
         );
     }
 

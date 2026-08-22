@@ -108,6 +108,7 @@ export type ParticipantTile = {
 
 export type AttachableTrack = {
     kind: Track.Kind;
+    source?: Track.Source;
     attach(): HTMLMediaElement;
     detach(): HTMLMediaElement[];
 };

@@ -6,9 +6,12 @@ type Props = {
     active: boolean;
     personallyPinned: boolean;
     globallyPinned: boolean;
+    size?: 'default' | 'compact' | 'share';
 };
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+    size: 'default',
+});
 
 const emit = defineEmits<{
     'media-host': [identity: string, element: HTMLElement | null];
@@ -17,14 +20,19 @@ const emit = defineEmits<{
 
 <template>
     <article
-        class="relative min-h-64 overflow-hidden rounded-[1.75rem] bg-[#1f1f1f] shadow-[0_20px_70px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow,scale] duration-200 ease-out active:scale-[0.995]"
-        :class="
+        class="relative overflow-hidden bg-[#1f1f1f] shadow-[0_20px_70px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow,scale] duration-200 ease-out active:scale-[0.995]"
+        :class="[
+            size === 'share'
+                ? 'h-full min-h-[24rem] rounded-[1.75rem]'
+                : size === 'compact'
+                  ? 'min-h-36 rounded-3xl'
+                  : 'min-h-64 rounded-[1.75rem]',
             personallyPinned || globallyPinned
                 ? 'ring-2 ring-sky-400/70'
                 : tile.speaking
                   ? 'ring-2 ring-emerald-400/70'
-                  : ''
-        "
+                  : '',
+        ]"
     >
         <div
             :ref="
@@ -35,12 +43,19 @@ const emit = defineEmits<{
                         element as HTMLElement | null,
                     )
             "
-            class="absolute inset-0 [&_audio]:hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
+            class="absolute inset-0 [&_audio]:hidden [&_video]:h-full [&_video]:w-full"
+            :class="
+                tile.screenShare && size === 'share'
+                    ? '[&_video:not([data-source=screen-share])]:hidden [&_video[data-source=screen-share]]:bg-black [&_video[data-source=screen-share]]:object-contain'
+                    : '[&_video]:object-cover'
+            "
         />
         <div
             class="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#343434,#1f1f1f_62%)] text-5xl font-semibold text-neutral-400 empty:hidden"
         >
-            <span v-if="!tile.camera">
+            <span
+                v-if="!tile.camera && !(tile.screenShare && size === 'share')"
+            >
                 {{ tile.name.slice(0, 1).toUpperCase() }}
             </span>
         </div>
