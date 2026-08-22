@@ -173,6 +173,7 @@ test('subroom switching rejects foreign targets and non members', function () {
 
 test('call page exposes subrooms only to active room members', function () {
     [$room, $owner] = subroomWorkflowRoom();
+    $stranger = User::factory()->create();
 
     $subroom = RoomSubroom::factory()
         ->for($room)
@@ -181,7 +182,8 @@ test('call page exposes subrooms only to active room members', function () {
             'position' => 1,
         ]);
 
-    $this->get(route('rooms.call.show', $room))
+    $this->actingAs($stranger)
+        ->get(route('rooms.call.show', $room))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/Call')

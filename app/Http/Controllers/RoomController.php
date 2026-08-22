@@ -52,7 +52,7 @@ class RoomController extends Controller
         $room = $createRoom->handle($user, $request->roomData());
 
         if (! $request->expectsJson()) {
-            return to_route('rooms.call.show', $room);
+            return to_route('rooms.call.prepare', $room);
         }
 
         return response()->json(['room' => $this->roomPayload($room->load('members'))], 201);
@@ -63,7 +63,7 @@ class RoomController extends Controller
         abort_unless($this->canView($request, $room), 403);
 
         if (! $request->expectsJson()) {
-            return to_route('rooms.call.show', $room);
+            return to_route('rooms.call.prepare', $room);
         }
 
         return response()->json(['room' => $this->roomPayload($room)]);

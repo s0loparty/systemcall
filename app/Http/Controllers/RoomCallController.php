@@ -20,15 +20,39 @@ use Inertia\Response;
 
 class RoomCallController extends Controller
 {
+    public function prepare(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): Response
+    {
+        return Inertia::render('rooms/Prepare', $this->pageProps($request, $room, $liveKit, $guestIdentity));
+    }
+
+    public function waiting(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): Response
+    {
+        return Inertia::render('rooms/Waiting', $this->pageProps($request, $room, $liveKit, $guestIdentity, true));
+    }
+
     public function show(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): Response
     {
+        return Inertia::render('rooms/Call', $this->pageProps($request, $room, $liveKit, $guestIdentity));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function pageProps(
+        Request $request,
+        Room $room,
+        LiveKitTokenService $liveKit,
+        GuestIdentity $guestIdentity,
+        bool $includeWaitingRoomEntries = false,
+    ): array {
         abort_unless($this->canOpen($request, $room), 403);
 
         $canModerateWaitingRoom = $this->canModerateWaitingRoom($request, $room);
         $currentRoomMemberId = $this->currentRoomMemberId($request, $room, $guestIdentity);
         $canSeeRoomMembers = $canModerateWaitingRoom || $currentRoomMemberId !== null;
+        $canSeeWaitingRoomEntries = $canModerateWaitingRoom || $includeWaitingRoomEntries;
 
-        return Inertia::render('rooms/Call', [
+        return [
             'room' => [
                 'public_id' => $room->public_id,
                 'name' => $room->name,
@@ -50,11 +74,11 @@ class RoomCallController extends Controller
                 ? $this->subrooms($room)
                 : [],
             'room_messages' => $currentRoomMemberId !== null ? $this->recentMessages($room) : [],
-            'waiting_room_entries' => $canModerateWaitingRoom
+            'waiting_room_entries' => $canSeeWaitingRoomEntries
                 ? $this->pendingWaitingRoomEntries($room)
                 : [],
             'current_waiting_room_entry' => $this->currentWaitingRoomEntry($request, $room, $guestIdentity),
-        ]);
+        ];
     }
 
     private function canOpen(Request $request, Room $room): bool

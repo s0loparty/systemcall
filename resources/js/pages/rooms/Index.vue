@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
 import { store as storeRoom } from '@/routes/rooms';
-import { show as showCall } from '@/routes/rooms/call';
+import { prepare as prepareCall } from '@/routes/rooms/call';
 
 type RoomSummary = {
     public_id: string;
@@ -350,8 +350,8 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
 
                             <div class="flex flex-wrap gap-2 md:justify-end">
                                 <Button as-child class="rounded-2xl">
-                                    <Link :href="showCall(room.public_id)">
-                                        Открыть звонок
+                                    <Link :href="prepareCall(room.public_id)">
+                                        Подготовиться
                                     </Link>
                                 </Button>
                             </div>

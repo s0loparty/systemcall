@@ -16,7 +16,7 @@ beforeEach(function () {
     config()->set('services.livekit.token_ttl', 600);
 });
 
-test('room call page renders the LiveKit vertical slice props', function () {
+test('room call flow pages render the LiveKit vertical slice props', function (string $routeName, string $component) {
     $user = User::factory()->create();
     $room = Room::factory()
         ->public()
@@ -25,24 +25,32 @@ test('room call page renders the LiveKit vertical slice props', function () {
         ]);
 
     $this->actingAs($user)
-        ->get(route('rooms.call.show', $room))
+        ->get(route($routeName, $room))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->component('rooms/Call')
+            ->component($component)
             ->where('room.public_id', $room->public_id)
             ->where('room.name', 'Daily standup')
             ->where('room.livekit_room_name', 'room-'.$room->public_id)
             ->where('can_join_without_password', true));
-});
+})->with([
+    'prepare page' => ['rooms.call.prepare', 'rooms/Prepare'],
+    'waiting page' => ['rooms.call.waiting', 'rooms/Waiting'],
+    'call page' => ['rooms.call.show', 'rooms/Call'],
+]);
 
-test('guests cannot open the room call page', function () {
+test('guests cannot open room call flow pages', function (string $routeName) {
     $room = Room::factory()
         ->public()
         ->create();
 
-    $this->get(route('rooms.call.show', $room))
+    $this->get(route($routeName, $room))
         ->assertRedirect(route('login'));
-});
+})->with([
+    'prepare page' => 'rooms.call.prepare',
+    'waiting page' => 'rooms.call.waiting',
+    'call page' => 'rooms.call.show',
+]);
 
 test('active room members can obtain scoped LiveKit tokens', function () {
     $owner = User::factory()->create();

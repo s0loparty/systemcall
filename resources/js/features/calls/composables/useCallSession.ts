@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
 import type {
     RoomMemberSummary,
+    SelectedDevices,
     SubroomTokenResponse,
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
@@ -12,11 +13,14 @@ import { useRoomJoin } from './useRoomJoin';
 type UseCallSessionOptions = {
     roomPublicId: string;
     displayName: string;
+    initialSelectedDevices?: SelectedDevices;
 };
 
 export function useCallSession(options: UseCallSessionOptions) {
     const liveKit = useLiveKit();
-    const mediaDevices = useMediaDevices();
+    const mediaDevices = useMediaDevices({
+        initialSelectedDevices: options.initialSelectedDevices,
+    });
     const roomJoin = useRoomJoin(options.roomPublicId, options.displayName);
     const connecting = ref(false);
     const errorMessage = ref<string | null>(null);

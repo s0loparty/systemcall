@@ -10,6 +10,20 @@ export type CallRoom = {
     livekit_room_name: string;
 };
 
+export type CallPageProps = {
+    room: CallRoom;
+    can_join_without_password: boolean;
+    can_moderate_waiting_room: boolean;
+    can_moderate_members: boolean;
+    current_room_member_id: number | null;
+    global_pinned_room_member_id: number | null;
+    room_members: RoomMemberSummary[];
+    room_subrooms: RoomSubroomSummary[];
+    room_messages: RoomMessageSummary[];
+    waiting_room_entries: WaitingRoomEntry[];
+    current_waiting_room_entry: WaitingRoomEntry | null;
+};
+
 export type JoinForm = {
     display_name: string;
     password: string;

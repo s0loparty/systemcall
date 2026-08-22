@@ -100,7 +100,7 @@ test('authenticated users can manage rooms through Inertia pages', function () {
         ->where('name', 'Browser-created room')
         ->firstOrFail();
 
-    $response->assertRedirect(route('rooms.call.show', $createdRoom));
+    $response->assertRedirect(route('rooms.call.prepare', $createdRoom));
     expect($createdRoom->waiting_room_enabled)->toBeTrue()
         ->and($createdRoom->max_participants)->toBe(8);
 });

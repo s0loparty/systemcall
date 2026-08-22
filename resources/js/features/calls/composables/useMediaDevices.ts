@@ -3,12 +3,16 @@ import type { LocalTrack } from 'livekit-client';
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { SelectedDevices } from '../types';
 
-export function useMediaDevices() {
+type UseMediaDevicesOptions = {
+    initialSelectedDevices?: SelectedDevices;
+};
+
+export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     const audioInputs = ref<MediaDeviceInfo[]>([]);
     const videoInputs = ref<MediaDeviceInfo[]>([]);
     const selectedDevices = ref<SelectedDevices>({
-        audioInputId: '',
-        videoInputId: '',
+        audioInputId: options.initialSelectedDevices?.audioInputId ?? '',
+        videoInputId: options.initialSelectedDevices?.videoInputId ?? '',
     });
     const previewEnabled = ref(false);
     const previewLoading = ref(false);
@@ -85,6 +89,10 @@ export function useMediaDevices() {
             ...selectedDevices.value,
             audioInputId: deviceId,
         };
+
+        if (previewEnabled.value) {
+            void startPreview();
+        }
     }
 
     function setVideoInput(deviceId: string): void {
@@ -92,6 +100,10 @@ export function useMediaDevices() {
             ...selectedDevices.value,
             videoInputId: deviceId,
         };
+
+        if (previewEnabled.value) {
+            void startPreview();
+        }
     }
 
     function renderPreview(): void {

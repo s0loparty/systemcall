@@ -143,6 +143,7 @@ test('global pin is synchronized by moderators only', function () {
 
 test('call page exposes application state only to active room members', function () {
     [$room, $owner, , $participant] = applicationStateRoom();
+    $stranger = User::factory()->create();
 
     $message = RoomMessage::factory()
         ->for($room)
@@ -153,7 +154,8 @@ test('call page exposes application state only to active room members', function
 
     $room->update(['global_pinned_room_member_id' => $participant->id]);
 
-    $this->get(route('rooms.call.show', $room))
+    $this->actingAs($stranger)
+        ->get(route('rooms.call.show', $room))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/Call')
