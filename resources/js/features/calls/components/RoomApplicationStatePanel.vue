@@ -109,11 +109,11 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
         <div class="flex min-h-80 flex-col">
             <div>
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Room chat
+                    Чат комнаты
                 </p>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                    Plain text only. Messages are rate limited and synced
-                    through Reverb.
+                    Только простой текст. Сообщения ограничены по частоте и
+                    синхронизируются через Reverb.
                 </p>
             </div>
 
@@ -124,7 +124,7 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                     v-if="messages.length === 0"
                     class="text-sm text-neutral-500 dark:text-neutral-400"
                 >
-                    No messages yet.
+                    Сообщений пока нет.
                 </li>
                 <li
                     v-for="message in messages"
@@ -152,7 +152,7 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                     v-model="messageRequest.body"
                     class="min-h-11 flex-1 resize-none rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 transition outline-none focus:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
                     maxlength="1000"
-                    placeholder="Write a message"
+                    placeholder="Напишите сообщение"
                     :disabled="
                         currentMemberId === null || messageRequest.processing
                     "
@@ -166,7 +166,7 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                         messageRequest.body.trim() === ''
                     "
                 >
-                    Send
+                    Отправить
                 </button>
             </form>
         </div>
@@ -176,7 +176,7 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                 class="rounded-2xl border border-neutral-200 p-3 dark:border-neutral-800"
             >
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Hands
+                    Руки
                 </p>
                 <div class="mt-2 flex flex-wrap gap-2">
                     <button
@@ -189,14 +189,14 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                     >
                         {{
                             currentMember?.hand_raised_at
-                                ? 'Lower hand'
-                                : 'Raise hand'
+                                ? 'Опустить руку'
+                                : 'Поднять руку'
                         }}
                     </button>
                     <span
                         class="rounded-full bg-neutral-100 px-3 py-1.5 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300"
                     >
-                        {{ raisedMembers.length }} raised
+                        Подняли руку: {{ raisedMembers.length }}
                     </span>
                 </div>
                 <ol
@@ -217,20 +217,21 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                 class="rounded-2xl border border-neutral-200 p-3 dark:border-neutral-800"
             >
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Pins
+                    Закрепления
                 </p>
                 <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                    Personal pin is local to this browser. Global pin syncs to
-                    everyone and requires moderator rights.
+                    Личное закрепление видно только в этом браузере. Общее
+                    закрепление синхронизируется для всех и требует прав
+                    модератора.
                 </p>
                 <div class="mt-3 grid gap-2">
                     <p class="text-xs text-neutral-600 dark:text-neutral-300">
-                        Personal:
-                        {{ personalPinnedMember?.display_name ?? 'none' }}
+                        Лично:
+                        {{ personalPinnedMember?.display_name ?? 'нет' }}
                     </p>
                     <p class="text-xs text-neutral-600 dark:text-neutral-300">
-                        Global:
-                        {{ globalPinnedMember?.display_name ?? 'none' }}
+                        Для всех:
+                        {{ globalPinnedMember?.display_name ?? 'нет' }}
                     </p>
                 </div>
                 <ol class="mt-3 flex max-h-48 flex-col gap-2 overflow-auto">
@@ -259,8 +260,8 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                             >
                                 {{
                                     personalPinnedMemberId === member.id
-                                        ? 'Unpin local'
-                                        : 'Pin local'
+                                        ? 'Открепить лично'
+                                        : 'Закрепить лично'
                                 }}
                             </button>
                             <button
@@ -278,8 +279,8 @@ async function setGlobalPin(memberId: number | null): Promise<void> {
                             >
                                 {{
                                     globalPinnedMemberId === member.id
-                                        ? 'Unpin global'
-                                        : 'Pin global'
+                                        ? 'Открепить для всех'
+                                        : 'Закрепить для всех'
                                 }}
                             </button>
                         </div>

@@ -25,7 +25,6 @@ export function useMediaDevices() {
 
             audioInputs.value = nextAudioInputs;
             videoInputs.value = nextVideoInputs;
-            selectDefaultDevices();
         } catch (error) {
             deviceErrorMessage.value = formatDeviceError(error);
         }
@@ -38,13 +37,23 @@ export function useMediaDevices() {
         deviceErrorMessage.value = null;
 
         try {
+            if (
+                selectedDevices.value.audioInputId === '' &&
+                selectedDevices.value.videoInputId === ''
+            ) {
+                deviceErrorMessage.value =
+                    'Выберите камеру или микрофон для предпросмотра.';
+
+                return;
+            }
+
             previewTracks.value = await createLocalTracks({
                 audio: selectedDevices.value.audioInputId
                     ? { deviceId: selectedDevices.value.audioInputId }
-                    : true,
+                    : false,
                 video: selectedDevices.value.videoInputId
                     ? { deviceId: selectedDevices.value.videoInputId }
-                    : true,
+                    : false,
             });
             previewEnabled.value = true;
 
@@ -85,16 +94,6 @@ export function useMediaDevices() {
         };
     }
 
-    function selectDefaultDevices(): void {
-        if (!selectedDevices.value.audioInputId && audioInputs.value[0]) {
-            setAudioInput(audioInputs.value[0].deviceId);
-        }
-
-        if (!selectedDevices.value.videoInputId && videoInputs.value[0]) {
-            setVideoInput(videoInputs.value[0].deviceId);
-        }
-    }
-
     function renderPreview(): void {
         if (!previewHost.value) {
             return;
@@ -124,7 +123,7 @@ export function useMediaDevices() {
             return error.message;
         }
 
-        return 'Could not access media devices.';
+        return 'Не удалось получить доступ к устройствам.';
     }
 
     onBeforeUnmount(() => {

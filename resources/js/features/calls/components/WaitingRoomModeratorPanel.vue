@@ -44,16 +44,16 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
         <div class="flex items-center justify-between gap-3">
             <div>
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Waiting room
+                    Зал ожидания
                 </p>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                    Approve or reject pending participants.
+                    Подтверждайте или отклоняйте ожидающих участников.
                 </p>
             </div>
             <span
                 class="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300"
             >
-                {{ entries.length }} pending
+                Ожидают: {{ entries.length }}
             </span>
         </div>
 
@@ -61,7 +61,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
             v-if="entries.length === 0"
             class="mt-3 text-sm text-neutral-500 dark:text-neutral-400"
         >
-            No one is waiting right now.
+            Сейчас никто не ожидает.
         </p>
 
         <ol v-else class="mt-3 flex flex-col gap-2">
@@ -77,7 +77,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                         {{ entry.display_name }}
                     </p>
                     <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                        {{ entry.guest ? 'Guest' : 'Authenticated user' }}
+                        {{ entry.guest ? 'Гость' : 'Пользователь' }}
                     </p>
                 </div>
                 <div class="flex gap-2">
@@ -90,7 +90,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                         "
                         @click="approveEntry(entry)"
                     >
-                        Approve
+                        Одобрить
                     </button>
                     <button
                         class="rounded-full bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
@@ -101,7 +101,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                         "
                         @click="rejectEntry(entry)"
                     >
-                        Reject
+                        Отклонить
                     </button>
                 </div>
             </li>

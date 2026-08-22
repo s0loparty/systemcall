@@ -67,7 +67,7 @@ export function useCallSession(options: UseCallSessionOptions) {
             errorMessage.value =
                 error instanceof Error
                     ? error.message
-                    : 'Could not connect to the room.';
+                    : 'Не удалось подключиться к комнате.';
             await liveKit.disconnect();
         } finally {
             connecting.value = false;
@@ -84,7 +84,7 @@ export function useCallSession(options: UseCallSessionOptions) {
         waitingRoomEntry.value = event.waiting_room;
 
         if (event.waiting_room.status === 'rejected') {
-            errorMessage.value = 'Your request to join this room was rejected.';
+            errorMessage.value = 'Ваша заявка на вход в комнату отклонена.';
 
             return;
         }
@@ -112,7 +112,7 @@ export function useCallSession(options: UseCallSessionOptions) {
             errorMessage.value =
                 error instanceof Error
                     ? error.message
-                    : 'Could not connect to the room.';
+                    : 'Не удалось подключиться к комнате.';
             await liveKit.disconnect();
         } finally {
             connecting.value = false;
@@ -151,7 +151,7 @@ export function useCallSession(options: UseCallSessionOptions) {
             errorMessage.value =
                 error instanceof Error
                     ? error.message
-                    : 'Could not switch subrooms.';
+                    : 'Не удалось переключить подкомнату.';
 
             return null;
         } finally {

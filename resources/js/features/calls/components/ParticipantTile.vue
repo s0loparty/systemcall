@@ -50,12 +50,14 @@ const emit = defineEmits<{
             <div>
                 <p class="font-medium">
                     {{ tile.name }}
-                    <span v-if="tile.local" class="text-neutral-300"
-                        >(you)</span
-                    >
+                    <span v-if="tile.local" class="text-neutral-300">(вы)</span>
                 </p>
                 <p class="text-xs text-neutral-300">
-                    {{ tile.microphone ? 'mic on' : 'mic off' }}
+                    {{
+                        tile.microphone
+                            ? 'микрофон включен'
+                            : 'микрофон выключен'
+                    }}
                 </p>
             </div>
             <div class="flex flex-wrap justify-end gap-2">
@@ -63,25 +65,25 @@ const emit = defineEmits<{
                     v-if="personallyPinned"
                     class="rounded-full bg-blue-300 px-2 py-1 text-xs font-medium text-blue-950"
                 >
-                    local pin
+                    локально закреплен
                 </span>
                 <span
                     v-if="globallyPinned"
                     class="rounded-full bg-indigo-300 px-2 py-1 text-xs font-medium text-indigo-950"
                 >
-                    global pin
+                    закреплен для всех
                 </span>
                 <span
                     v-if="tile.screenShare"
                     class="rounded-full bg-sky-300 px-2 py-1 text-xs font-medium text-sky-950"
                 >
-                    sharing
+                    показ экрана
                 </span>
                 <span
                     v-if="active || tile.speaking"
                     class="rounded-full bg-emerald-400 px-2 py-1 text-xs font-medium text-emerald-950"
                 >
-                    speaking
+                    говорит
                 </span>
             </div>
         </div>

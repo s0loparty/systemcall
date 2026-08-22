@@ -7,6 +7,18 @@ type Props = {
 };
 
 defineProps<Props>();
+
+function connectionStateLabel(state: EchoConnectionState): string {
+    return (
+        {
+            connected: 'подключен',
+            connecting: 'подключение',
+            reconnecting: 'переподключение',
+            disconnected: 'отключен',
+            failed: 'ошибка',
+        } satisfies Record<EchoConnectionState, string>
+    )[state];
+}
 </script>
 
 <template>
@@ -29,16 +41,16 @@ defineProps<Props>();
             />
             <div>
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Reverb application channel
+                    Канал событий Reverb
                 </p>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                    Echo status: {{ connectionState }}
+                    Статус Echo: {{ connectionStateLabel(connectionState) }}
                 </p>
             </div>
         </div>
 
         <div class="min-w-0 text-sm text-neutral-600 dark:text-neutral-300">
-            <p v-if="activities.length === 0">Application events are ready.</p>
+            <p v-if="activities.length === 0">События приложения готовы.</p>
             <ol v-else class="flex flex-col gap-1">
                 <li
                     v-for="activity in activities"

@@ -30,11 +30,11 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Dashboard',
+                title: 'Панель',
                 href: dashboard(),
             },
             {
-                title: 'Rooms',
+                title: 'Комнаты',
                 href: '/rooms',
             },
         ],
@@ -47,10 +47,14 @@ const activeRooms = computed(() =>
 const waitingRoomCount = computed(
     () => props.rooms.filter((room) => room.waiting_room_enabled).length,
 );
+
+function visibilityLabel(visibility: RoomSummary['visibility']): string {
+    return visibility === 'public' ? 'публичная' : 'приватная';
+}
 </script>
 
 <template>
-    <Head title="Rooms" />
+    <Head title="Комнаты" />
 
     <div class="p-5">
         <div class="grid grid-cols-2 gap-5">
@@ -67,19 +71,20 @@ const waitingRoomCount = computed(
                                 class="mb-4 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-emerald-100"
                             >
                                 <RadioTower class="size-3.5" />
-                                Local-ready LiveKit + Reverb
+                                Локально готово: LiveKit + Reverb
                             </div>
                             <h1
                                 class="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl"
                             >
-                                Create a room, share the link, test the call.
+                                Создайте комнату, поделитесь ссылкой и проверьте
+                                звонок.
                             </h1>
                             <p
                                 class="mt-4 max-w-2xl text-sm leading-6 text-neutral-300 md:text-base"
                             >
-                                This is the working control surface for the
-                                current milestones: media join, waiting room,
-                                moderation, chat, hands, pins and subrooms.
+                                Это рабочая панель для текущих возможностей:
+                                вход в медиа, зал ожидания, модерация, чат,
+                                руки, закрепления и подкомнаты.
                             </p>
                         </div>
 
@@ -91,7 +96,7 @@ const waitingRoomCount = computed(
                                     {{ rooms.length }}
                                 </p>
                                 <p class="text-xs text-neutral-300">
-                                    accessible rooms
+                                    доступных комнат
                                 </p>
                             </div>
                             <div
@@ -101,7 +106,7 @@ const waitingRoomCount = computed(
                                     {{ activeRooms.length }}
                                 </p>
                                 <p class="text-xs text-neutral-300">
-                                    active right now
+                                    активны сейчас
                                 </p>
                             </div>
                             <div
@@ -111,7 +116,7 @@ const waitingRoomCount = computed(
                                     {{ waitingRoomCount }}
                                 </p>
                                 <p class="text-xs text-neutral-300">
-                                    with waiting room
+                                    с залом ожидания
                                 </p>
                             </div>
                         </div>
@@ -130,58 +135,64 @@ const waitingRoomCount = computed(
                                 <Plus class="size-5" />
                             </div>
                             <div>
-                                <p class="text-sm font-semibold">New room</p>
+                                <p class="text-sm font-semibold">
+                                    Новая комната
+                                </p>
                                 <p
                                     class="text-xs text-neutral-500 dark:text-neutral-400"
                                 >
-                                    You will be redirected straight to the call.
+                                    После создания вы сразу попадете в звонок.
                                 </p>
                             </div>
                         </div>
 
                         <div class="mt-5 grid gap-4">
                             <div class="grid gap-2">
-                                <Label for="name">Name</Label>
+                                <Label for="name">Название</Label>
                                 <Input
                                     id="name"
                                     name="name"
                                     required
                                     maxlength="120"
-                                    placeholder="Daily sync"
+                                    placeholder="Ежедневный созвон"
                                 />
                                 <InputError :message="errors.name" />
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="description">Description</Label>
+                                <Label for="description">Описание</Label>
                                 <textarea
                                     id="description"
                                     name="description"
                                     maxlength="2000"
                                     class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-input/30"
-                                    placeholder="What is this room for?"
+                                    placeholder="Для чего эта комната?"
                                 />
                                 <InputError :message="errors.description" />
                             </div>
 
                             <div class="grid gap-4 sm:grid-cols-2">
                                 <div class="grid gap-2">
-                                    <Label for="visibility">Visibility</Label>
+                                    <Label for="visibility">Доступность</Label>
                                     <select
                                         id="visibility"
                                         name="visibility"
                                         class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30"
                                         required
                                     >
-                                        <option value="public">Public</option>
-                                        <option value="private">Private</option>
+                                        <option value="public">
+                                            Публичная
+                                        </option>
+                                        <option value="private">
+                                            Приватная
+                                        </option>
                                     </select>
                                     <InputError :message="errors.visibility" />
                                 </div>
 
                                 <div class="grid gap-2">
                                     <Label for="max_participants">
-                                        Max participants
+                                        Максимум участников
                                     </Label>
                                     <Input
                                         id="max_participants"
@@ -189,7 +200,7 @@ const waitingRoomCount = computed(
                                         type="number"
                                         min="2"
                                         max="500"
-                                        placeholder="Optional"
+                                        placeholder="Необязательно"
                                     />
                                     <InputError
                                         :message="errors.max_participants"
@@ -199,7 +210,7 @@ const waitingRoomCount = computed(
 
                             <div class="grid gap-2">
                                 <Label for="password">
-                                    Password, optional
+                                    Пароль, необязательно
                                 </Label>
                                 <Input
                                     id="password"
@@ -208,7 +219,7 @@ const waitingRoomCount = computed(
                                     minlength="8"
                                     maxlength="255"
                                     autocomplete="new-password"
-                                    placeholder="Leave empty for open access"
+                                    placeholder="Оставьте пустым для открытого доступа"
                                 />
                                 <InputError :message="errors.password" />
                             </div>
@@ -224,13 +235,13 @@ const waitingRoomCount = computed(
                                 />
                                 <span>
                                     <span class="block font-medium">
-                                        Enable waiting room
+                                        Включить зал ожидания
                                     </span>
                                     <span
                                         class="block text-xs text-neutral-500 dark:text-neutral-400"
                                     >
-                                        Guests wait until a moderator approves
-                                        them.
+                                        Участники ждут, пока модератор одобрит
+                                        вход.
                                     </span>
                                 </span>
                             </label>
@@ -242,8 +253,8 @@ const waitingRoomCount = computed(
                             >
                                 {{
                                     processing
-                                        ? 'Creating...'
-                                        : 'Create and join'
+                                        ? 'Создаем...'
+                                        : 'Создать и войти'
                                 }}
                             </Button>
                         </div>
@@ -262,13 +273,13 @@ const waitingRoomCount = computed(
                             <h2
                                 class="text-lg font-semibold text-neutral-950 dark:text-white"
                             >
-                                Your rooms
+                                Ваши комнаты
                             </h2>
                             <p
                                 class="text-sm text-neutral-500 dark:text-neutral-400"
                             >
-                                Open the call page in two browsers to test media
-                                and realtime features locally.
+                                Откройте страницу звонка в двух браузерах, чтобы
+                                локально проверить медиа и realtime-функции.
                             </p>
                         </div>
                     </div>
@@ -283,11 +294,11 @@ const waitingRoomCount = computed(
                         <p
                             class="mt-3 font-medium text-neutral-950 dark:text-white"
                         >
-                            No rooms yet
+                            Комнат пока нет
                         </p>
                         <p class="mt-1 text-sm text-neutral-500">
-                            Create the first room above and you can join
-                            immediately.
+                            Создайте первую комнату выше и сразу войдите в
+                            звонок.
                         </p>
                     </div>
 
@@ -307,19 +318,19 @@ const waitingRoomCount = computed(
                                     <span
                                         class="rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] font-medium text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200"
                                     >
-                                        {{ room.visibility }}
+                                        {{ visibilityLabel(room.visibility) }}
                                     </span>
                                     <span
                                         v-if="room.waiting_room_enabled"
                                         class="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-950 dark:text-amber-200"
                                     >
-                                        waiting room
+                                        зал ожидания
                                     </span>
                                     <span
                                         v-if="room.has_password"
                                         class="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-200"
                                     >
-                                        password
+                                        пароль
                                     </span>
                                 </div>
                                 <p
@@ -327,20 +338,20 @@ const waitingRoomCount = computed(
                                 >
                                     {{
                                         room.description ??
-                                        'No description yet.'
+                                        'Описание пока не добавлено.'
                                     }}
                                 </p>
                                 <p
                                     class="mt-2 text-xs text-neutral-400 dark:text-neutral-500"
                                 >
-                                    Public id: {{ room.public_id }}
+                                    Public ID: {{ room.public_id }}
                                 </p>
                             </div>
 
                             <div class="flex flex-wrap gap-2 md:justify-end">
                                 <Button as-child class="rounded-2xl">
                                     <Link :href="showCall(room.public_id)">
-                                        Open call
+                                        Открыть звонок
                                     </Link>
                                 </Button>
                             </div>
@@ -360,7 +371,7 @@ const waitingRoomCount = computed(
                                 <p
                                     class="font-medium text-neutral-950 dark:text-white"
                                 >
-                                    Local checklist
+                                    Локальный чек-лист
                                 </p>
                                 <ul
                                     class="mt-3 grid gap-2 text-sm text-neutral-500 dark:text-neutral-400"
@@ -387,10 +398,11 @@ const waitingRoomCount = computed(
                                 <p
                                     class="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400"
                                 >
-                                    Open one room in a normal browser and in a
-                                    private window. Join as owner and guest,
-                                    then test mic, camera, chat, hand, pin and
-                                    subroom switching.
+                                    Откройте одну комнату в обычном браузере и
+                                    приватном окне. Войдите как владелец и
+                                    гость, затем проверьте микрофон, камеру,
+                                    чат, руку, закрепление и переключение
+                                    подкомнат.
                                 </p>
                             </div>
                         </div>

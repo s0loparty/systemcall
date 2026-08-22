@@ -66,11 +66,11 @@ async function createSubroom(): Promise<void> {
         >
             <div>
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Subrooms
+                    Подкомнаты
                 </p>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                    Switching requests a new authorized LiveKit token and
-                    reconnects media to the target room.
+                    Переключение запрашивает новый разрешенный LiveKit-токен и
+                    переподключает медиа к выбранной комнате.
                 </p>
             </div>
             <span
@@ -92,7 +92,7 @@ async function createSubroom(): Promise<void> {
                 :disabled="!connected || switching || currentSubroomId === null"
                 @click="emit('switch', null)"
             >
-                Main room
+                Основная комната
             </button>
             <button
                 v-for="subroom in orderedSubrooms"
@@ -122,7 +122,7 @@ async function createSubroom(): Promise<void> {
                 v-model="createRequest.name"
                 class="min-h-10 flex-1 rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 transition outline-none focus:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
                 maxlength="80"
-                placeholder="New subroom name"
+                placeholder="Название подкомнаты"
                 :disabled="createRequest.processing || subroomCount >= 5"
             />
             <button
@@ -134,7 +134,7 @@ async function createSubroom(): Promise<void> {
                     createRequest.name.trim() === ''
                 "
             >
-                Create
+                Создать
             </button>
         </form>
 

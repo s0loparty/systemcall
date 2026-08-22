@@ -13,7 +13,7 @@ const password = defineModel<string>('password', { required: true });
         class="rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs dark:border-neutral-800 dark:bg-neutral-950"
     >
         <label class="text-sm font-medium" for="room-password">
-            Room password
+            Пароль комнаты
         </label>
         <input
             id="room-password"

@@ -66,7 +66,7 @@ const orderedTiles = computed(() => {
             v-if="tiles.length === 0"
             class="flex min-h-96 items-center justify-center rounded-3xl border border-dashed border-neutral-300 bg-neutral-50 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-950"
         >
-            Join the call to start publishing microphone and camera.
+            Войдите в звонок. Камеру и микрофон можно оставить выключенными.
         </div>
     </section>
 </template>

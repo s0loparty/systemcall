@@ -101,6 +101,16 @@ async function banMember(member: RoomMemberSummary): Promise<void> {
 function canModerate(member: RoomMemberSummary): boolean {
     return member.role !== 'owner' && member.id !== props.currentMemberId;
 }
+
+function roleLabel(role: RoomMemberSummary['role']): string {
+    return (
+        {
+            owner: 'владелец',
+            moderator: 'модератор',
+            participant: 'участник',
+        } satisfies Record<RoomMemberSummary['role'], string>
+    )[role];
+}
 </script>
 
 <template>
@@ -112,10 +122,11 @@ function canModerate(member: RoomMemberSummary): boolean {
         >
             <div>
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Room moderation
+                    Модерация комнаты
                 </p>
                 <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                    Manage roles, force mute, remove, or ban active members.
+                    Управляйте ролями, принудительно выключайте микрофон,
+                    удаляйте или блокируйте активных участников.
                 </p>
             </div>
             <button
@@ -124,7 +135,7 @@ function canModerate(member: RoomMemberSummary): boolean {
                 :disabled="muteAllRequest.processing"
                 @click="muteAllMembers"
             >
-                Mute all participants
+                Выключить микрофон всем
             </button>
         </div>
 
@@ -132,7 +143,7 @@ function canModerate(member: RoomMemberSummary): boolean {
             v-if="members.length === 0"
             class="mt-3 text-sm text-neutral-500 dark:text-neutral-400"
         >
-            No active members right now.
+            Сейчас нет активных участников.
         </p>
 
         <ol v-else class="mt-3 flex flex-col gap-2">
@@ -151,23 +162,25 @@ function canModerate(member: RoomMemberSummary): boolean {
                         <span
                             class="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300"
                         >
-                            {{ member.role }}
+                            {{ roleLabel(member.role) }}
                         </span>
                         <span
                             v-if="member.id === currentMemberId"
                             class="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-200"
                         >
-                            you
+                            вы
                         </span>
                     </div>
                     <p
                         class="mt-1 text-xs text-neutral-500 dark:text-neutral-400"
                     >
-                        {{ member.guest ? 'Guest' : 'Authenticated user' }}
+                        {{ member.guest ? 'Гость' : 'Пользователь' }}
                         · mic
-                        {{ member.can_publish_audio ? 'allowed' : 'muted' }} ·
-                        camera
-                        {{ member.can_publish_video ? 'allowed' : 'off' }}
+                        {{ member.can_publish_audio ? 'разрешен' : 'выключен' }}
+                        · camera
+                        {{
+                            member.can_publish_video ? 'разрешена' : 'выключена'
+                        }}
                     </p>
                 </div>
 
@@ -182,7 +195,7 @@ function canModerate(member: RoomMemberSummary): boolean {
                         :disabled="roleRequest.processing"
                         @click="changeRole(member, 'moderator')"
                     >
-                        Promote
+                        Назначить модератором
                     </button>
                     <button
                         v-if="member.role === 'moderator'"
@@ -191,7 +204,7 @@ function canModerate(member: RoomMemberSummary): boolean {
                         :disabled="roleRequest.processing"
                         @click="changeRole(member, 'participant')"
                     >
-                        Demote
+                        Снять модератора
                     </button>
                     <button
                         class="rounded-full bg-amber-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
@@ -201,7 +214,7 @@ function canModerate(member: RoomMemberSummary): boolean {
                         "
                         @click="muteMember(member)"
                     >
-                        Force mute
+                        Выключить микрофон
                     </button>
                     <button
                         class="rounded-full bg-orange-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-60"
@@ -209,7 +222,7 @@ function canModerate(member: RoomMemberSummary): boolean {
                         :disabled="kickRequest.processing"
                         @click="kickMember(member)"
                     >
-                        Kick
+                        Удалить
                     </button>
                     <button
                         class="rounded-full bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
@@ -217,14 +230,14 @@ function canModerate(member: RoomMemberSummary): boolean {
                         :disabled="banRequest.processing"
                         @click="banMember(member)"
                     >
-                        Ban
+                        Заблокировать
                     </button>
                 </div>
                 <p
                     v-else
                     class="text-xs text-neutral-500 dark:text-neutral-400"
                 >
-                    Protected member
+                    Защищенный участник
                 </p>
             </li>
         </ol>

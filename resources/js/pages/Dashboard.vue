@@ -8,7 +8,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'Dashboard',
+                title: 'Панель',
                 href: dashboard(),
             },
         ],
@@ -17,7 +17,7 @@ defineOptions({
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Панель" />
 
     <div class="min-h-full bg-neutral-50 p-4 dark:bg-neutral-950">
         <div class="mx-auto grid max-w-7xl gap-5">
@@ -32,27 +32,26 @@ defineOptions({
                         class="mb-4 flex w-fit items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
                     >
                         <Sparkles class="size-3.5" />
-                        Ready for local call testing
+                        Готово к локальной проверке звонков
                     </div>
                     <h1
                         class="text-3xl font-semibold tracking-tight text-neutral-950 md:text-5xl dark:text-white"
                     >
-                        Run group calls from one place.
+                        Управляйте групповыми звонками из одного места.
                     </h1>
                     <p
                         class="mt-4 max-w-2xl text-sm leading-6 text-neutral-500 md:text-base dark:text-neutral-400"
                     >
-                        Create a room, invite another browser session and test
-                        the implemented milestones: LiveKit media, Reverb
-                        realtime state, waiting room, moderation, chat, pins and
-                        subrooms.
+                        Создайте комнату, откройте вторую сессию браузера и
+                        проверьте LiveKit-медиа, Reverb-события, зал ожидания,
+                        модерацию, чат, закрепления и подкомнаты.
                     </p>
                     <div class="mt-6 flex flex-wrap gap-3">
                         <Link
                             :href="roomsIndex()"
                             class="inline-flex items-center gap-2 rounded-2xl bg-neutral-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                         >
-                            Open rooms
+                            Открыть комнаты
                             <ArrowRight class="size-4" />
                         </Link>
                     </div>
@@ -67,13 +66,13 @@ defineOptions({
                     <p
                         class="mt-4 font-medium text-neutral-950 dark:text-white"
                     >
-                        Media rooms
+                        Медиа-комнаты
                     </p>
                     <p
                         class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
                     >
-                        LiveKit owns mic, camera, screen share, active speaker
-                        and WebRTC media routing.
+                        LiveKit отвечает за микрофон, камеру, показ экрана,
+                        активного говорящего и WebRTC-маршрутизацию.
                     </p>
                 </div>
                 <div
@@ -83,13 +82,13 @@ defineOptions({
                     <p
                         class="mt-4 font-medium text-neutral-950 dark:text-white"
                     >
-                        Application realtime
+                        События приложения
                     </p>
                     <p
                         class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
                     >
-                        Reverb syncs waiting room, chat, hand state, global pin,
-                        moderation and subroom events.
+                        Reverb синхронизирует зал ожидания, чат, поднятые руки,
+                        общие закрепления, модерацию и события подкомнат.
                     </p>
                 </div>
                 <div
@@ -99,13 +98,13 @@ defineOptions({
                     <p
                         class="mt-4 font-medium text-neutral-950 dark:text-white"
                     >
-                        Browser smoke flow
+                        Проверка в браузере
                     </p>
                     <p
                         class="mt-2 text-sm text-neutral-500 dark:text-neutral-400"
                     >
-                        Use two browsers or a private window to validate owner
-                        and guest behavior locally.
+                        Используйте два браузера или приватное окно, чтобы
+                        локально проверить владельца и гостевой сценарий.
                     </p>
                 </div>
             </section>

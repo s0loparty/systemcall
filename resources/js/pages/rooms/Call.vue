@@ -39,7 +39,7 @@ type RoomPageProps = {
 const props = defineProps<RoomPageProps>();
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user);
-const defaultDisplayName = computed(() => currentUser.value?.name ?? 'Guest');
+const defaultDisplayName = computed(() => currentUser.value?.name ?? 'Гость');
 const personalPinnedRoomMemberId = ref<number | null>(null);
 const call = useCallSession({
     roomPublicId: props.room.public_id,
@@ -159,30 +159,30 @@ async function switchCallSubroom(
     <Head :title="`${room.name} call`" />
 
     <div class="flex h-full flex-1 flex-col gap-4 overflow-hidden p-4">
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid gap-4 md:grid-cols-2">
             <CallHeader
-            :room="room"
-            :connected="connected"
-            :connection-state="connectionState"
-            :busy="busy"
-            :microphone-enabled="microphoneEnabled"
-            :camera-enabled="cameraEnabled"
-            :screen-share-enabled="screenShareEnabled"
-            :waiting-room-status="waitingRoomEntry?.status ?? null"
-            @join="connectToCall"
-            @mute="toggleMicrophone"
-            @unmute="toggleMicrophone"
-            @start-camera="toggleCamera"
-            @stop-camera="toggleCamera"
-            @start-screen-share="toggleScreenShare"
-            @stop-screen-share="toggleScreenShare"
-            @leave="disconnect"
-        />
+                :room="room"
+                :connected="connected"
+                :connection-state="connectionState"
+                :busy="busy"
+                :microphone-enabled="microphoneEnabled"
+                :camera-enabled="cameraEnabled"
+                :screen-share-enabled="screenShareEnabled"
+                :waiting-room-status="waitingRoomEntry?.status ?? null"
+                @join="connectToCall"
+                @mute="toggleMicrophone"
+                @unmute="toggleMicrophone"
+                @start-camera="toggleCamera"
+                @stop-camera="toggleCamera"
+                @start-screen-share="toggleScreenShare"
+                @stop-screen-share="toggleScreenShare"
+                @leave="disconnect"
+            />
 
-        <ApplicationRealtimePanel
-            :connection-state="echoConnectionStatus"
-            :activities="activities"
-        />
+            <ApplicationRealtimePanel
+                :connection-state="echoConnectionStatus"
+                :activities="activities"
+            />
         </div>
 
         <WaitingRoomStatusPanel :entry="waitingRoomEntry" />

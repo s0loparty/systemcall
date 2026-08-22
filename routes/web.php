@@ -21,7 +21,9 @@ Route::match(['get', 'post'], 'broadcasting/room-auth', RoomBroadcastAuthControl
     ->withoutMiddleware(PreventRequestForgery::class);
 
 Route::get('rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
-Route::get('rooms/{room}/call', [RoomCallController::class, 'show'])->name('rooms.call.show');
+Route::get('rooms/{room}/call', [RoomCallController::class, 'show'])
+    ->middleware(['auth', 'verified'])
+    ->name('rooms.call.show');
 Route::post('rooms/{room}/memberships', [RoomMembershipController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('rooms.memberships.store');

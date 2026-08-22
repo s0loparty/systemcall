@@ -42,11 +42,11 @@ onMounted(async () => {
     <Card class="w-full">
         <CardHeader>
             <CardTitle class="flex gap-3">
-                <LockKeyhole class="size-4" />2FA recovery codes
+                <LockKeyhole class="size-4" />Коды восстановления 2FA
             </CardTitle>
             <CardDescription>
-                Recovery codes let you regain access if you lose your 2FA
-                device. Store them in a secure password manager.
+                Коды восстановления помогут вернуть доступ, если вы потеряете
+                устройство 2FA. Храните их в надежном менеджере паролей.
             </CardDescription>
         </CardHeader>
         <CardContent>
@@ -58,8 +58,8 @@ onMounted(async () => {
                         :is="isRecoveryCodesVisible ? EyeOff : Eye"
                         class="size-4"
                     />
-                    {{ isRecoveryCodesVisible ? 'Hide' : 'View' }} recovery
-                    codes
+                    {{ isRecoveryCodesVisible ? 'Скрыть' : 'Показать' }}
+                    коды восстановления
                 </Button>
 
                 <Form
@@ -75,7 +75,7 @@ onMounted(async () => {
                         type="submit"
                         :disabled="processing"
                     >
-                        <RefreshCw /> Regenerate codes
+                        <RefreshCw /> Создать новые коды
                     </Button>
                 </Form>
             </div>
@@ -111,10 +111,10 @@ onMounted(async () => {
                         </div>
                     </div>
                     <p class="text-xs text-muted-foreground select-none">
-                        Each recovery code can be used once to access your
-                        account and will be removed after use. If you need more,
-                        click
-                        <span class="font-bold">Regenerate codes</span> above.
+                        Каждый код восстановления можно использовать один раз,
+                        после чего он будет удален. Если нужны новые коды,
+                        нажмите
+                        <span class="font-bold">Создать новые коды</span> выше.
                     </p>
                 </div>
             </div>

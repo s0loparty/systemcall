@@ -31,8 +31,8 @@ onUnmounted(() => clearTwoFactorAuthData());
     <div v-if="canManageTwoFactor" class="space-y-6">
         <Heading
             variant="small"
-            title="Two-factor authentication"
-            description="Manage your two-factor authentication settings"
+            title="Двухфакторная аутентификация"
+            description="Управляйте настройками двухфакторной аутентификации"
         />
 
         <div
@@ -40,14 +40,14 @@ onUnmounted(() => clearTwoFactorAuthData());
             class="flex flex-col items-start justify-start space-y-4"
         >
             <p class="text-sm text-muted-foreground">
-                When you enable two-factor authentication, you will be prompted
-                for a secure pin during login. This pin can be retrieved from a
-                TOTP-supported application on your phone.
+                Когда вы включите двухфакторную аутентификацию, при входе
+                потребуется безопасный код. Его можно получить в TOTP-приложении
+                на телефоне.
             </p>
 
             <div>
                 <Button v-if="hasSetupData" @click="showSetupModal = true">
-                    <ShieldCheck />Continue setup
+                    <ShieldCheck />Продолжить настройку
                 </Button>
                 <Form
                     v-else
@@ -56,7 +56,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                     #default="{ processing }"
                 >
                     <Button type="submit" :disabled="processing">
-                        Enable 2FA
+                        Включить 2FA
                     </Button>
                 </Form>
             </div>
@@ -64,9 +64,8 @@ onUnmounted(() => clearTwoFactorAuthData());
 
         <div v-else class="flex flex-col items-start justify-start space-y-4">
             <p class="text-sm text-muted-foreground">
-                You will be prompted for a secure, random pin during login,
-                which you can retrieve from the TOTP-supported application on
-                your phone.
+                При входе потребуется безопасный одноразовый код из
+                TOTP-приложения на телефоне.
             </p>
 
             <div class="relative inline">
@@ -76,7 +75,7 @@ onUnmounted(() => clearTwoFactorAuthData());
                         type="submit"
                         :disabled="processing"
                     >
-                        Disable 2FA
+                        Отключить 2FA
                     </Button>
                 </Form>
             </div>

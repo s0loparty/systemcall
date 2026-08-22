@@ -36,7 +36,7 @@ const user = computed(() => page.props.auth.user);
                     <div>
                         <p class="leading-none font-semibold">Systemcall</p>
                         <p class="mt-1 text-xs text-neutral-400">
-                            group video rooms
+                            групповые видеокомнаты
                         </p>
                     </div>
                 </Link>
@@ -47,7 +47,7 @@ const user = computed(() => page.props.auth.user);
                             :href="roomsIndex()"
                             class="rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:bg-neutral-200"
                         >
-                            Rooms
+                            Комнаты
                         </Link>
                     </template>
                     <template v-else>
@@ -55,13 +55,13 @@ const user = computed(() => page.props.auth.user);
                             :href="login()"
                             class="rounded-full px-4 py-2 text-sm font-medium text-neutral-200 transition hover:bg-white/10 hover:text-white"
                         >
-                            Log in
+                            Войти
                         </Link>
                         <Link
                             :href="register()"
                             class="rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-950 transition hover:bg-neutral-200"
                         >
-                            Register
+                            Регистрация
                         </Link>
                     </template>
                 </nav>
@@ -75,19 +75,20 @@ const user = computed(() => page.props.auth.user);
                         class="mb-6 flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-xs font-medium text-emerald-100"
                     >
                         <span class="size-2 rounded-full bg-emerald-400" />
-                        Local smoke ready with Sail + LiveKit
+                        Локальная проверка готова: Sail + LiveKit
                     </div>
                     <h1
                         class="max-w-4xl text-5xl font-semibold tracking-tight md:text-7xl"
                     >
-                        Video calls you can actually test today.
+                        Видеозвонки, которые можно проверить уже сейчас.
                     </h1>
                     <p
                         class="mt-6 max-w-2xl text-base leading-7 text-neutral-300 md:text-lg"
                     >
-                        Create rooms, join as a guest, approve waiting-room
-                        entries, moderate participants, chat, raise hands, pin
-                        speakers and switch LiveKit subrooms.
+                        Создавайте комнаты, одобряйте вход через зал ожидания,
+                        модерируйте участников, общайтесь в чате, поднимайте
+                        руки, закрепляйте говорящих и переключайте LiveKit
+                        подкомнаты.
                     </p>
 
                     <div class="mt-8 flex flex-wrap gap-3">
@@ -95,14 +96,14 @@ const user = computed(() => page.props.auth.user);
                             :href="user ? roomsIndex() : register()"
                             class="inline-flex items-center gap-2 rounded-2xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-neutral-950 transition hover:bg-emerald-300"
                         >
-                            {{ user ? 'Open rooms' : 'Start testing' }}
+                            {{ user ? 'Открыть комнаты' : 'Начать проверку' }}
                             <ArrowRight class="size-4" />
                         </Link>
                         <Link
                             :href="user ? dashboard() : login()"
                             class="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 px-5 py-3 text-sm font-medium text-white transition hover:bg-white/15"
                         >
-                            {{ user ? 'Dashboard' : 'Log in' }}
+                            {{ user ? 'Панель' : 'Войти' }}
                         </Link>
                     </div>
                 </div>
@@ -116,9 +117,11 @@ const user = computed(() => page.props.auth.user);
                         >
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="font-medium">Local demo room</p>
+                                    <p class="font-medium">
+                                        Локальная демо-комната
+                                    </p>
                                     <p class="mt-1 text-xs text-neutral-400">
-                                        Main room · Subroom A · Subroom B
+                                        Основная · Подкомната A · Подкомната B
                                     </p>
                                 </div>
                                 <span
@@ -133,7 +136,7 @@ const user = computed(() => page.props.auth.user);
                                 >
                                     <Video class="size-5" />
                                     <p class="mt-10 text-sm font-semibold">
-                                        Owner camera
+                                        Камера владельца
                                     </p>
                                 </div>
                                 <div
@@ -141,7 +144,7 @@ const user = computed(() => page.props.auth.user);
                                 >
                                     <Users class="size-5 text-neutral-300" />
                                     <p class="mt-10 text-sm font-semibold">
-                                        Guest joined
+                                        Гость вошел
                                     </p>
                                 </div>
                             </div>
@@ -152,7 +155,7 @@ const user = computed(() => page.props.auth.user);
                                 class="rounded-2xl border border-white/10 bg-white/10 p-4"
                             >
                                 <Video class="size-5 text-emerald-300" />
-                                <p class="mt-3 text-sm font-medium">Media</p>
+                                <p class="mt-3 text-sm font-medium">Медиа</p>
                                 <p class="mt-1 text-xs text-neutral-400">
                                     LiveKit WebRTC
                                 </p>
@@ -161,7 +164,7 @@ const user = computed(() => page.props.auth.user);
                                 class="rounded-2xl border border-white/10 bg-white/10 p-4"
                             >
                                 <RadioTower class="size-5 text-blue-300" />
-                                <p class="mt-3 text-sm font-medium">Realtime</p>
+                                <p class="mt-3 text-sm font-medium">События</p>
                                 <p class="mt-1 text-xs text-neutral-400">
                                     Reverb events
                                 </p>
@@ -170,7 +173,7 @@ const user = computed(() => page.props.auth.user);
                                 class="rounded-2xl border border-white/10 bg-white/10 p-4"
                             >
                                 <Lock class="size-5 text-amber-300" />
-                                <p class="mt-3 text-sm font-medium">Access</p>
+                                <p class="mt-3 text-sm font-medium">Доступ</p>
                                 <p class="mt-1 text-xs text-neutral-400">
                                     Laravel auth
                                 </p>

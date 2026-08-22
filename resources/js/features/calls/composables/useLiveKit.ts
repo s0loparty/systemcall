@@ -59,15 +59,19 @@ export function useLiveKit() {
             attachExistingTracks(participant);
         });
 
+        const shouldEnableMicrophone =
+            initialMedia.microphone ?? selectedDevices.audioInputId !== '';
+        const shouldEnableCamera =
+            initialMedia.camera ?? selectedDevices.videoInputId !== '';
         const mediaResults = await Promise.allSettled([
             liveKitRoom.localParticipant.setMicrophoneEnabled(
-                initialMedia.microphone ?? true,
+                shouldEnableMicrophone,
                 selectedDevices.audioInputId
                     ? { deviceId: selectedDevices.audioInputId }
                     : undefined,
             ),
             liveKitRoom.localParticipant.setCameraEnabled(
-                initialMedia.camera ?? true,
+                shouldEnableCamera,
                 selectedDevices.videoInputId
                     ? { deviceId: selectedDevices.videoInputId }
                     : undefined,
@@ -406,7 +410,7 @@ export function useLiveKit() {
             return error.message;
         }
 
-        return 'Connected to the room, but could not enable camera or microphone.';
+        return 'Вы подключены к комнате, но камеру или микрофон включить не удалось.';
     }
 
     return {

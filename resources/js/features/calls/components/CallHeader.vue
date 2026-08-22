@@ -54,6 +54,17 @@ function emitScreenShareIntent(): void {
 
     emit('start-screen-share');
 }
+
+function connectionStateLabel(state: CallConnectionState): string {
+    return (
+        {
+            connected: 'подключен',
+            connecting: 'подключение',
+            reconnecting: 'переподключение',
+            disconnected: 'отключен',
+        } satisfies Record<CallConnectionState, string>
+    )[state];
+}
 </script>
 
 <template>
@@ -69,7 +80,7 @@ function emitScreenShareIntent(): void {
             <div class="space-y-2">
                 <div class="flex flex-wrap items-center gap-2">
                     <p class="text-sm text-neutral-300">
-                        LiveKit room: {{ room.livekit_room_name }}
+                        Комната LiveKit: {{ room.livekit_room_name }}
                     </p>
                     <span
                         class="rounded-full px-2.5 py-1 text-xs font-medium"
@@ -81,7 +92,7 @@ function emitScreenShareIntent(): void {
                                   : 'bg-white/10 text-neutral-200 ring-1 ring-white/15'
                         "
                     >
-                        {{ connectionState }}
+                        {{ connectionStateLabel(connectionState) }}
                     </span>
                 </div>
                 <h1 class="text-2xl font-semibold tracking-tight">
@@ -105,10 +116,10 @@ function emitScreenShareIntent(): void {
                 >
                     {{
                         waitingRoomStatus === 'pending'
-                            ? 'Waiting approval...'
+                            ? 'Ожидаем подтверждение...'
                             : busy
-                              ? 'Connecting...'
-                              : 'Join call'
+                              ? 'Подключаемся...'
+                              : 'Войти в звонок'
                     }}
                 </button>
                 <template v-else>
@@ -117,14 +128,22 @@ function emitScreenShareIntent(): void {
                         type="button"
                         @click="emitMicrophoneIntent"
                     >
-                        {{ microphoneEnabled ? 'Mute mic' : 'Unmute mic' }}
+                        {{
+                            microphoneEnabled
+                                ? 'Выключить микрофон'
+                                : 'Включить микрофон'
+                        }}
                     </button>
                     <button
                         class="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/20"
                         type="button"
                         @click="emitCameraIntent"
                     >
-                        {{ cameraEnabled ? 'Stop camera' : 'Start camera' }}
+                        {{
+                            cameraEnabled
+                                ? 'Выключить камеру'
+                                : 'Включить камеру'
+                        }}
                     </button>
                     <button
                         class="rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/15 transition hover:bg-white/20"
@@ -132,7 +151,9 @@ function emitScreenShareIntent(): void {
                         @click="emitScreenShareIntent"
                     >
                         {{
-                            screenShareEnabled ? 'Stop sharing' : 'Share screen'
+                            screenShareEnabled
+                                ? 'Остановить показ'
+                                : 'Показать экран'
                         }}
                     </button>
                     <button
@@ -140,7 +161,7 @@ function emitScreenShareIntent(): void {
                         type="button"
                         @click="emit('leave')"
                     >
-                        Leave
+                        Выйти
                     </button>
                 </template>
             </div>

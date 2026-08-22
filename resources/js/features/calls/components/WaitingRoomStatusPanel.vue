@@ -16,19 +16,19 @@ defineProps<Props>();
         <p class="text-sm font-medium">
             {{
                 entry.status === 'pending'
-                    ? 'Waiting room request pending'
+                    ? 'Заявка в зал ожидания отправлена'
                     : entry.status === 'approved'
-                      ? 'Waiting room request approved'
-                      : 'Waiting room request rejected'
+                      ? 'Заявка одобрена'
+                      : 'Заявка отклонена'
             }}
         </p>
         <p class="mt-1 text-sm text-amber-800 dark:text-amber-200/80">
             {{
                 entry.status === 'pending'
-                    ? 'A moderator must approve you before LiveKit media access is issued.'
+                    ? 'Модератор должен одобрить вход, прежде чем будет выдан доступ к LiveKit.'
                     : entry.status === 'approved'
-                      ? 'Approval received. The call will request a media token.'
-                      : 'You cannot join this room unless a moderator changes the decision.'
+                      ? 'Одобрение получено. Звонок запросит медиа-токен.'
+                      : 'Вы не сможете войти, пока модератор не изменит решение.'
             }}
         </p>
     </section>

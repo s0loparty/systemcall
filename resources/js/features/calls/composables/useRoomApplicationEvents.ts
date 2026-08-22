@@ -52,7 +52,7 @@ export function useRoomApplicationEvents(
             upsertRoomMember(event.member);
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
-                `${event.member.display_name} joined the room`,
+                `${event.member.display_name} вошел в комнату`,
                 event.occurred_at,
             );
         },
@@ -74,8 +74,8 @@ export function useRoomApplicationEvents(
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
                 event.member.hand_raised_at
-                    ? `${event.member.display_name} raised a hand`
-                    : `${event.member.display_name} lowered a hand`,
+                    ? `${event.member.display_name} поднял руку`
+                    : `${event.member.display_name} опустил руку`,
                 event.occurred_at,
             );
         },
@@ -89,8 +89,8 @@ export function useRoomApplicationEvents(
             addActivity(
                 `${event.type}:${event.global_pinned_room_member_id ?? 'none'}:${event.occurred_at}`,
                 event.member
-                    ? `${event.member.display_name} was globally pinned`
-                    : 'Global pin was cleared',
+                    ? `${event.member.display_name} закреплен для всех`
+                    : 'Общее закрепление снято',
                 event.occurred_at,
             );
         },
@@ -103,7 +103,7 @@ export function useRoomApplicationEvents(
             upsertRoomMember(event.member);
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
-                `${event.member.display_name} is now ${event.member.role}`,
+                `${event.member.display_name} теперь ${event.member.role}`,
                 event.occurred_at,
             );
         },
@@ -116,7 +116,7 @@ export function useRoomApplicationEvents(
             upsertRoomMember(event.member);
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
-                `${event.member.display_name} was muted by a moderator`,
+                `${event.member.display_name} был выключен модератором`,
                 event.occurred_at,
             );
         },
@@ -129,7 +129,7 @@ export function useRoomApplicationEvents(
             removeRoomMember(event.member.id);
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
-                `${event.member.display_name} was removed from the room`,
+                `${event.member.display_name} удален из комнаты`,
                 event.occurred_at,
             );
         },
@@ -142,7 +142,7 @@ export function useRoomApplicationEvents(
             removeRoomMember(event.member.id);
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
-                `${event.member.display_name} was banned from the room`,
+                `${event.member.display_name} заблокирован в комнате`,
                 event.occurred_at,
             );
         },
@@ -155,7 +155,7 @@ export function useRoomApplicationEvents(
             upsertRoomSubroom(event.subroom);
             addActivity(
                 `${event.type}:${event.subroom.id}:${event.occurred_at}`,
-                `${event.subroom.name} subroom was created`,
+                `Подкомната ${event.subroom.name} создана`,
                 event.occurred_at,
             );
         },
@@ -169,8 +169,8 @@ export function useRoomApplicationEvents(
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
                 event.subroom
-                    ? `${event.member.display_name} moved to ${event.subroom.name}`
-                    : `${event.member.display_name} returned to main room`,
+                    ? `${event.member.display_name} перешел в ${event.subroom.name}`
+                    : `${event.member.display_name} вернулся в основную комнату`,
                 event.occurred_at,
             );
         },
@@ -183,7 +183,7 @@ export function useRoomApplicationEvents(
             upsertWaitingRoomEntry(event.waiting_room);
             addActivity(
                 `${event.type}:${event.waiting_room.id}:${event.occurred_at}`,
-                `${event.waiting_room.display_name} is waiting for approval`,
+                `${event.waiting_room.display_name} ожидает одобрения`,
                 event.occurred_at,
             );
         },
@@ -201,7 +201,7 @@ export function useRoomApplicationEvents(
 
             addActivity(
                 `${event.type}:${event.waiting_room.id}:${event.occurred_at}`,
-                `${event.waiting_room.display_name} was ${event.waiting_room.status}`,
+                `${event.waiting_room.display_name}: ${waitingRoomStatusLabel(event.waiting_room.status)}`,
                 event.occurred_at,
             );
             options.onWaitingRoomDecision?.(event);
@@ -274,6 +274,18 @@ export function useRoomApplicationEvents(
 
     function setGlobalPinnedRoomMemberId(memberId: number | null): void {
         globalPinnedRoomMemberId.value = memberId;
+    }
+
+    function waitingRoomStatusLabel(
+        status: WaitingRoomEntry['status'],
+    ): string {
+        return (
+            {
+                pending: 'ожидает',
+                approved: 'одобрен',
+                rejected: 'отклонен',
+            } satisfies Record<WaitingRoomEntry['status'], string>
+        )[status];
     }
 
     return {

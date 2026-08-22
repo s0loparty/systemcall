@@ -14,7 +14,7 @@ const { toggleSidebar } = useSidebar()
   <button
     data-sidebar="rail"
     data-slot="sidebar-rail"
-    aria-label="Toggle Sidebar"
+    aria-label="Переключить боковую панель"
     :tabindex="-1"
     title="Toggle Sidebar"
     :class="cn(

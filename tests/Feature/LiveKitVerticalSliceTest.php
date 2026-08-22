@@ -17,13 +17,15 @@ beforeEach(function () {
 });
 
 test('room call page renders the LiveKit vertical slice props', function () {
+    $user = User::factory()->create();
     $room = Room::factory()
         ->public()
         ->create([
             'name' => 'Daily standup',
         ]);
 
-    $this->get(route('rooms.call.show', $room))
+    $this->actingAs($user)
+        ->get(route('rooms.call.show', $room))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/Call')
@@ -31,6 +33,15 @@ test('room call page renders the LiveKit vertical slice props', function () {
             ->where('room.name', 'Daily standup')
             ->where('room.livekit_room_name', 'room-'.$room->public_id)
             ->where('can_join_without_password', true));
+});
+
+test('guests cannot open the room call page', function () {
+    $room = Room::factory()
+        ->public()
+        ->create();
+
+    $this->get(route('rooms.call.show', $room))
+        ->assertRedirect(route('login'));
 });
 
 test('active room members can obtain scoped LiveKit tokens', function () {
