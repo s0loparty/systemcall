@@ -30,15 +30,15 @@ const emit = defineEmits<{
 
 <template>
     <nav
-        class="pointer-events-auto fixed inset-x-0 bottom-4 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full border border-white/10 bg-neutral-950/90 p-2 text-white shadow-2xl shadow-black/40 backdrop-blur"
+        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-[#202124]/95 p-2 text-white shadow-[0_18px_70px_rgba(0,0,0,0.42),inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-xl"
         aria-label="Управление звонком"
     >
         <button
-            class="flex size-11 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+            class="group flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 microphoneEnabled
-                    ? 'bg-white/10 hover:bg-white/20'
-                    : 'bg-red-500 hover:bg-red-400'
+                    ? 'bg-[#3c4043] hover:bg-[#4a4d51]'
+                    : 'bg-[#ea4335] hover:bg-[#f05246]'
             "
             type="button"
             :disabled="busy"
@@ -49,14 +49,17 @@ const emit = defineEmits<{
         >
             <Mic v-if="props.microphoneEnabled" class="size-5" />
             <MicOff v-else class="size-5" />
+            <span class="hidden pr-1 sm:inline">
+                {{ microphoneEnabled ? 'Микрофон' : 'Выкл.' }}
+            </span>
         </button>
 
         <button
-            class="flex size-11 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+            class="group flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 cameraEnabled
-                    ? 'bg-white/10 hover:bg-white/20'
-                    : 'bg-red-500 hover:bg-red-400'
+                    ? 'bg-[#3c4043] hover:bg-[#4a4d51]'
+                    : 'bg-[#ea4335] hover:bg-[#f05246]'
             "
             type="button"
             :disabled="busy"
@@ -65,14 +68,17 @@ const emit = defineEmits<{
         >
             <Video v-if="props.cameraEnabled" class="size-5" />
             <VideoOff v-else class="size-5" />
+            <span class="hidden pr-1 sm:inline">
+                {{ cameraEnabled ? 'Камера' : 'Выкл.' }}
+            </span>
         </button>
 
         <button
-            class="flex size-11 items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60"
+            class="flex size-11 items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 handRaised
-                    ? 'bg-amber-400 text-amber-950 hover:bg-amber-300'
-                    : 'bg-white/10 hover:bg-white/20'
+                    ? 'bg-[#fbbc04] text-[#202124] hover:bg-[#ffd15c]'
+                    : 'bg-[#3c4043] hover:bg-[#4a4d51]'
             "
             type="button"
             :disabled="busy"
@@ -83,11 +89,11 @@ const emit = defineEmits<{
         </button>
 
         <button
-            class="flex size-11 items-center justify-center rounded-full transition"
+            class="flex size-11 items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96]"
             :class="
                 chatOpen
-                    ? 'bg-sky-400 text-sky-950 hover:bg-sky-300'
-                    : 'bg-white/10 hover:bg-white/20'
+                    ? 'bg-[#8ab4f8] text-[#202124] hover:bg-[#a8c7fa]'
+                    : 'bg-[#3c4043] hover:bg-[#4a4d51]'
             "
             type="button"
             :aria-label="chatOpen ? 'Закрыть чат' : 'Открыть чат'"
@@ -97,7 +103,7 @@ const emit = defineEmits<{
         </button>
 
         <button
-            class="flex size-11 items-center justify-center rounded-full bg-red-600 transition hover:bg-red-500"
+            class="flex h-11 min-w-14 items-center justify-center rounded-full bg-[#ea4335] px-4 transition-[background-color,scale] duration-150 ease-out hover:bg-[#f05246] active:scale-[0.96]"
             type="button"
             aria-label="Отключиться"
             @click="emit('leave')"

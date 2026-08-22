@@ -45,21 +45,19 @@ async function sendMessage(): Promise<void> {
 
 <template>
     <aside
-        class="fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-neutral-200 bg-white shadow-2xl dark:border-neutral-800 dark:bg-neutral-950"
+        class="fixed inset-y-3 right-3 z-40 flex w-[calc(100%-1.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-[1.75rem] bg-[#2b2c2f] text-white shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
     >
         <header
-            class="flex items-center justify-between gap-3 border-b border-neutral-200 p-4 dark:border-neutral-800"
+            class="flex items-center justify-between gap-3 border-b border-white/8 p-4"
         >
             <div>
-                <h2 class="font-semibold text-neutral-950 dark:text-white">
-                    Чат комнаты
-                </h2>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                <h2 class="font-medium text-white">Чат комнаты</h2>
+                <p class="text-xs text-white/55">
                     Сообщения синхронизируются через Reverb.
                 </p>
             </div>
             <button
-                class="flex size-9 items-center justify-center rounded-full bg-neutral-100 text-neutral-600 transition hover:bg-neutral-200 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                class="flex size-10 items-center justify-center rounded-full bg-white/8 text-white/75 transition-[background-color,scale] duration-150 hover:bg-white/14 active:scale-[0.96]"
                 type="button"
                 aria-label="Закрыть чат"
                 @click="emit('close')"
@@ -71,38 +69,33 @@ async function sendMessage(): Promise<void> {
         <ol class="flex flex-1 flex-col gap-2 overflow-auto p-4">
             <li
                 v-if="messages.length === 0"
-                class="rounded-2xl border border-dashed border-neutral-300 p-4 text-sm text-neutral-500 dark:border-neutral-800 dark:text-neutral-400"
+                class="rounded-2xl border border-dashed border-white/12 p-4 text-sm text-white/55"
             >
                 Сообщений пока нет.
             </li>
             <li
                 v-for="message in messages"
                 :key="message.id"
-                class="rounded-2xl bg-neutral-100 p-3 text-sm dark:bg-neutral-900"
+                class="rounded-2xl bg-white/8 p-3 text-sm"
             >
                 <div class="flex items-center justify-between gap-3">
-                    <p class="font-medium text-neutral-950 dark:text-white">
+                    <p class="font-medium text-white">
                         {{ message.display_name }}
                     </p>
-                    <time class="text-xs text-neutral-400">
+                    <time class="text-xs text-white/40">
                         {{ message.created_at ?? '' }}
                     </time>
                 </div>
-                <p
-                    class="mt-1 whitespace-pre-wrap text-neutral-700 dark:text-neutral-200"
-                >
+                <p class="mt-1 whitespace-pre-wrap text-white/78">
                     {{ message.body }}
                 </p>
             </li>
         </ol>
 
-        <form
-            class="border-t border-neutral-200 p-4 dark:border-neutral-800"
-            @submit.prevent="sendMessage"
-        >
+        <form class="border-t border-white/8 p-4" @submit.prevent="sendMessage">
             <textarea
                 v-model="messageRequest.body"
-                class="min-h-24 w-full resize-none rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 transition outline-none focus:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:text-white"
+                class="min-h-24 w-full resize-none rounded-2xl bg-[#202124] px-3 py-2 text-sm text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow] outline-none placeholder:text-white/35 focus:shadow-[inset_0_0_0_1px_rgba(138,180,248,0.65)]"
                 maxlength="1000"
                 placeholder="Напишите сообщение"
                 :disabled="
@@ -110,7 +103,7 @@ async function sendMessage(): Promise<void> {
                 "
             />
             <button
-                class="mt-2 w-full rounded-2xl bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                class="mt-2 w-full rounded-2xl bg-[#8ab4f8] px-4 py-2 text-sm font-medium text-[#202124] transition-[background-color,scale] hover:bg-[#a8c7fa] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
                 type="submit"
                 :disabled="
                     currentMemberId === null ||

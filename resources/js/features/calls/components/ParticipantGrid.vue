@@ -36,11 +36,28 @@ const orderedTiles = computed(() => {
         return 0;
     });
 });
+
+const gridClass = computed(() => {
+    if (orderedTiles.value.length <= 1) {
+        return 'grid-cols-1 max-w-5xl';
+    }
+
+    if (orderedTiles.value.length === 2) {
+        return 'grid-cols-1 lg:grid-cols-2 max-w-6xl';
+    }
+
+    if (orderedTiles.value.length <= 4) {
+        return 'grid-cols-1 sm:grid-cols-2 max-w-6xl';
+    }
+
+    return 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 max-w-[96rem]';
+});
 </script>
 
 <template>
     <section
-        class="grid flex-1 auto-rows-fr grid-cols-1 gap-4 overflow-auto md:grid-cols-2 xl:grid-cols-3"
+        class="mx-auto grid h-full w-full flex-1 auto-rows-fr content-center gap-3 overflow-hidden p-1 md:gap-4"
+        :class="gridClass"
     >
         <ParticipantTile
             v-for="tile in orderedTiles"
@@ -54,7 +71,7 @@ const orderedTiles = computed(() => {
                     tile.identity === globalPinnedIdentity ||
                     tile.identity === activeSpeakerIdentity) &&
                 tiles.length > 1
-                    ? 'md:col-span-2 md:row-span-2'
+                    ? 'sm:col-span-2 sm:row-span-2'
                     : ''
             "
             @media-host="
@@ -64,7 +81,7 @@ const orderedTiles = computed(() => {
 
         <div
             v-if="tiles.length === 0"
-            class="flex min-h-96 items-center justify-center rounded-3xl border border-dashed border-neutral-300 bg-neutral-50 text-center text-sm text-neutral-500 dark:border-neutral-800 dark:bg-neutral-950"
+            class="flex min-h-96 items-center justify-center rounded-[1.75rem] bg-[#1f1f1f] text-center text-sm text-neutral-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
         >
             Войдите в звонок. Камеру и микрофон можно оставить выключенными.
         </div>

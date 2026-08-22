@@ -158,29 +158,47 @@ onMounted(() => {
 <template>
     <Head :title="`Звонок: ${room.name}`" />
 
-    <main class="relative min-h-full overflow-hidden bg-neutral-950 text-white">
+    <main
+        class="relative h-dvh overflow-hidden bg-[#202124] text-white antialiased"
+    >
+        <div
+            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(138,180,248,0.10),transparent_30%),radial-gradient(circle_at_80%_100%,rgba(129,201,149,0.08),transparent_30%)]"
+        />
         <header
-            class="pointer-events-none fixed inset-x-0 top-0 z-20 bg-linear-to-b from-black/70 to-transparent p-4"
+            class="pointer-events-none fixed inset-x-0 top-0 z-20 bg-linear-to-b from-[#202124]/95 via-[#202124]/72 to-transparent px-5 py-4"
         >
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p
-                        class="text-xs tracking-[0.24em] text-white/50 uppercase"
+            <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0">
+                    <h1
+                        class="truncate text-lg font-medium tracking-tight text-white"
                     >
-                        LiveKit: {{ room.livekit_room_name }}
-                    </p>
-                    <h1 class="mt-1 text-xl font-semibold tracking-tight">
                         {{ room.name }}
                     </h1>
+                    <p class="mt-0.5 text-xs text-white/55">
+                        {{ room.livekit_room_name }}
+                    </p>
                 </div>
-                <div class="text-right text-xs text-white/60">
-                    <p>{{ connectionState }}</p>
-                    <p>Подняли руку: {{ raisedHandsCount }}</p>
+                <div
+                    class="flex items-center gap-2 text-xs text-white/70 tabular-nums"
+                >
+                    <span
+                        class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                    >
+                        {{ connectionState }}
+                    </span>
+                    <span
+                        class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                    >
+                        Руки: {{ raisedHandsCount }}
+                    </span>
                 </div>
             </div>
         </header>
 
-        <section class="flex min-h-screen p-3 pt-20 pb-24">
+        <section
+            class="relative flex h-full p-4 pt-20 pb-24 transition-[padding-right] duration-200 ease-out"
+            :class="chatOpen ? 'lg:pr-[28.5rem]' : ''"
+        >
             <ParticipantGrid
                 class="min-h-0 w-full"
                 :tiles="tiles"
@@ -193,10 +211,10 @@ onMounted(() => {
 
         <div
             v-if="!connected"
-            class="fixed inset-0 z-10 flex items-center justify-center bg-neutral-950/70 p-4 backdrop-blur-sm"
+            class="fixed inset-0 z-10 flex items-center justify-center bg-[#202124]/78 p-4 backdrop-blur-sm"
         >
             <div
-                class="w-full max-w-md rounded-[2rem] border border-white/10 bg-neutral-900 p-5 shadow-2xl"
+                class="w-full max-w-md rounded-[2rem] bg-[#2b2c2f] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
             >
                 <h2 class="text-lg font-semibold">
                     {{

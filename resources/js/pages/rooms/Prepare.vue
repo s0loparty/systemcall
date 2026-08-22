@@ -55,11 +55,13 @@ async function continueToRoom(): Promise<void> {
     <Head :title="`Подготовка: ${room.name}`" />
 
     <main
-        class="min-h-full bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.16),transparent_34%),linear-gradient(180deg,#fafafa,#f5f5f5)] p-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.18),transparent_34%),linear-gradient(180deg,#0a0a0a,#111)]"
+        class="min-h-dvh bg-[#f8fafd] bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.28),transparent_34%),radial-gradient(circle_at_84%_100%,rgba(129,201,149,0.20),transparent_32%)] p-4 text-neutral-950 antialiased dark:bg-[#202124]"
     >
-        <div class="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+        <div
+            class="mx-auto grid min-h-[calc(100dvh-2rem)] max-w-6xl items-center gap-5 lg:grid-cols-[0.9fr_1.1fr]"
+        >
             <section
-                class="rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
+                class="rounded-[2rem] bg-white/92 p-6 shadow-[0_24px_90px_rgba(60,64,67,0.16),inset_0_0_0_1px_rgba(60,64,67,0.08)] backdrop-blur dark:bg-[#2b2c2f] dark:text-white"
             >
                 <p class="text-sm font-medium text-emerald-600">
                     Подготовка к звонку

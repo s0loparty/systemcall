@@ -17,13 +17,13 @@ const emit = defineEmits<{
 
 <template>
     <article
-        class="relative min-h-64 overflow-hidden rounded-3xl border bg-neutral-950 shadow-sm transition"
+        class="relative min-h-64 overflow-hidden rounded-[1.75rem] bg-[#1f1f1f] shadow-[0_20px_70px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow,scale] duration-200 ease-out active:scale-[0.995]"
         :class="
             personallyPinned || globallyPinned
-                ? 'border-blue-400 ring-2 ring-blue-400/40'
+                ? 'ring-2 ring-sky-400/70'
                 : tile.speaking
-                  ? 'border-emerald-400 ring-2 ring-emerald-400/40'
-                  : 'border-neutral-200 dark:border-neutral-800'
+                  ? 'ring-2 ring-emerald-400/70'
+                  : ''
         "
     >
         <div
@@ -38,17 +38,17 @@ const emit = defineEmits<{
             class="absolute inset-0 [&_audio]:hidden [&_video]:h-full [&_video]:w-full [&_video]:object-cover"
         />
         <div
-            class="absolute inset-0 flex items-center justify-center bg-neutral-900 text-4xl font-semibold text-neutral-500 empty:hidden"
+            class="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#343434,#1f1f1f_62%)] text-5xl font-semibold text-neutral-400 empty:hidden"
         >
             <span v-if="!tile.camera">
                 {{ tile.name.slice(0, 1).toUpperCase() }}
             </span>
         </div>
         <div
-            class="absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 bg-linear-to-t from-black/80 to-transparent p-4 text-white"
+            class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-black/80 via-black/35 to-transparent p-4 text-white"
         >
             <div>
-                <p class="font-medium">
+                <p class="text-sm font-medium drop-shadow">
                     {{ tile.name }}
                     <span v-if="tile.local" class="text-neutral-300">(вы)</span>
                 </p>
@@ -60,10 +60,10 @@ const emit = defineEmits<{
                     }}
                 </p>
             </div>
-            <div class="flex flex-wrap justify-end gap-2">
+            <div class="flex flex-wrap justify-end gap-1.5">
                 <span
                     v-if="personallyPinned"
-                    class="rounded-full bg-blue-300 px-2 py-1 text-xs font-medium text-blue-950"
+                    class="rounded-full bg-sky-300 px-2 py-1 text-xs font-medium text-sky-950"
                 >
                     локально закреплен
                 </span>
