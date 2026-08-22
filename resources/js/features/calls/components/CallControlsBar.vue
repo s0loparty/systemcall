@@ -4,6 +4,7 @@ import {
     MessageSquare,
     Mic,
     MicOff,
+    MonitorUp,
     PhoneOff,
     Video,
     VideoOff,
@@ -12,6 +13,8 @@ import {
 type Props = {
     microphoneEnabled: boolean;
     cameraEnabled: boolean;
+    screenShareEnabled: boolean;
+    canShareScreen: boolean;
     handRaised: boolean;
     chatOpen: boolean;
     busy: boolean;
@@ -22,6 +25,7 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
     toggleMicrophone: [];
     toggleCamera: [];
+    toggleScreenShare: [];
     toggleHand: [];
     toggleChat: [];
     leave: [];
@@ -86,6 +90,26 @@ const emit = defineEmits<{
             @click="emit('toggleHand')"
         >
             <Hand class="size-5" />
+        </button>
+
+        <button
+            v-if="canShareScreen"
+            class="flex size-11 items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+            :class="
+                screenShareEnabled
+                    ? 'bg-[#8ab4f8] text-[#202124] hover:bg-[#a8c7fa]'
+                    : 'bg-[#3c4043] hover:bg-[#4a4d51]'
+            "
+            type="button"
+            :disabled="busy"
+            :aria-label="
+                screenShareEnabled
+                    ? 'Остановить показ экрана'
+                    : 'Показать экран'
+            "
+            @click="emit('toggleScreenShare')"
+        >
+            <MonitorUp class="size-5" />
         </button>
 
         <button

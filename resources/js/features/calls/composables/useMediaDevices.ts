@@ -5,6 +5,7 @@ import type { SelectedDevices } from '../types';
 
 type UseMediaDevicesOptions = {
     initialSelectedDevices?: SelectedDevices;
+    autoSelectCameraAfterPermission?: boolean;
 };
 
 export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
@@ -29,6 +30,23 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
 
             audioInputs.value = nextAudioInputs;
             videoInputs.value = nextVideoInputs;
+
+            if (
+                requestPermissions &&
+                options.autoSelectCameraAfterPermission === true &&
+                (selectedDevices.value.videoInputId === '' ||
+                    !nextVideoInputs.some(
+                        (device) =>
+                            device.deviceId ===
+                            selectedDevices.value.videoInputId,
+                    )) &&
+                nextVideoInputs.length > 0
+            ) {
+                selectedDevices.value = {
+                    ...selectedDevices.value,
+                    videoInputId: nextVideoInputs[0].deviceId,
+                };
+            }
         } catch (error) {
             deviceErrorMessage.value = formatDeviceError(error);
         }

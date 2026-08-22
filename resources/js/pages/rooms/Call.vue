@@ -56,6 +56,7 @@ const {
     busy,
     microphoneEnabled,
     cameraEnabled,
+    screenShareEnabled,
     waitingRoomEntry,
     joinedMember,
     activeSpeakerIdentity,
@@ -67,6 +68,7 @@ const {
     disconnect,
     toggleMicrophone,
     toggleCamera,
+    toggleScreenShare,
     setMediaHost,
 } = call;
 const {
@@ -88,6 +90,12 @@ const currentRoomMember = computed(() =>
 );
 const handRaised = computed(() =>
     Boolean(currentRoomMember.value?.hand_raised_at),
+);
+const canShareScreen = computed(
+    () =>
+        currentRoomMember.value?.can_publish_screen ??
+        joinedMember.value?.can_publish_screen ??
+        false,
 );
 const raisedHandsCount = computed(
     () => roomMembers.value.filter((member) => member.hand_raised_at).length,
@@ -271,11 +279,14 @@ onMounted(() => {
         <CallControlsBar
             :microphone-enabled="microphoneEnabled"
             :camera-enabled="cameraEnabled"
+            :screen-share-enabled="screenShareEnabled"
+            :can-share-screen="canShareScreen"
             :hand-raised="handRaised"
             :chat-open="chatOpen"
             :busy="busy || handRequest.processing"
             @toggle-microphone="toggleMicrophone"
             @toggle-camera="toggleCamera"
+            @toggle-screen-share="toggleScreenShare"
             @toggle-hand="toggleHand"
             @toggle-chat="chatOpen = !chatOpen"
             @leave="leaveCall"
