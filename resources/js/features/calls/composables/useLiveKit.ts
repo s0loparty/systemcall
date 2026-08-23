@@ -39,7 +39,9 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     const mediaElements = new Map<string, HTMLMediaElement[]>();
     let fakeMicrophoneTrack: MediaStreamTrack | null = null;
     let fakeCameraTrack: MediaStreamTrack | null = null;
+    let fakeScreenShareTrack: MediaStreamTrack | null = null;
     let fakeCameraFrameTimer: number | null = null;
+    let fakeScreenShareFrameTimer: number | null = null;
 
     async function connect(
         url: string,
@@ -162,6 +164,13 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         }
 
         const enabled = !screenShareEnabled.value;
+
+        if (options.testingMediaMode === 'fake') {
+            await setFakeScreenShareEnabled(enabled);
+
+            return;
+        }
+
         await activeRoom.value.localParticipant.setScreenShareEnabled(
             enabled,
             { audio: true },
@@ -447,6 +456,32 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         patchLocalTile({ camera: enabled });
     }
 
+    async function setFakeScreenShareEnabled(enabled: boolean): Promise<void> {
+        if (!activeRoom.value) {
+            return;
+        }
+
+        if (enabled && !fakeScreenShareTrack) {
+            fakeScreenShareTrack = createFakeScreenShareTrack();
+            await activeRoom.value.localParticipant.publishTrack(
+                fakeScreenShareTrack,
+                { source: Track.Source.ScreenShare, simulcast: true },
+            );
+        }
+
+        if (!enabled && fakeScreenShareTrack) {
+            await activeRoom.value.localParticipant.unpublishTrack(
+                fakeScreenShareTrack,
+                true,
+            );
+            fakeScreenShareTrack.stop();
+            fakeScreenShareTrack = null;
+        }
+
+        screenShareEnabled.value = enabled;
+        patchLocalTile({ screenShare: enabled });
+    }
+
     function createFakeAudioTrack(): MediaStreamTrack {
         const audioContext = new AudioContext();
         const oscillator = audioContext.createOscillator();
@@ -506,6 +541,56 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
                 if (fakeCameraFrameTimer !== null) {
                     window.clearInterval(fakeCameraFrameTimer);
                     fakeCameraFrameTimer = null;
+                }
+            },
+            { once: true },
+        );
+
+        return track;
+    }
+
+    function createFakeScreenShareTrack(): MediaStreamTrack {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const width = 1280;
+        const height = 720;
+        let frame = 0;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const drawFrame = () => {
+            if (!context) {
+                return;
+            }
+
+            context.fillStyle = '#020617';
+            context.fillRect(0, 0, width, height);
+            context.fillStyle = '#0ea5e9';
+            context.fillRect(80, 84, width - 160, 84);
+            context.fillStyle = '#1e293b';
+            context.fillRect(80, 208, width - 160, 380);
+            context.fillStyle = '#38bdf8';
+            context.fillRect(120 + (frame % 760), 320, 240, 120);
+            context.fillStyle = '#ffffff';
+            context.font = '48px sans-serif';
+            context.fillText('E2E screen share', 120, 142);
+            context.font = '32px sans-serif';
+            context.fillText('Synthetic display media', 120, 268);
+            frame += 12;
+        };
+
+        drawFrame();
+        fakeScreenShareFrameTimer = window.setInterval(drawFrame, 200);
+
+        const [track] = canvas.captureStream(5).getVideoTracks();
+
+        track.addEventListener(
+            'ended',
+            () => {
+                if (fakeScreenShareFrameTimer !== null) {
+                    window.clearInterval(fakeScreenShareFrameTimer);
+                    fakeScreenShareFrameTimer = null;
                 }
             },
             { once: true },
@@ -608,10 +693,17 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         fakeMicrophoneTrack = null;
         fakeCameraTrack?.stop();
         fakeCameraTrack = null;
+        fakeScreenShareTrack?.stop();
+        fakeScreenShareTrack = null;
 
         if (fakeCameraFrameTimer !== null) {
             window.clearInterval(fakeCameraFrameTimer);
             fakeCameraFrameTimer = null;
+        }
+
+        if (fakeScreenShareFrameTimer !== null) {
+            window.clearInterval(fakeScreenShareFrameTimer);
+            fakeScreenShareFrameTimer = null;
         }
     }
 

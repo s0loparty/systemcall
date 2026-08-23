@@ -68,6 +68,7 @@ const sideTiles = computed(() =>
 <template>
     <section
         v-if="screenShareTile"
+        data-test="screen-share-layout"
         class="mx-auto grid h-full w-full max-w-[96rem] flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2fr)_minmax(14rem,1fr)] xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]"
     >
         <ParticipantTile
@@ -84,6 +85,7 @@ const sideTiles = computed(() =>
         />
 
         <aside
+            data-test="participant-side-rail"
             class="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-[1.75rem] bg-black/10 p-1 pr-2"
             aria-label="Участники звонка"
         >
@@ -111,6 +113,7 @@ const sideTiles = computed(() =>
 
     <section
         v-else
+        data-test="participant-grid"
         class="mx-auto grid h-full w-full flex-1 auto-rows-fr content-center gap-3 overflow-hidden p-1 md:gap-4"
         :class="gridClass"
     >

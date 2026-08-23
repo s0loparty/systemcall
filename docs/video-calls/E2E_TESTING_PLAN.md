@@ -286,30 +286,39 @@ Implementation notes:
 - `useLiveKit` now handles remote track publish/unpublish events and deduplicates
   media elements by participant/source to avoid stale duplicate camera videos.
 
-## Milestone E6 — Screen sharing `[ ]`
+## Milestone E6 — Screen sharing `[x]`
 Validate Zoom-like screen-share behavior.
 
 Scenarios:
-- [ ] user A with `can_publish_screen=true` sees screen-share button
-- [ ] user A starts screen share
-- [ ] user A sees screen-share layout
-- [ ] user B sees screen-share layout
-- [ ] large screen-share tile occupies the main area
-- [ ] participant list moves to vertical scrollable side rail
-- [ ] screen-share tile uses screen video, not camera video
-- [ ] screen-share badge appears only while sharing is active
-- [ ] user A stops screen share
-- [ ] user A returns to normal participant grid
-- [ ] user B returns to normal participant grid
-- [ ] stale black screen-share tile does not remain after stop
+- [x] user A with `can_publish_screen=true` sees screen-share button
+- [x] user A starts screen share
+- [x] user A sees screen-share layout
+- [x] user B sees screen-share layout
+- [x] large screen-share tile occupies the main area
+- [x] participant list moves to vertical scrollable side rail
+- [x] screen-share tile uses screen video, not camera video
+- [x] screen-share badge appears only while sharing is active
+- [x] user A stops screen share
+- [x] user A returns to normal participant grid
+- [x] user B returns to normal participant grid
+- [x] stale black screen-share tile does not remain after stop
 
 Acceptance:
-- [ ] screen-share start is visible in both browser contexts
-- [ ] screen-share stop is visible in both browser contexts
-- [ ] remote browser does not keep stale `screenShare` state
-- [ ] screen-share media element is removed after stop
-- [ ] layout does not stay in share mode after stop
-- [ ] no JavaScript errors in either browser context
+- [x] screen-share start is visible in both browser contexts
+- [x] screen-share stop is visible in both browser contexts
+- [x] remote browser does not keep stale `screenShare` state
+- [x] screen-share media element is removed after stop
+- [x] layout does not stay in share mode after stop
+- [x] no JavaScript errors in either browser context
+
+Implementation notes:
+- E6 uses `_e2e_media=fake` to publish a synthetic display-media video track
+  as `Track.Source.ScreenShare` through the real local LiveKit connection.
+- The test validates both local and remote browser contexts enter the
+  screen-share layout, render the screen-share video element, move participants
+  into the side rail and return to the normal grid after stopping share.
+- The stop path asserts no stale `screenShare` dataset state and no stale
+  `video[data-source="screen-share"]` remains in the remote browser.
 
 ## Milestone E7 — Raised hand `[ ]`
 Validate application realtime state through Reverb.
