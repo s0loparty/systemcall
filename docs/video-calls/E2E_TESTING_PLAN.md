@@ -258,24 +258,33 @@ Implementation notes:
 - E4 uses the same Sail/LiveKit gateway `rtc.node_ip` requirement documented in
   E3.
 
-## Milestone E5 — Audio/video controls `[ ]`
+## Milestone E5 — Audio/video controls `[x]`
 Validate user-visible audio/video behavior in multi-user calls.
 
 Scenarios:
-- [ ] user A toggles microphone on/off
-- [ ] user B sees user A microphone state change
-- [ ] user A toggles camera on/off
-- [ ] user B sees user A camera state change
-- [ ] camera-off state shows fallback avatar
-- [ ] camera-on state shows a video element
-- [ ] audio/video toggles remain usable after reconnect or reload
+- [x] user A toggles microphone on/off
+- [x] user B sees user A microphone state change
+- [x] user A toggles camera on/off
+- [x] user B sees user A camera state change
+- [x] camera-off state shows fallback avatar
+- [x] camera-on state shows a video element
+- [x] audio/video toggles remain usable after reconnect or reload
 
 Acceptance:
-- [ ] microphone UI state propagates between browsers
-- [ ] camera UI state propagates between browsers
-- [ ] fallback avatar only appears when camera is off and no screen-share video
+- [x] microphone UI state propagates between browsers
+- [x] camera UI state propagates between browsers
+- [x] fallback avatar only appears when camera is off and no screen-share video
       is active
-- [ ] no JavaScript errors in either browser context
+- [x] no JavaScript errors in either browser context
+
+Implementation notes:
+- E5 uses `_e2e_media=fake` to publish synthetic microphone/camera tracks
+  through the real local LiveKit connection. This avoids physical device
+  requirements while still validating remote LiveKit media state.
+- The test covers remote reload while user A keeps media enabled, then verifies
+  controls remain usable after that reload.
+- `useLiveKit` now handles remote track publish/unpublish events and deduplicates
+  media elements by participant/source to avoid stale duplicate camera videos.
 
 ## Milestone E6 — Screen sharing `[ ]`
 Validate Zoom-like screen-share behavior.

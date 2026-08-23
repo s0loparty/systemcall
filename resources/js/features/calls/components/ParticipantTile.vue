@@ -41,6 +41,7 @@ const emit = defineEmits<{
         ]"
     >
         <div
+            data-test="participant-media-host"
             :ref="
                 (element) =>
                     emit(
@@ -61,6 +62,7 @@ const emit = defineEmits<{
         >
             <span
                 v-if="!tile.camera && !(tile.screenShare && size === 'share')"
+                data-test="participant-fallback-avatar"
             >
                 {{ tile.name.slice(0, 1).toUpperCase() }}
             </span>

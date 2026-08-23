@@ -37,6 +37,9 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     const tiles = ref<ParticipantTile[]>([]);
     const mediaHosts = new Map<string, HTMLElement>();
     const mediaElements = new Map<string, HTMLMediaElement[]>();
+    let fakeMicrophoneTrack: MediaStreamTrack | null = null;
+    let fakeCameraTrack: MediaStreamTrack | null = null;
+    let fakeCameraFrameTimer: number | null = null;
 
     async function connect(
         url: string,
@@ -120,8 +123,7 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         const enabled = !microphoneEnabled.value;
 
         if (options.testingMediaMode === 'fake') {
-            microphoneEnabled.value = enabled;
-            patchLocalTile({ microphone: enabled });
+            await setFakeMicrophoneEnabled(enabled);
 
             return;
         }
@@ -140,8 +142,7 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         const enabled = !cameraEnabled.value;
 
         if (options.testingMediaMode === 'fake') {
-            cameraEnabled.value = enabled;
-            patchLocalTile({ camera: enabled });
+            await setFakeCameraEnabled(enabled);
 
             return;
         }
@@ -198,6 +199,15 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
                 },
             )
             .on(
+                RoomEvent.TrackPublished,
+                (
+                    _publication: RemoteTrackPublication,
+                    participant: RemoteParticipant,
+                ) => {
+                    syncParticipantState(participant);
+                },
+            )
+            .on(
                 RoomEvent.TrackSubscribed,
                 (
                     track: RemoteTrack,
@@ -208,6 +218,20 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
                         participant.identity,
                         track,
                         false,
+                        publication.source,
+                    );
+                    syncParticipantState(participant);
+                },
+            )
+            .on(
+                RoomEvent.TrackUnpublished,
+                (
+                    publication: RemoteTrackPublication,
+                    participant: RemoteParticipant,
+                ) => {
+                    detachMedia(
+                        participant.identity,
+                        publication.track,
                         publication.source,
                     );
                     syncParticipantState(participant);
@@ -371,6 +395,125 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         );
     }
 
+    async function setFakeMicrophoneEnabled(enabled: boolean): Promise<void> {
+        if (!activeRoom.value) {
+            return;
+        }
+
+        if (enabled && !fakeMicrophoneTrack) {
+            fakeMicrophoneTrack = createFakeAudioTrack();
+            await activeRoom.value.localParticipant.publishTrack(
+                fakeMicrophoneTrack,
+                { source: Track.Source.Microphone },
+            );
+        }
+
+        if (!enabled && fakeMicrophoneTrack) {
+            await activeRoom.value.localParticipant.unpublishTrack(
+                fakeMicrophoneTrack,
+                true,
+            );
+            fakeMicrophoneTrack.stop();
+            fakeMicrophoneTrack = null;
+        }
+
+        microphoneEnabled.value = enabled;
+        patchLocalTile({ microphone: enabled });
+    }
+
+    async function setFakeCameraEnabled(enabled: boolean): Promise<void> {
+        if (!activeRoom.value) {
+            return;
+        }
+
+        if (enabled && !fakeCameraTrack) {
+            fakeCameraTrack = createFakeVideoTrack();
+            await activeRoom.value.localParticipant.publishTrack(
+                fakeCameraTrack,
+                { source: Track.Source.Camera, simulcast: true },
+            );
+        }
+
+        if (!enabled && fakeCameraTrack) {
+            await activeRoom.value.localParticipant.unpublishTrack(
+                fakeCameraTrack,
+                true,
+            );
+            fakeCameraTrack.stop();
+            fakeCameraTrack = null;
+        }
+
+        cameraEnabled.value = enabled;
+        patchLocalTile({ camera: enabled });
+    }
+
+    function createFakeAudioTrack(): MediaStreamTrack {
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const destination = audioContext.createMediaStreamDestination();
+
+        oscillator.frequency.value = 440;
+        oscillator.connect(destination);
+        oscillator.start();
+
+        const [track] = destination.stream.getAudioTracks();
+
+        track.addEventListener(
+            'ended',
+            () => {
+                oscillator.stop();
+                void audioContext.close();
+            },
+            { once: true },
+        );
+
+        return track;
+    }
+
+    function createFakeVideoTrack(): MediaStreamTrack {
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        const width = 640;
+        const height = 360;
+        let frame = 0;
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const drawFrame = () => {
+            if (!context) {
+                return;
+            }
+
+            context.fillStyle = '#1f2937';
+            context.fillRect(0, 0, width, height);
+            context.fillStyle = '#38bdf8';
+            context.fillRect((frame % width) - 80, 120, 160, 120);
+            context.fillStyle = '#ffffff';
+            context.font = '28px sans-serif';
+            context.fillText('E2E camera', 32, 54);
+            frame += 8;
+        };
+
+        drawFrame();
+        fakeCameraFrameTimer = window.setInterval(drawFrame, 200);
+
+        const [track] = canvas.captureStream(5).getVideoTracks();
+
+        track.addEventListener(
+            'ended',
+            () => {
+                if (fakeCameraFrameTimer !== null) {
+                    window.clearInterval(fakeCameraFrameTimer);
+                    fakeCameraFrameTimer = null;
+                }
+            },
+            { once: true },
+        );
+
+        return track;
+    }
+
     function attachMedia(
         identity: string,
         track: AttachableTrack | null | undefined,
@@ -379,6 +522,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     ): void {
         if (!track) {
             return;
+        }
+
+        if (source) {
+            detachMedia(identity, undefined, source);
         }
 
         const element = track.attach();
@@ -448,11 +595,24 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     }
 
     function detachAllMedia(): void {
+        stopFakeMediaTracks();
         mediaElements.forEach((elements) => {
             elements.forEach((element) => element.remove());
         });
         mediaElements.clear();
         mediaHosts.clear();
+    }
+
+    function stopFakeMediaTracks(): void {
+        fakeMicrophoneTrack?.stop();
+        fakeMicrophoneTrack = null;
+        fakeCameraTrack?.stop();
+        fakeCameraTrack = null;
+
+        if (fakeCameraFrameTimer !== null) {
+            window.clearInterval(fakeCameraFrameTimer);
+            fakeCameraFrameTimer = null;
+        }
     }
 
     function renderMedia(identity: string): void {
