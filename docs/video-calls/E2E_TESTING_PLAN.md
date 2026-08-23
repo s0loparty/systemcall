@@ -232,23 +232,31 @@ docker compose -f compose.sail.yaml -f compose.sail-livekit.yaml up -d --force-r
   deterministic microphone/camera UI toggles in headless Chromium. LiveKit
   signaling, token validation and room connection remain real.
 
-## Milestone E4 — Multi-user room presence `[ ]`
+## Milestone E4 — Multi-user room presence `[x]`
 Validate two independent browser contexts in the same room.
 
 Scenarios:
-- [ ] user A joins room
-- [ ] user B joins same room
-- [ ] user A sees user B tile
-- [ ] user B sees user A tile
-- [ ] user A disconnecting removes or updates their presence for user B
-- [ ] reconnecting/reloading does not duplicate participant tiles
+- [x] user A joins room
+- [x] user B joins same room
+- [x] user A sees user B tile
+- [x] user B sees user A tile
+- [x] user A disconnecting removes or updates their presence for user B
+- [x] reconnecting/reloading does not duplicate participant tiles
 
 Acceptance:
-- [ ] two browser contexts can authenticate as different users
-- [ ] both contexts join the same LiveKit room
-- [ ] participant grid reaches expected tile count
-- [ ] no duplicate tile after refresh/rejoin
-- [ ] no JavaScript errors in either browser context
+- [x] two browser contexts can authenticate as different users
+- [x] both contexts join the same LiveKit room
+- [x] participant grid reaches expected tile count
+- [x] no duplicate tile after refresh/rejoin
+- [x] no JavaScript errors in either browser context
+
+Implementation notes:
+- E4 uses two independent Pest Browser pages authenticated as two different
+  users through Laravel's test auth session handling.
+- The test keeps microphone/camera disabled and validates LiveKit participant
+  presence only. Audio/video state propagation is deferred to E5.
+- E4 uses the same Sail/LiveKit gateway `rtc.node_ip` requirement documented in
+  E3.
 
 ## Milestone E5 — Audio/video controls `[ ]`
 Validate user-visible audio/video behavior in multi-user calls.
