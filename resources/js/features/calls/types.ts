@@ -22,7 +22,10 @@ export type CallPageProps = {
     room_messages: RoomMessageSummary[];
     waiting_room_entries: WaitingRoomEntry[];
     current_waiting_room_entry: WaitingRoomEntry | null;
+    testing_media_mode: TestingMediaMode;
 };
+
+export type TestingMediaMode = 'fake' | 'error' | null;
 
 export type JoinForm = {
     display_name: string;

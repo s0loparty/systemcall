@@ -44,6 +44,7 @@ const emit = defineEmits<{
                         Микрофон
                     </span>
                     <select
+                        data-test="audio-input-select"
                         class="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
                         :value="selectedAudioInputId"
                         @change="
@@ -69,6 +70,7 @@ const emit = defineEmits<{
                         Камера
                     </span>
                     <select
+                        data-test="video-input-select"
                         class="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
                         :value="selectedVideoInputId"
                         @change="
@@ -99,6 +101,7 @@ const emit = defineEmits<{
 
             <div class="flex flex-wrap gap-2">
                 <button
+                    data-test="refresh-devices"
                     class="rounded-full bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                     type="button"
                     @click="emit('refresh')"
@@ -106,6 +109,7 @@ const emit = defineEmits<{
                     Обновить устройства
                 </button>
                 <button
+                    data-test="toggle-preview"
                     class="rounded-full border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-900"
                     type="button"
                     :disabled="previewLoading"
@@ -132,10 +136,12 @@ const emit = defineEmits<{
                     (element) =>
                         emit('preview-host', element as HTMLElement | null)
                 "
+                data-test="preview-host"
                 class="absolute inset-0 [&_video]:h-full [&_video]:w-full [&_video]:scale-x-[-1] [&_video]:object-cover"
             />
             <div
                 v-if="!previewEnabled"
+                data-test="preview-empty-state"
                 class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-neutral-400"
             >
                 Выберите камеру и запустите предпросмотр, чтобы проверить

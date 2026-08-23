@@ -18,6 +18,7 @@ const deviceQuery = useCallDeviceQuery();
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     autoSelectCameraAfterPermission: true,
+    testingMediaMode: props.testing_media_mode,
 });
 const roomJoin = useRoomJoin(props.room.public_id, defaultDisplayName.value);
 

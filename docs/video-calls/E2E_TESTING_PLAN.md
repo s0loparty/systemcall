@@ -171,29 +171,31 @@ Acceptance:
 - [x] no app sidebar appears on prepare/waiting/call pages
 - [x] backend feature tests remain green
 
-## Milestone E2 — Device selection and media permission UX `[ ]`
+## Milestone E2 — Device selection and media permission UX `[x]`
 Validate preparation-room behavior with browser media permissions.
 
 Scenarios:
-- [ ] prepare page works when no camera is selected
-- [ ] prepare page works when no microphone is selected
-- [ ] clicking refresh/request devices updates microphone select
-- [ ] clicking refresh/request devices updates camera select
-- [ ] after camera permission, first available camera is selected automatically
-- [ ] local preview starts when a camera is selected
-- [ ] local preview can stop
-- [ ] permission/device errors are shown without crashing the page
+- [x] prepare page works when no camera is selected
+- [x] prepare page works when no microphone is selected
+- [x] clicking refresh/request devices updates microphone select
+- [x] clicking refresh/request devices updates camera select
+- [x] after camera permission, first available camera is selected automatically
+- [x] local preview starts when a camera is selected
+- [x] local preview can stop
+- [x] permission/device errors are shown without crashing the page
 
 Acceptance:
-- [ ] tests cover no-device and fake-device cases
-- [ ] selected camera is preserved when navigating prepare -> waiting/call
-- [ ] selected microphone is preserved when navigating prepare -> waiting/call
-- [ ] no JavaScript errors during permission flow
+- [x] tests cover no-device and fake-device cases
+- [x] selected camera is preserved when navigating prepare -> waiting/call
+- [x] selected microphone is preserved when navigating prepare -> waiting/call
+- [x] no JavaScript errors during permission flow
 
 Implementation notes:
 - Prefer browser fake media devices for deterministic CI.
 - Use real devices only for manual local smoke.
 - Avoid requiring physical camera/microphone in CI.
+- The automated fake-device path uses `_e2e_media=fake|error`, but Laravel only
+  exposes this mode while `APP_ENV=testing`.
 
 ## Milestone E3 — Single-user LiveKit call smoke `[ ]`
 Validate that one browser can enter the LiveKit room and control local media.

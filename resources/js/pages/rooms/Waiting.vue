@@ -16,6 +16,7 @@ const props = defineProps<CallPageProps>();
 const deviceQuery = useCallDeviceQuery();
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
+    testingMediaMode: props.testing_media_mode,
 });
 const realtime = useRoomApplicationEvents(props.room.public_id, {
     waitingRoomEntries: props.waiting_room_entries,

@@ -1,11 +1,12 @@
 import { Room, Track, createLocalTracks } from 'livekit-client';
 import type { LocalTrack } from 'livekit-client';
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import type { SelectedDevices } from '../types';
+import type { SelectedDevices, TestingMediaMode } from '../types';
 
 type UseMediaDevicesOptions = {
     initialSelectedDevices?: SelectedDevices;
     autoSelectCameraAfterPermission?: boolean;
+    testingMediaMode?: TestingMediaMode;
 };
 
 export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
@@ -22,6 +23,20 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     const previewTracks = ref<LocalTrack[]>([]);
 
     async function loadDevices(requestPermissions = false): Promise<void> {
+        if (options.testingMediaMode === 'fake') {
+            loadTestingDevices(requestPermissions);
+
+            return;
+        }
+
+        if (options.testingMediaMode === 'error' && requestPermissions) {
+            audioInputs.value = [];
+            videoInputs.value = [];
+            deviceErrorMessage.value = 'E2 permission denied';
+
+            return;
+        }
+
         try {
             const [nextAudioInputs, nextVideoInputs] = await Promise.all([
                 Room.getLocalDevices('audioinput', requestPermissions),
@@ -69,14 +84,17 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
                 return;
             }
 
-            previewTracks.value = await createLocalTracks({
-                audio: selectedDevices.value.audioInputId
-                    ? { deviceId: selectedDevices.value.audioInputId }
-                    : false,
-                video: selectedDevices.value.videoInputId
-                    ? { deviceId: selectedDevices.value.videoInputId }
-                    : false,
-            });
+            previewTracks.value =
+                options.testingMediaMode === 'fake'
+                    ? testingPreviewTracks()
+                    : await createLocalTracks({
+                          audio: selectedDevices.value.audioInputId
+                              ? { deviceId: selectedDevices.value.audioInputId }
+                              : false,
+                          video: selectedDevices.value.videoInputId
+                              ? { deviceId: selectedDevices.value.videoInputId }
+                              : false,
+                      });
             previewEnabled.value = true;
 
             await nextTick();
@@ -146,6 +164,57 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
 
             previewHost.value?.append(element);
         });
+    }
+
+    function loadTestingDevices(requestPermissions: boolean): void {
+        const nextAudioInputs = [testingDevice('audioinput', 'e2-mic', 'E2 Fake Microphone')];
+        const nextVideoInputs = [testingDevice('videoinput', 'e2-camera', 'E2 Fake Camera')];
+
+        audioInputs.value = nextAudioInputs;
+        videoInputs.value = nextVideoInputs;
+
+        if (
+            requestPermissions &&
+            options.autoSelectCameraAfterPermission === true &&
+            selectedDevices.value.videoInputId === ''
+        ) {
+            selectedDevices.value = {
+                ...selectedDevices.value,
+                videoInputId: nextVideoInputs[0].deviceId,
+            };
+        }
+    }
+
+    function testingDevice(
+        kind: MediaDeviceKind,
+        deviceId: string,
+        label: string,
+    ): MediaDeviceInfo {
+        return {
+            deviceId,
+            groupId: 'e2-media',
+            kind,
+            label,
+            toJSON() {
+                return this;
+            },
+        } as MediaDeviceInfo;
+    }
+
+    function testingPreviewTracks(): LocalTrack[] {
+        const video = document.createElement('video');
+        video.dataset.testid = 'fake-preview-video';
+        video.autoplay = true;
+        video.muted = true;
+        video.playsInline = true;
+
+        const track = {
+            kind: Track.Kind.Video,
+            attach: () => video,
+            stop: () => {},
+        };
+
+        return [track as unknown as LocalTrack];
     }
 
     function formatDeviceError(error: unknown): string {

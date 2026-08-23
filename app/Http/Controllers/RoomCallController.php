@@ -78,7 +78,19 @@ class RoomCallController extends Controller
                 ? $this->pendingWaitingRoomEntries($room)
                 : [],
             'current_waiting_room_entry' => $this->currentWaitingRoomEntry($request, $room, $guestIdentity),
+            'testing_media_mode' => $this->testingMediaMode($request),
         ];
+    }
+
+    private function testingMediaMode(Request $request): ?string
+    {
+        if (! app()->environment('testing')) {
+            return null;
+        }
+
+        $mode = $request->query('_e2e_media');
+
+        return in_array($mode, ['fake', 'error'], true) ? $mode : null;
     }
 
     private function canOpen(Request $request, Room $room): bool
