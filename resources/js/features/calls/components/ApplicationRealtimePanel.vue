@@ -43,11 +43,9 @@ function connectionStateLabel(state: EchoConnectionState): string {
             />
             <div>
                 <p class="text-sm font-medium text-neutral-950 dark:text-white">
-                    Канал событий Reverb
+                    События комнаты
                 </p>
-                <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                    Статус Echo: {{ connectionStateLabel(connectionState) }}
-                </p>
+                <p class="sr-only">{{ connectionStateLabel(connectionState) }}</p>
             </div>
         </div>
 

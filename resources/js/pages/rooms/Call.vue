@@ -348,25 +348,10 @@ onMounted(() => {
                     >
                         {{ room.name }}
                     </h1>
-                    <p class="mt-0.5 text-xs text-white/55">
-                        {{ room.livekit_room_name }}
-                    </p>
                 </div>
                 <div
                     class="flex items-center gap-2 text-xs text-white/70 tabular-nums"
                 >
-                    <span
-                        data-test="connection-state"
-                        class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                    >
-                        {{ connectionState }}
-                    </span>
-                    <span
-                        data-test="echo-connection-state"
-                        class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                    >
-                        Reverb: {{ echoConnectionStatus }}
-                    </span>
                     <span
                         data-test="raised-hands-count"
                         :data-count="raisedHandsCount"
@@ -375,6 +360,14 @@ onMounted(() => {
                         Руки: {{ raisedHandsCount }}
                     </span>
                 </div>
+            </div>
+            <div class="hidden">
+                <span data-test="connection-state">
+                    {{ connectionState }}
+                </span>
+                <span data-test="echo-connection-state">
+                    {{ echoConnectionStatus }}
+                </span>
             </div>
         </header>
 

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { computed, onMounted, ref } from 'vue';
-import ApplicationRealtimePanel from '@/features/calls/components/ApplicationRealtimePanel.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import WaitingRoomModeratorPanel from '@/features/calls/components/WaitingRoomModeratorPanel.vue';
@@ -176,11 +175,6 @@ onMounted(() => {
             </section>
 
             <aside class="grid content-start gap-4">
-                <ApplicationRealtimePanel
-                    :connection-state="realtime.echoConnectionStatus.value"
-                    :activities="realtime.activities.value"
-                />
-
                 <section
                     data-test="other-waiting-list"
                     class="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"

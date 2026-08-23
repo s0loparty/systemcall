@@ -79,9 +79,6 @@ function connectionStateLabel(state: CallConnectionState): string {
         >
             <div class="space-y-2">
                 <div class="flex flex-wrap items-center gap-2">
-                    <p class="text-sm text-neutral-300">
-                        Комната LiveKit: {{ room.livekit_room_name }}
-                    </p>
                     <span
                         class="rounded-full px-2.5 py-1 text-xs font-medium"
                         :class="

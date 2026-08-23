@@ -71,7 +71,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                 class="mb-4 flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-emerald-100"
                             >
                                 <RadioTower class="size-3.5" />
-                                Локально готово: LiveKit + Reverb
+                                Пространство для командных звонков
                             </div>
                             <h1
                                 class="max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl"
@@ -82,9 +82,9 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                             <p
                                 class="mt-4 max-w-2xl text-sm leading-6 text-neutral-300 md:text-base"
                             >
-                                Это рабочая панель для текущих возможностей:
-                                вход в медиа, зал ожидания, модерация, чат,
-                                руки, закрепления и подкомнаты.
+                                Создавайте защищенные комнаты для аудио- и
+                                видеовстреч, управляйте участниками и
+                                подключайтесь без лишней подготовки.
                             </p>
                         </div>
 
@@ -278,8 +278,8 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                             <p
                                 class="text-sm text-neutral-500 dark:text-neutral-400"
                             >
-                                Откройте страницу звонка в двух браузерах, чтобы
-                                локально проверить медиа и realtime-функции.
+                                Выберите комнату, настройте устройства и
+                                присоединяйтесь к звонку.
                             </p>
                         </div>
                     </div>
@@ -341,11 +341,6 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                         'Описание пока не добавлено.'
                                     }}
                                 </p>
-                                <p
-                                    class="mt-2 text-xs text-neutral-400 dark:text-neutral-500"
-                                >
-                                    Public ID: {{ room.public_id }}
-                                </p>
                             </div>
 
                             <div class="flex flex-wrap gap-2 md:justify-end">
@@ -371,15 +366,15 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                 <p
                                     class="font-medium text-neutral-950 dark:text-white"
                                 >
-                                    Локальный чек-лист
+                                    Безопасный вход
                                 </p>
-                                <ul
-                                    class="mt-3 grid gap-2 text-sm text-neutral-500 dark:text-neutral-400"
+                                <p
+                                    class="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400"
                                 >
-                                    <li>Laravel: http://localhost</li>
-                                    <li>Reverb: ws://localhost:8080</li>
-                                    <li>LiveKit: ws://localhost:7880</li>
-                                </ul>
+                                    Используйте приватные комнаты, пароль и зал
+                                    ожидания, чтобы контролировать доступ к
+                                    встрече.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -393,16 +388,14 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                 <p
                                     class="font-medium text-neutral-950 dark:text-white"
                                 >
-                                    Smoke test
+                                    Совместная работа
                                 </p>
                                 <p
                                     class="mt-2 text-sm leading-6 text-neutral-500 dark:text-neutral-400"
                                 >
-                                    Откройте одну комнату в обычном браузере и
-                                    приватном окне. Войдите как владелец и
-                                    гость, затем проверьте микрофон, камеру,
-                                    чат, руку, закрепление и переключение
-                                    подкомнат.
+                                    В звонке доступны чат, поднятые руки,
+                                    закрепление участников, демонстрация экрана
+                                    и модерация.
                                 </p>
                             </div>
                         </div>
