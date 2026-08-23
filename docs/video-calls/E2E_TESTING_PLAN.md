@@ -197,24 +197,40 @@ Implementation notes:
 - The automated fake-device path uses `_e2e_media=fake|error`, but Laravel only
   exposes this mode while `APP_ENV=testing`.
 
-## Milestone E3 — Single-user LiveKit call smoke `[ ]`
+## Milestone E3 — Single-user LiveKit call smoke `[x]`
 Validate that one browser can enter the LiveKit room and control local media.
 
 Scenarios:
-- [ ] user joins call with no microphone/camera selected
-- [ ] participant tile appears for local user
-- [ ] microphone button toggles local microphone state
-- [ ] camera button toggles local camera state
-- [ ] screen share button appears only when `can_publish_screen` is true
-- [ ] screen share button is hidden when `can_publish_screen` is false
-- [ ] disconnect returns user to preparation page
+- [x] user joins call with no microphone/camera selected
+- [x] participant tile appears for local user
+- [x] microphone button toggles local microphone state
+- [x] camera button toggles local camera state
+- [x] screen share button appears only when `can_publish_screen` is true
+- [x] screen share button is hidden when `can_publish_screen` is false
+- [x] disconnect returns user to preparation page
 
 Acceptance:
-- [ ] real LiveKit token is issued
-- [ ] browser connects to local LiveKit
-- [ ] UI reflects connected state
-- [ ] UI reflects mic/camera/screen-share button state
-- [ ] no JavaScript errors during join/disconnect
+- [x] real LiveKit token is issued
+- [x] browser connects to local LiveKit
+- [x] UI reflects connected state
+- [x] UI reflects mic/camera/screen-share button state
+- [x] no JavaScript errors during join/disconnect
+
+Implementation notes:
+- E3 uses local LiveKit signaling and real backend-issued LiveKit tokens.
+- Browser tests run inside the Sail container. In that environment LiveKit must
+  advertise the Docker network gateway as `rtc.node_ip`; otherwise Chromium sees
+  ICE candidates for `127.0.0.1` and stays in `connecting`.
+- Before running E3 locally, recreate LiveKit with the Sail network gateway:
+
+```bash
+LIVEKIT_NODE_IP="$(docker network inspect systemcall-app_sail --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}')" \
+docker compose -f compose.sail.yaml -f compose.sail-livekit.yaml up -d --force-recreate livekit
+```
+
+- The local fake media path still uses `_e2e_media=fake`, but only for
+  deterministic microphone/camera UI toggles in headless Chromium. LiveKit
+  signaling, token validation and room connection remain real.
 
 ## Milestone E4 — Multi-user room presence `[ ]`
 Validate two independent browser contexts in the same room.

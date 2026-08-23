@@ -35,6 +35,7 @@ const call = useCallSession({
     roomPublicId: props.room.public_id,
     displayName: defaultDisplayName.value,
     initialSelectedDevices: deviceQuery.query.value,
+    testingMediaMode: props.testing_media_mode,
 });
 call.waitingRoomEntry.value = props.current_waiting_room_entry;
 
@@ -190,6 +191,7 @@ onMounted(() => {
                     class="flex items-center gap-2 text-xs text-white/70 tabular-nums"
                 >
                     <span
+                        data-test="connection-state"
                         class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
                     >
                         {{ connectionState }}

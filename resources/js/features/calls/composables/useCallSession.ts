@@ -3,6 +3,7 @@ import type {
     RoomMemberSummary,
     SelectedDevices,
     SubroomTokenResponse,
+    TestingMediaMode,
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
 } from '../types';
@@ -14,12 +15,16 @@ type UseCallSessionOptions = {
     roomPublicId: string;
     displayName: string;
     initialSelectedDevices?: SelectedDevices;
+    testingMediaMode?: TestingMediaMode;
 };
 
 export function useCallSession(options: UseCallSessionOptions) {
-    const liveKit = useLiveKit();
+    const liveKit = useLiveKit({
+        testingMediaMode: options.testingMediaMode,
+    });
     const mediaDevices = useMediaDevices({
         initialSelectedDevices: options.initialSelectedDevices,
+        testingMediaMode: options.testingMediaMode,
     });
     const roomJoin = useRoomJoin(options.roomPublicId, options.displayName);
     const connecting = ref(false);

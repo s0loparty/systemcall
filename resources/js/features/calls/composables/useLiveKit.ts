@@ -13,6 +13,7 @@ import type {
     CallConnectionState,
     ParticipantTile,
     SelectedDevices,
+    TestingMediaMode,
 } from '../types';
 
 type InitialMediaState = {
@@ -20,7 +21,11 @@ type InitialMediaState = {
     camera?: boolean;
 };
 
-export function useLiveKit() {
+type UseLiveKitOptions = {
+    testingMediaMode?: TestingMediaMode;
+};
+
+export function useLiveKit(options: UseLiveKitOptions = {}) {
     const activeRoom = shallowRef<Room | null>(null);
     const connected = ref(false);
     const connectionState = ref<CallConnectionState>('disconnected');
@@ -113,6 +118,14 @@ export function useLiveKit() {
         }
 
         const enabled = !microphoneEnabled.value;
+
+        if (options.testingMediaMode === 'fake') {
+            microphoneEnabled.value = enabled;
+            patchLocalTile({ microphone: enabled });
+
+            return;
+        }
+
         await activeRoom.value.localParticipant.setMicrophoneEnabled(enabled);
         microphoneEnabled.value =
             activeRoom.value.localParticipant.isMicrophoneEnabled;
@@ -125,6 +138,14 @@ export function useLiveKit() {
         }
 
         const enabled = !cameraEnabled.value;
+
+        if (options.testingMediaMode === 'fake') {
+            cameraEnabled.value = enabled;
+            patchLocalTile({ camera: enabled });
+
+            return;
+        }
+
         await activeRoom.value.localParticipant.setCameraEnabled(
             enabled,
             undefined,
@@ -336,6 +357,18 @@ export function useLiveKit() {
     function removeParticipant(identity: string): void {
         detachIdentityMedia(identity);
         tiles.value = tiles.value.filter((tile) => tile.identity !== identity);
+    }
+
+    function patchLocalTile(partial: Partial<ParticipantTile>): void {
+        const localIdentity = activeRoom.value?.localParticipant.identity;
+
+        if (!localIdentity) {
+            return;
+        }
+
+        tiles.value = tiles.value.map((tile) =>
+            tile.identity === localIdentity ? { ...tile, ...partial } : tile,
+        );
     }
 
     function attachMedia(

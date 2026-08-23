@@ -45,6 +45,7 @@ const emit = defineEmits<{
                     : 'bg-[#ea4335] hover:bg-[#f05246]'
             "
             type="button"
+            data-test="toggle-microphone"
             :disabled="busy"
             :aria-label="
                 microphoneEnabled ? 'Выключить микрофон' : 'Включить микрофон'
@@ -66,6 +67,7 @@ const emit = defineEmits<{
                     : 'bg-[#ea4335] hover:bg-[#f05246]'
             "
             type="button"
+            data-test="toggle-camera"
             :disabled="busy"
             :aria-label="cameraEnabled ? 'Выключить камеру' : 'Включить камеру'"
             @click="emit('toggleCamera')"
@@ -85,6 +87,7 @@ const emit = defineEmits<{
                     : 'bg-[#3c4043] hover:bg-[#4a4d51]'
             "
             type="button"
+            data-test="toggle-hand"
             :disabled="busy"
             :aria-label="handRaised ? 'Опустить руку' : 'Поднять руку'"
             @click="emit('toggleHand')"
@@ -101,6 +104,7 @@ const emit = defineEmits<{
                     : 'bg-[#3c4043] hover:bg-[#4a4d51]'
             "
             type="button"
+            data-test="toggle-screen-share"
             :disabled="busy"
             :aria-label="
                 screenShareEnabled
@@ -120,6 +124,7 @@ const emit = defineEmits<{
                     : 'bg-[#3c4043] hover:bg-[#4a4d51]'
             "
             type="button"
+            data-test="toggle-chat"
             :aria-label="chatOpen ? 'Закрыть чат' : 'Открыть чат'"
             @click="emit('toggleChat')"
         >
@@ -129,6 +134,7 @@ const emit = defineEmits<{
         <button
             class="flex h-11 min-w-14 items-center justify-center rounded-full bg-[#ea4335] px-4 transition-[background-color,scale] duration-150 ease-out hover:bg-[#f05246] active:scale-[0.96]"
             type="button"
+            data-test="leave-call"
             aria-label="Отключиться"
             @click="emit('leave')"
         >

@@ -20,6 +20,12 @@ const emit = defineEmits<{
 
 <template>
     <article
+        data-test="participant-tile"
+        :data-identity="tile.identity"
+        :data-local="tile.local ? 'true' : 'false'"
+        :data-microphone-enabled="tile.microphone ? 'true' : 'false'"
+        :data-camera-enabled="tile.camera ? 'true' : 'false'"
+        :data-screen-share-enabled="tile.screenShare ? 'true' : 'false'"
         class="relative overflow-hidden bg-[#1f1f1f] shadow-[0_20px_70px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow,scale] duration-200 ease-out active:scale-[0.995]"
         :class="[
             size === 'share'
