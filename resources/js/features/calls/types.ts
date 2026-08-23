@@ -107,6 +107,7 @@ export type ParticipantTile = {
     microphone: boolean;
     speaking: boolean;
     screenShare: boolean;
+    handRaised: boolean;
 };
 
 export type AttachableTrack = {

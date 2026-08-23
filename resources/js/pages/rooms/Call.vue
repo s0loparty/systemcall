@@ -9,7 +9,11 @@ import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue
 import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
 import { useCallSession } from '@/features/calls/composables/useCallSession';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
-import type { CallPageProps, RoomMemberSummary } from '@/features/calls/types';
+import type {
+    CallPageProps,
+    ParticipantTile,
+    RoomMemberSummary,
+} from '@/features/calls/types';
 import {
     prepare as showPrepare,
     waiting as showWaiting,
@@ -78,6 +82,7 @@ const {
     roomMessages,
     appendRoomMessage,
     globalPinnedRoomMemberId,
+    echoConnectionStatus,
 } = realtime;
 
 const needsPassword = computed(
@@ -100,6 +105,18 @@ const canShareScreen = computed(
 );
 const raisedHandsCount = computed(
     () => roomMembers.value.filter((member) => member.hand_raised_at).length,
+);
+const tilesWithApplicationState = computed<ParticipantTile[]>(() =>
+    tiles.value.map((tile) => {
+        const member = roomMembers.value.find(
+            (roomMember) => roomMember.livekit_identity === tile.identity,
+        );
+
+        return {
+            ...tile,
+            handRaised: Boolean(member?.hand_raised_at),
+        };
+    }),
 );
 const personalPinnedIdentity = computed(
     () =>
@@ -197,6 +214,14 @@ onMounted(() => {
                         {{ connectionState }}
                     </span>
                     <span
+                        data-test="echo-connection-state"
+                        class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                    >
+                        Reverb: {{ echoConnectionStatus }}
+                    </span>
+                    <span
+                        data-test="raised-hands-count"
+                        :data-count="raisedHandsCount"
                         class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
                     >
                         Руки: {{ raisedHandsCount }}
@@ -211,7 +236,7 @@ onMounted(() => {
         >
             <ParticipantGrid
                 class="min-h-0 w-full"
-                :tiles="tiles"
+                :tiles="tilesWithApplicationState"
                 :active-speaker-identity="activeSpeakerIdentity"
                 :personal-pinned-identity="personalPinnedIdentity"
                 :global-pinned-identity="globalPinnedIdentity"

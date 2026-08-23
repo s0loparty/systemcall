@@ -88,6 +88,7 @@ const emit = defineEmits<{
             "
             type="button"
             data-test="toggle-hand"
+            :data-hand-raised="handRaised ? 'true' : 'false'"
             :disabled="busy"
             :aria-label="handRaised ? 'Опустить руку' : 'Поднять руку'"
             @click="emit('toggleHand')"

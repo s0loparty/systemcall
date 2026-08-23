@@ -320,23 +320,34 @@ Implementation notes:
 - The stop path asserts no stale `screenShare` dataset state and no stale
   `video[data-source="screen-share"]` remains in the remote browser.
 
-## Milestone E7 — Raised hand `[ ]`
+## Milestone E7 — Raised hand `[x]`
 Validate application realtime state through Reverb.
 
 Scenarios:
-- [ ] user A raises hand
-- [ ] user A sees hand button active
-- [ ] user B sees raised-hand count update
-- [ ] user B sees user A hand state in participant/application UI
-- [ ] user A lowers hand
-- [ ] user B sees raised-hand count return to previous value
-- [ ] repeated clicks do not duplicate or corrupt hand state
+- [x] user A raises hand
+- [x] user A sees hand button active
+- [x] user B sees raised-hand count update
+- [x] user B sees user A hand state in participant/application UI
+- [x] user A lowers hand
+- [x] user B sees raised-hand count return to previous value
+- [x] repeated clicks do not duplicate or corrupt hand state
 
 Acceptance:
-- [ ] hand state persists through backend endpoint
-- [ ] hand state propagates through Reverb
-- [ ] UI state is consistent after reload
-- [ ] no JavaScript errors in either browser context
+- [x] hand state persists through backend endpoint
+- [x] hand state propagates through Reverb
+- [x] UI state is consistent after reload
+- [x] no JavaScript errors in either browser context
+
+Implementation notes:
+- E7 adds a browser test that opens the same call as two authenticated users,
+  toggles raised-hand state through the real Laravel endpoint and verifies the
+  remote browser receives the Reverb update.
+- Call tiles now expose application-owned raised-hand state from
+  `room_members.hand_raised_at`, while LiveKit remains the source of truth for
+  media tracks.
+- The test verifies persisted backend state, local button state, remote counter,
+  remote participant badge, reload consistency and no duplicate raised-hand
+  tiles after repeated toggles.
 
 ## Milestone E8 — Waiting room and moderation smoke `[ ]`
 Validate room admission workflows that affect call access.

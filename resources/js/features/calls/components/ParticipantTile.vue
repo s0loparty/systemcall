@@ -26,6 +26,7 @@ const emit = defineEmits<{
         :data-microphone-enabled="tile.microphone ? 'true' : 'false'"
         :data-camera-enabled="tile.camera ? 'true' : 'false'"
         :data-screen-share-enabled="tile.screenShare ? 'true' : 'false'"
+        :data-hand-raised="tile.handRaised ? 'true' : 'false'"
         class="relative overflow-hidden bg-[#1f1f1f] shadow-[0_20px_70px_rgba(0,0,0,0.28),inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow,scale] duration-200 ease-out active:scale-[0.995]"
         :class="[
             size === 'share'
@@ -95,6 +96,13 @@ const emit = defineEmits<{
                     class="rounded-full bg-indigo-300 px-2 py-1 text-xs font-medium text-indigo-950"
                 >
                     закреплен для всех
+                </span>
+                <span
+                    v-if="tile.handRaised"
+                    data-test="participant-hand-raised-badge"
+                    class="rounded-full bg-amber-300 px-2 py-1 text-xs font-medium text-amber-950"
+                >
+                    рука поднята
                 </span>
                 <span
                     v-if="tile.screenShare"

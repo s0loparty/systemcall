@@ -362,6 +362,7 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
             microphone: participant.isMicrophoneEnabled,
             speaking: participant.isSpeaking,
             screenShare: hasActiveScreenShare(participant),
+            handRaised: false,
         };
 
         const index = tiles.value.findIndex(
