@@ -112,6 +112,30 @@ curl -I http://localhost:8080
 ./vendor/bin/sail npm run build
 ```
 
+Browser/E2E smoke запускается отдельно. Он использует собранные assets из
+`public/build`, поэтому перед запуском обновите build и установите браузер
+Playwright в контейнере:
+
+```bash
+./vendor/bin/sail npm run build
+./vendor/bin/sail npm run playwright:install
+```
+
+Минимальный browser smoke:
+
+```bash
+./vendor/bin/sail composer test:browser
+```
+
+Полный E2E alias сейчас указывает на browser suite:
+
+```bash
+./vendor/bin/sail composer test:e2e
+```
+
+План расширения E2E сценариев для комнат, аудио, видео, screen sharing и
+поднятия руки описан в `docs/video-calls/E2E_TESTING_PLAN.md`.
+
 Проверка production Compose:
 
 ```bash

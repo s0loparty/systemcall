@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -27,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureTestingAssets();
         $this->configureRoomRateLimiting();
     }
 
@@ -50,6 +52,13 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    private function configureTestingAssets(): void
+    {
+        if ($this->app->environment('testing')) {
+            Vite::useHotFile(storage_path('framework/testing-vite.hot'));
+        }
     }
 
     private function configureRoomRateLimiting(): void
