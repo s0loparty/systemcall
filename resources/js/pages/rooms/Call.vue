@@ -12,16 +12,23 @@ import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomAp
 import type {
     CallPageProps,
     ParticipantTile,
+    ParticipantTileActions,
     RoomMemberSummary,
 } from '@/features/calls/types';
 import {
     prepare as showPrepare,
     waiting as showWaiting,
 } from '@/routes/rooms/call';
+import { update as updateGlobalPin } from '@/routes/rooms/global_pin';
 import { update as updateHand } from '@/routes/rooms/hand';
+import { ban, kick } from '@/routes/rooms/members';
 
 type MemberResponse = {
     member: RoomMemberSummary;
+};
+
+type GlobalPinResponse = {
+    global_pinned_room_member_id: number | null;
 };
 
 const props = defineProps<CallPageProps>();
@@ -34,6 +41,14 @@ const personalPinnedRoomMemberId = ref<number | null>(null);
 const handRequest = useHttp<{ raised: boolean }, MemberResponse>({
     raised: false,
 });
+const globalPinRequest = useHttp<
+    { room_member_id: number | null },
+    GlobalPinResponse
+>({
+    room_member_id: null,
+});
+const kickRequest = useHttp<Record<string, never>, MemberResponse>({});
+const banRequest = useHttp<Record<string, never>, unknown>({});
 
 const call = useCallSession({
     roomPublicId: props.room.public_id,
@@ -83,6 +98,8 @@ const {
     appendRoomMessage,
     globalPinnedRoomMemberId,
     echoConnectionStatus,
+    removeRoomMember,
+    setGlobalPinnedRoomMemberId,
 } = realtime;
 
 const needsPassword = computed(
@@ -130,6 +147,68 @@ const globalPinnedIdentity = computed(
             (member) => member.id === globalPinnedRoomMemberId.value,
         )?.livekit_identity ?? null,
 );
+const roomMemberByIdentity = computed(
+    () =>
+        new Map(
+            roomMembers.value.map((member) => [
+                member.livekit_identity,
+                member,
+            ]),
+        ),
+);
+const tileActionsByIdentity = computed(() =>
+    tilesWithApplicationState.value.reduce<
+        Record<string, ParticipantTileActions>
+    >((actions, tile) => {
+        const member = roomMemberByIdentity.value.get(tile.identity);
+        const canTarget = !tile.local && member !== undefined;
+        const canModerateTarget = member
+            ? canTarget && canModerateRoomMember(member)
+            : false;
+
+        actions[tile.identity] = {
+            canPersonalPin: canTarget,
+            canGlobalPin: canTarget && props.can_moderate_members,
+            canKick: canModerateTarget,
+            canBan: canModerateTarget,
+        };
+
+        return actions;
+    }, {}),
+);
+const tileActionsBusy = computed(
+    () =>
+        globalPinRequest.processing ||
+        kickRequest.processing ||
+        banRequest.processing,
+);
+
+function canModerateRoomMember(member: RoomMemberSummary): boolean {
+    const currentMember = currentRoomMember.value;
+
+    if (
+        !props.can_moderate_members ||
+        !currentMember ||
+        member.id === currentMember.id ||
+        member.left_at !== null
+    ) {
+        return false;
+    }
+
+    if (currentMember.role === 'owner') {
+        return member.role !== 'owner';
+    }
+
+    if (currentMember.role === 'moderator') {
+        return member.role === 'participant';
+    }
+
+    return false;
+}
+
+function memberByIdentity(identity: string): RoomMemberSummary | null {
+    return roomMemberByIdentity.value.get(identity) ?? null;
+}
 
 async function connectToCall(): Promise<void> {
     await connect();
@@ -163,6 +242,75 @@ async function toggleHand(): Promise<void> {
     if (response?.member) {
         upsertRoomMember(response.member);
     }
+}
+
+function togglePersonalPin(identity: string): void {
+    const member = memberByIdentity(identity);
+
+    if (!member || member.id === currentRoomMemberId.value) {
+        return;
+    }
+
+    personalPinnedRoomMemberId.value =
+        personalPinnedRoomMemberId.value === member.id ? null : member.id;
+}
+
+async function toggleGlobalPin(identity: string): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (
+        !member ||
+        member.id === currentRoomMemberId.value ||
+        !props.can_moderate_members ||
+        globalPinRequest.processing
+    ) {
+        return;
+    }
+
+    globalPinRequest.room_member_id =
+        globalPinnedRoomMemberId.value === member.id ? null : member.id;
+
+    const response = await globalPinRequest.patch(
+        updateGlobalPin.url(props.room.public_id),
+    );
+
+    setGlobalPinnedRoomMemberId(
+        response?.global_pinned_room_member_id ?? null,
+    );
+}
+
+async function kickParticipant(identity: string): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (!member || !canModerateRoomMember(member) || kickRequest.processing) {
+        return;
+    }
+
+    const response = await kickRequest.delete(
+        kick.url({
+            room: props.room.public_id,
+            roomMember: member.id,
+        }),
+    );
+
+    removeRoomMember(response?.member?.id ?? member.id);
+}
+
+async function banParticipant(identity: string): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (!member || !canModerateRoomMember(member) || banRequest.processing) {
+        return;
+    }
+
+    await banRequest.post(
+        ban.url({
+            room: props.room.public_id,
+            roomMember: member.id,
+        }),
+    );
+
+    removeRoomMember(member.id);
 }
 
 async function leaveCall(): Promise<void> {
@@ -240,7 +388,13 @@ onMounted(() => {
                 :active-speaker-identity="activeSpeakerIdentity"
                 :personal-pinned-identity="personalPinnedIdentity"
                 :global-pinned-identity="globalPinnedIdentity"
+                :tile-actions-by-identity="tileActionsByIdentity"
+                :actions-disabled="tileActionsBusy"
                 @media-host="setMediaHost"
+                @pin-personal="togglePersonalPin"
+                @pin-global="toggleGlobalPin"
+                @kick="kickParticipant"
+                @ban="banParticipant"
             />
         </section>
 

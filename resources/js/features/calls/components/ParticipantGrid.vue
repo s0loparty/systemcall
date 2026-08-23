@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { ParticipantTile as ParticipantTileData } from '../types';
+import type {
+    ParticipantTileActions,
+    ParticipantTile as ParticipantTileData,
+} from '../types';
 import ParticipantTile from './ParticipantTile.vue';
 
 type Props = {
@@ -8,33 +11,44 @@ type Props = {
     activeSpeakerIdentity: string | null;
     personalPinnedIdentity: string | null;
     globalPinnedIdentity: string | null;
+    tileActionsByIdentity?: Record<string, ParticipantTileActions | undefined>;
+    actionsDisabled?: boolean;
 };
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    tileActionsByIdentity: () => ({}),
+    actionsDisabled: false,
+});
 
 const emit = defineEmits<{
     'media-host': [identity: string, element: HTMLElement | null];
+    'pin-personal': [identity: string];
+    'pin-global': [identity: string];
+    kick: [identity: string];
+    ban: [identity: string];
 }>();
 
 const orderedTiles = computed(() => {
     const pinnedIdentity =
         props.personalPinnedIdentity ?? props.globalPinnedIdentity;
 
-    if (pinnedIdentity === null) {
-        return props.tiles;
-    }
+    return props.tiles
+        .map((tile, index) => ({ tile, index }))
+        .sort((left, right) => {
+            const leftPinned = left.tile.identity === pinnedIdentity;
+            const rightPinned = right.tile.identity === pinnedIdentity;
 
-    return [...props.tiles].sort((left, right) => {
-        if (left.identity === pinnedIdentity) {
-            return -1;
-        }
+            if (leftPinned !== rightPinned) {
+                return leftPinned ? -1 : 1;
+            }
 
-        if (right.identity === pinnedIdentity) {
-            return 1;
-        }
+            if (left.tile.handRaised !== right.tile.handRaised) {
+                return left.tile.handRaised ? -1 : 1;
+            }
 
-        return 0;
-    });
+            return left.index - right.index;
+        })
+        .map(({ tile }) => tile);
 });
 
 const gridClass = computed(() => {
@@ -56,10 +70,20 @@ const gridClass = computed(() => {
 const screenShareTile = computed(
     () => orderedTiles.value.find((tile) => tile.screenShare) ?? null,
 );
+const pinnedTile = computed(() => {
+    const pinnedIdentity =
+        props.personalPinnedIdentity ?? props.globalPinnedIdentity;
+
+    return pinnedIdentity
+        ? (orderedTiles.value.find((tile) => tile.identity === pinnedIdentity) ??
+              null)
+        : null;
+});
+const focusedTile = computed(() => screenShareTile.value ?? pinnedTile.value);
 const sideTiles = computed(() =>
-    screenShareTile.value
+    focusedTile.value
         ? orderedTiles.value.filter(
-              (tile) => tile.identity !== screenShareTile.value?.identity,
+              (tile) => tile.identity !== focusedTile.value?.identity,
           )
         : [],
 );
@@ -67,21 +91,29 @@ const sideTiles = computed(() =>
 
 <template>
     <section
-        v-if="screenShareTile"
-        data-test="screen-share-layout"
-        class="mx-auto grid h-full w-full max-w-[96rem] flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2fr)_minmax(14rem,1fr)] xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]"
+        v-if="focusedTile"
+        :data-test="
+            screenShareTile ? 'screen-share-layout' : 'focused-tile-layout'
+        "
+        class="mx-auto grid h-full w-full max-w-[96rem] flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2.35fr)_minmax(14rem,0.65fr)] xl:grid-cols-[minmax(0,2.6fr)_minmax(18rem,0.72fr)]"
     >
         <ParticipantTile
-            :tile="screenShareTile"
-            :active="screenShareTile.identity === activeSpeakerIdentity"
+            :tile="focusedTile"
+            :active="focusedTile.identity === activeSpeakerIdentity"
             :personally-pinned="
-                screenShareTile.identity === personalPinnedIdentity
+                focusedTile.identity === personalPinnedIdentity
             "
-            :globally-pinned="screenShareTile.identity === globalPinnedIdentity"
+            :globally-pinned="focusedTile.identity === globalPinnedIdentity"
+            :actions="tileActionsByIdentity[focusedTile.identity]"
+            :actions-disabled="actionsDisabled"
             size="share"
             @media-host="
                 (identity, element) => emit('media-host', identity, element)
             "
+            @pin-personal="(identity) => emit('pin-personal', identity)"
+            @pin-global="(identity) => emit('pin-global', identity)"
+            @kick="(identity) => emit('kick', identity)"
+            @ban="(identity) => emit('ban', identity)"
         />
 
         <aside
@@ -96,10 +128,16 @@ const sideTiles = computed(() =>
                 :active="tile.identity === activeSpeakerIdentity"
                 :personally-pinned="tile.identity === personalPinnedIdentity"
                 :globally-pinned="tile.identity === globalPinnedIdentity"
+                :actions="tileActionsByIdentity[tile.identity]"
+                :actions-disabled="actionsDisabled"
                 size="compact"
                 @media-host="
                     (identity, element) => emit('media-host', identity, element)
                 "
+                @pin-personal="(identity) => emit('pin-personal', identity)"
+                @pin-global="(identity) => emit('pin-global', identity)"
+                @kick="(identity) => emit('kick', identity)"
+                @ban="(identity) => emit('ban', identity)"
             />
 
             <div
@@ -124,10 +162,11 @@ const sideTiles = computed(() =>
             :active="tile.identity === activeSpeakerIdentity"
             :personally-pinned="tile.identity === personalPinnedIdentity"
             :globally-pinned="tile.identity === globalPinnedIdentity"
+            :actions="tileActionsByIdentity[tile.identity]"
+            :actions-disabled="actionsDisabled"
             :class="
                 (tile.identity === personalPinnedIdentity ||
-                    tile.identity === globalPinnedIdentity ||
-                    tile.identity === activeSpeakerIdentity) &&
+                    tile.identity === globalPinnedIdentity) &&
                 tiles.length > 1
                     ? 'sm:col-span-2 sm:row-span-2'
                     : ''
@@ -135,6 +174,10 @@ const sideTiles = computed(() =>
             @media-host="
                 (identity, element) => emit('media-host', identity, element)
             "
+            @pin-personal="(identity) => emit('pin-personal', identity)"
+            @pin-global="(identity) => emit('pin-global', identity)"
+            @kick="(identity) => emit('kick', identity)"
+            @ban="(identity) => emit('ban', identity)"
         />
 
         <div

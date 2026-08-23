@@ -110,6 +110,13 @@ export type ParticipantTile = {
     handRaised: boolean;
 };
 
+export type ParticipantTileActions = {
+    canPersonalPin: boolean;
+    canGlobalPin: boolean;
+    canKick: boolean;
+    canBan: boolean;
+};
+
 export type AttachableTrack = {
     kind: Track.Kind;
     source?: Track.Source;
