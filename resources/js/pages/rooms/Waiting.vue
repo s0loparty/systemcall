@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import ApplicationRealtimePanel from '@/features/calls/components/ApplicationRealtimePanel.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
@@ -18,12 +18,15 @@ const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     testingMediaMode: props.testing_media_mode,
 });
+const currentWaitingRoomEntry = ref(props.current_waiting_room_entry);
 const realtime = useRoomApplicationEvents(props.room.public_id, {
     waitingRoomEntries: props.waiting_room_entries,
     onWaitingRoomDecision: (event) => {
-        if (event.waiting_room.id !== props.current_waiting_room_entry?.id) {
+        if (event.waiting_room.id !== currentWaitingRoomEntry.value?.id) {
             return;
         }
+
+        currentWaitingRoomEntry.value = event.waiting_room;
 
         if (event.waiting_room.status === 'approved') {
             goToCall();
@@ -47,11 +50,11 @@ const selectedVideoLabel = computed(() =>
 );
 const otherWaitingEntries = computed(() =>
     realtime.waitingRoomEntries.value.filter(
-        (entry) => entry.id !== props.current_waiting_room_entry?.id,
+        (entry) => entry.id !== currentWaitingRoomEntry.value?.id,
     ),
 );
 const rejected = computed(
-    () => props.current_waiting_room_entry?.status === 'rejected',
+    () => currentWaitingRoomEntry.value?.status === 'rejected',
 );
 
 function deviceLabel(
@@ -112,6 +115,7 @@ onMounted(() => {
 
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         <div
+                            data-test="selected-audio-device"
                             class="rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900"
                         >
                             <p class="text-xs text-neutral-500">Микрофон</p>
@@ -122,6 +126,7 @@ onMounted(() => {
                             </p>
                         </div>
                         <div
+                            data-test="selected-video-device"
                             class="rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900"
                         >
                             <p class="text-xs text-neutral-500">Камера</p>
@@ -134,7 +139,7 @@ onMounted(() => {
                     </div>
                 </div>
 
-                <WaitingRoomStatusPanel :entry="current_waiting_room_entry" />
+                <WaitingRoomStatusPanel :entry="currentWaitingRoomEntry" />
                 <CallError
                     v-if="rejected"
                     message="Заявка отклонена. Обратитесь к модератору комнаты."
@@ -161,7 +166,7 @@ onMounted(() => {
                 />
 
                 <button
-                    v-if="current_waiting_room_entry?.status === 'approved'"
+                    v-if="currentWaitingRoomEntry?.status === 'approved'"
                     class="w-full rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                     type="button"
                     @click="goToCall"
@@ -177,6 +182,7 @@ onMounted(() => {
                 />
 
                 <section
+                    data-test="other-waiting-list"
                     class="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
                 >
                     <div class="flex items-center justify-between gap-3">
@@ -203,6 +209,8 @@ onMounted(() => {
                         <li
                             v-for="entry in otherWaitingEntries"
                             :key="entry.id"
+                            data-test="other-waiting-entry"
+                            :data-entry-id="entry.id"
                             class="rounded-2xl bg-neutral-100 p-3 text-sm dark:bg-neutral-900"
                         >
                             <p

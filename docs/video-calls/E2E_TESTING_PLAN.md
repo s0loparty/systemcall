@@ -349,24 +349,37 @@ Implementation notes:
   remote participant badge, reload consistency and no duplicate raised-hand
   tiles after repeated toggles.
 
-## Milestone E8 — Waiting room and moderation smoke `[ ]`
+## Milestone E8 — Waiting room and moderation smoke `[x]`
 Validate room admission workflows that affect call access.
 
 Scenarios:
-- [ ] waiting-room enabled room sends participant to waiting page
-- [ ] waiting page shows selected microphone/camera labels
-- [ ] waiting page shows camera preview when camera was selected
-- [ ] moderator sees pending participant
-- [ ] moderator approves participant
-- [ ] participant transitions to call page
-- [ ] moderator rejects participant
-- [ ] participant sees rejected state and cannot join
+- [x] waiting-room enabled room sends participant to waiting page
+- [x] waiting page shows selected microphone/camera labels
+- [x] waiting page shows camera preview when camera was selected
+- [x] moderator sees pending participant
+- [x] moderator approves participant
+- [x] participant transitions to call page
+- [x] moderator rejects participant
+- [x] participant sees rejected state and cannot join
 
 Acceptance:
-- [ ] waiting-room approval is required before LiveKit token is used
-- [ ] waiting room events propagate through Reverb
-- [ ] approved participant can join LiveKit
-- [ ] rejected participant cannot join LiveKit
+- [x] waiting-room approval is required before LiveKit token is used
+- [x] waiting room events propagate through Reverb
+- [x] approved participant can join LiveKit
+- [x] rejected participant cannot join LiveKit
+
+Implementation notes:
+- E8 adds browser coverage for approval and rejection paths with two
+  authenticated browser contexts: moderator and waiting participant.
+- The test verifies selected microphone/camera labels and fake preview survive
+  prepare -> waiting navigation by preserving `_e2e_media` with device query
+  parameters during test runs.
+- Waiting page now keeps its own current waiting-room entry state so a Reverb
+  rejection event updates the visible status without a reload.
+- The approval path asserts token issuance is forbidden while pending, then the
+  participant reaches a connected LiveKit call after moderator approval.
+- The rejection path asserts the participant remains in the waiting room and
+  cannot receive a LiveKit token.
 
 ## Milestone E9 — Chat smoke `[ ]`
 Validate the side chat used during calls.

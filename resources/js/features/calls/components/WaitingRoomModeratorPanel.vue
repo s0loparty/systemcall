@@ -39,6 +39,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
 
 <template>
     <section
+        data-test="waiting-room-moderator-panel"
         class="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
     >
         <div class="flex items-center justify-between gap-3">
@@ -51,6 +52,8 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                 </p>
             </div>
             <span
+                data-test="waiting-room-pending-count"
+                :data-count="entries.length"
                 class="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300"
             >
                 Ожидают: {{ entries.length }}
@@ -68,6 +71,8 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
             <li
                 v-for="entry in entries"
                 :key="entry.id"
+                data-test="waiting-room-entry"
+                :data-entry-id="entry.id"
                 class="flex flex-col gap-2 rounded-2xl border border-neutral-200 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800"
             >
                 <div>
@@ -84,6 +89,8 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                     <button
                         class="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
                         type="button"
+                        data-test="approve-waiting-entry"
+                        :data-entry-id="entry.id"
                         :disabled="
                             approveRequest.processing ||
                             rejectRequest.processing
@@ -95,6 +102,8 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                     <button
                         class="rounded-full bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
                         type="button"
+                        data-test="reject-waiting-entry"
+                        :data-entry-id="entry.id"
                         :disabled="
                             approveRequest.processing ||
                             rejectRequest.processing

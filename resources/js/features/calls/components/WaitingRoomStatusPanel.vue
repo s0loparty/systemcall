@@ -11,6 +11,8 @@ defineProps<Props>();
 <template>
     <section
         v-if="entry"
+        data-test="waiting-room-status"
+        :data-status="entry.status"
         class="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-amber-950 shadow-sm dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100"
     >
         <p class="text-sm font-medium">

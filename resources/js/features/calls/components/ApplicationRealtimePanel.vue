@@ -23,6 +23,8 @@ function connectionStateLabel(state: EchoConnectionState): string {
 
 <template>
     <section
+        data-test="application-realtime-panel"
+        :data-echo-state="connectionState"
         class="flex flex-col gap-3 rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between dark:border-neutral-800 dark:bg-neutral-950"
     >
         <div class="flex items-center gap-3">
