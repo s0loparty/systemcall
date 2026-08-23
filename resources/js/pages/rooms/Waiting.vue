@@ -95,7 +95,7 @@ onMounted(() => {
         <div class="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1fr_24rem]">
             <section class="grid gap-5">
                 <div
-                    class="rounded-[2rem] bg-white/92 p-6 shadow-[0_24px_90px_rgba(60,64,67,0.16),inset_0_0_0_1px_rgba(60,64,67,0.08)] backdrop-blur dark:bg-[#2b2c2f] dark:text-white"
+                    class="rounded-md bg-white/92 p-6 shadow-[0_24px_90px_rgba(60,64,67,0.16),inset_0_0_0_1px_rgba(60,64,67,0.08)] backdrop-blur dark:bg-[#2b2c2f] dark:text-white"
                 >
                     <p class="text-sm font-medium text-amber-600">
                         Зал ожидания

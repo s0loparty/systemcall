@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { ArrowLeftIcon } from '@lucide/vue';
 import { computed } from 'vue';
+import Button from '@/components/ui/button/Button.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
@@ -9,6 +11,7 @@ import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomJoin } from '@/features/calls/composables/useRoomJoin';
 import type { CallPageProps } from '@/features/calls/types';
 import { show as showCall, waiting as showWaiting } from '@/routes/rooms/call';
+import { index as showRooms } from '@/routes/rooms/index';
 
 const props = defineProps<CallPageProps>();
 const page = usePage();
@@ -57,11 +60,15 @@ async function continueToRoom(): Promise<void> {
     <Head :title="`Подготовка: ${room.name}`" />
 
     <main
-        class="min-h-dvh bg-[#f8fafd] bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.28),transparent_34%),radial-gradient(circle_at_84%_100%,rgba(129,201,149,0.20),transparent_32%)] p-4 text-neutral-950 antialiased dark:bg-[#202124]"
+        class="min-h-dvh bg-gray-200 antialiased dark:bg-[#202124]"
     >
         <div class="mx-auto grid max-w-2xl items-center gap-5 pt-[10vh]">
+            <Button :as="Link" :href="showRooms.url()" class="w-max" variant="ghost">
+                <ArrowLeftIcon class="size-4"/>
+                <span>Вернуться назад</span>
+            </Button>
             <section
-                class="rounded-[2rem] bg-white/92 p-6 shadow-[0_24px_90px_rgba(60,64,67,0.16),inset_0_0_0_1px_rgba(60,64,67,0.08)] backdrop-blur dark:bg-[#2b2c2f] dark:text-white"
+                class="rounded-md bg-white/92 p-6 shadow backdrop-blur dark:bg-[#2b2c2f] dark:text-white"
             >
                 <p class="text-sm font-medium text-emerald-600">
                     Подготовка к звонку
@@ -96,7 +103,7 @@ async function continueToRoom(): Promise<void> {
                 />
 
                 <button
-                    class="mt-6 w-full rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                    class="mt-6 w-full rounded-md bg-green-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 cursor-pointer"
                     type="button"
                     :disabled="continueDisabled"
                     @click="continueToRoom"
@@ -105,7 +112,7 @@ async function continueToRoom(): Promise<void> {
                         continueDisabled
                             ? 'Проверяем доступ...'
                             : room.waiting_room_enabled
-                              ? 'Отправить заявку'
+                              ? 'Подключиться'
                               : 'Войти в звонок'
                     }}
                 </button>

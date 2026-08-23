@@ -396,7 +396,7 @@ onMounted(() => {
             class="fixed inset-0 z-10 flex items-center justify-center bg-[#202124]/78 p-4 backdrop-blur-sm"
         >
             <div
-                class="w-full max-w-md rounded-[2rem] bg-[#2b2c2f] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                class="w-full max-w-md rounded-md bg-[#2b2c2f] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
             >
                 <h2 class="text-lg font-semibold">
                     {{

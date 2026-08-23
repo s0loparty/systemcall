@@ -22,7 +22,7 @@ defineOptions({
     <div class="min-h-full bg-neutral-50 p-4 dark:bg-neutral-950">
         <div class="mx-auto grid max-w-7xl gap-5">
             <section
-                class="relative overflow-hidden rounded-[2rem] border border-neutral-200 bg-white p-6 shadow-sm md:p-8 dark:border-neutral-800 dark:bg-neutral-950"
+                class="relative overflow-hidden rounded-md border border-neutral-200 bg-white p-6 shadow-sm md:p-8 dark:border-neutral-800 dark:bg-neutral-950"
             >
                 <div
                     class="absolute -top-24 right-0 size-72 rounded-full bg-emerald-400/20 blur-3xl"

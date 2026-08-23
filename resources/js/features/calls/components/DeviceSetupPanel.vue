@@ -23,7 +23,7 @@ const emit = defineEmits<{
 
 <template>
     <section
-        class="grid gap-4 rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm lg:grid-cols-[minmax(0,1fr)_18rem] dark:border-neutral-800 dark:bg-neutral-950"
+        class="grid gap-4 rounded-md border border-neutral-200 bg-white p-4 shadow-sm lg:grid-cols-[minmax(0,1fr)_18rem] dark:border-neutral-800 dark:bg-neutral-950"
     >
         <div class="space-y-4">
             <div>
@@ -45,7 +45,7 @@ const emit = defineEmits<{
                     </span>
                     <select
                         data-test="audio-input-select"
-                        class="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
                         :value="selectedAudioInputId"
                         @change="
                             emit(
@@ -71,7 +71,7 @@ const emit = defineEmits<{
                     </span>
                     <select
                         data-test="video-input-select"
-                        class="w-full rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
                         :value="selectedVideoInputId"
                         @change="
                             emit(
@@ -94,7 +94,7 @@ const emit = defineEmits<{
 
             <p
                 v-if="error"
-                class="rounded-2xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-200"
+                class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-200"
             >
                 {{ error }}
             </p>
@@ -102,7 +102,7 @@ const emit = defineEmits<{
             <div class="flex flex-wrap gap-2">
                 <button
                     data-test="refresh-devices"
-                    class="rounded-full bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                    class="rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                     type="button"
                     @click="emit('refresh')"
                 >
@@ -110,7 +110,7 @@ const emit = defineEmits<{
                 </button>
                 <button
                     data-test="toggle-preview"
-                    class="rounded-full border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-900"
+                    class="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-900"
                     type="button"
                     :disabled="previewLoading"
                     @click="

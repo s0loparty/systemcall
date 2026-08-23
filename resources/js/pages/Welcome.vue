@@ -109,7 +109,7 @@ const user = computed(() => page.props.auth.user);
                 </div>
 
                 <div
-                    class="rounded-[2rem] border border-white/10 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur"
+                    class="rounded-md border border-white/10 bg-white/10 p-4 shadow-2xl shadow-black/30 backdrop-blur"
                 >
                     <div class="grid gap-3">
                         <div
