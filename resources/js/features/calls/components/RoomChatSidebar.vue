@@ -45,6 +45,7 @@ async function sendMessage(): Promise<void> {
 
 <template>
     <aside
+        data-test="chat-sidebar"
         class="fixed inset-y-3 right-3 z-40 flex w-[calc(100%-1.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-[1.75rem] bg-[#2b2c2f] text-white shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
     >
         <header
@@ -59,6 +60,7 @@ async function sendMessage(): Promise<void> {
             <button
                 class="flex size-10 items-center justify-center rounded-full bg-white/8 text-white/75 transition-[background-color,scale] duration-150 hover:bg-white/14 active:scale-[0.96]"
                 type="button"
+                data-test="close-chat"
                 aria-label="Закрыть чат"
                 @click="emit('close')"
             >
@@ -66,9 +68,13 @@ async function sendMessage(): Promise<void> {
             </button>
         </header>
 
-        <ol class="flex flex-1 flex-col gap-2 overflow-auto p-4">
+        <ol
+            data-test="chat-message-list"
+            class="flex flex-1 flex-col gap-2 overflow-auto p-4"
+        >
             <li
                 v-if="messages.length === 0"
+                data-test="chat-empty-state"
                 class="rounded-2xl border border-dashed border-white/12 p-4 text-sm text-white/55"
             >
                 Сообщений пока нет.
@@ -76,6 +82,8 @@ async function sendMessage(): Promise<void> {
             <li
                 v-for="message in messages"
                 :key="message.id"
+                data-test="chat-message"
+                :data-message-id="message.id"
                 class="rounded-2xl bg-white/8 p-3 text-sm"
             >
                 <div class="flex items-center justify-between gap-3">
@@ -95,6 +103,7 @@ async function sendMessage(): Promise<void> {
         <form class="border-t border-white/8 p-4" @submit.prevent="sendMessage">
             <textarea
                 v-model="messageRequest.body"
+                data-test="chat-message-input"
                 class="min-h-24 w-full resize-none rounded-2xl bg-[#202124] px-3 py-2 text-sm text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] transition-[box-shadow] outline-none placeholder:text-white/35 focus:shadow-[inset_0_0_0_1px_rgba(138,180,248,0.65)]"
                 maxlength="1000"
                 placeholder="Напишите сообщение"
@@ -105,6 +114,7 @@ async function sendMessage(): Promise<void> {
             <button
                 class="mt-2 w-full rounded-2xl bg-[#8ab4f8] px-4 py-2 text-sm font-medium text-[#202124] transition-[background-color,scale] hover:bg-[#a8c7fa] active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
                 type="submit"
+                data-test="send-chat-message"
                 :disabled="
                     currentMemberId === null ||
                     messageRequest.processing ||

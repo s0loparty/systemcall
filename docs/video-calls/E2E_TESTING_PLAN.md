@@ -381,21 +381,30 @@ Implementation notes:
 - The rejection path asserts the participant remains in the waiting room and
   cannot receive a LiveKit token.
 
-## Milestone E9 — Chat smoke `[ ]`
+## Milestone E9 — Chat smoke `[x]`
 Validate the side chat used during calls.
 
 Scenarios:
-- [ ] user A opens chat sidebar
-- [ ] user A sends text message
-- [ ] user B receives message without page refresh
-- [ ] empty messages cannot be sent
-- [ ] chat can close and reopen without losing recent messages
+- [x] user A opens chat sidebar
+- [x] user A sends text message
+- [x] user B receives message without page refresh
+- [x] empty messages cannot be sent
+- [x] chat can close and reopen without losing recent messages
 
 Acceptance:
-- [ ] chat message persists through backend endpoint
-- [ ] chat event propagates through Reverb
-- [ ] message appears in both browser contexts
-- [ ] no JavaScript errors during send/receive
+- [x] chat message persists through backend endpoint
+- [x] chat event propagates through Reverb
+- [x] message appears in both browser contexts
+- [x] no JavaScript errors during send/receive
+
+Implementation notes:
+- E9 adds a two-browser call chat test with real LiveKit join, real Laravel chat
+  endpoint and real Reverb propagation.
+- The test verifies empty/whitespace-only messages keep submit disabled, the
+  sent message is persisted, the remote browser receives it without refresh, and
+  closing/reopening the chat sidebar preserves recent messages.
+- Chat sidebar now exposes stable `data-test` selectors for E2E assertions only;
+  rendering still escapes message bodies through Vue interpolation.
 
 ## Milestone E10 — CI integration `[ ]`
 Add browser tests to automated pipelines with clear cost boundaries.
