@@ -167,8 +167,12 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     }
 
     function loadTestingDevices(requestPermissions: boolean): void {
-        const nextAudioInputs = [testingDevice('audioinput', 'e2-mic', 'E2 Fake Microphone')];
-        const nextVideoInputs = [testingDevice('videoinput', 'e2-camera', 'E2 Fake Camera')];
+        const nextAudioInputs = [
+            testingDevice('audioinput', 'e2-mic', 'E2 Fake Microphone'),
+        ];
+        const nextVideoInputs = [
+            testingDevice('videoinput', 'e2-camera', 'E2 Fake Camera'),
+        ];
 
         audioInputs.value = nextAudioInputs;
         videoInputs.value = nextVideoInputs;

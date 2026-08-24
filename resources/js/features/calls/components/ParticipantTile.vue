@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { Ban, CastIcon, EarthIcon, Globe2, HandIcon, MicIcon, MicOffIcon, Pin, PinIcon, PinOff, UserMinus } from '@lucide/vue';
+import {
+    Ban,
+    CastIcon,
+    EarthIcon,
+    Globe2,
+    HandIcon,
+    MicIcon,
+    MicOffIcon,
+    Pin,
+    PinIcon,
+    PinOff,
+    UserMinus,
+} from '@lucide/vue';
 import {
     Tooltip,
     TooltipContent,
@@ -205,15 +217,18 @@ const emit = defineEmits<{
                 </p>
             </div>
             <div class="flex flex-wrap justify-end gap-1.5">
-                <div class="bg-black/50 rounded-full p-2">
-                    <component :is="tile.microphone ? MicIcon : MicOffIcon" class="size-5"/>
+                <div class="rounded-full bg-black/50 p-2">
+                    <component
+                        :is="tile.microphone ? MicIcon : MicOffIcon"
+                        class="size-5"
+                    />
                 </div>
                 <div
                     v-if="personallyPinned"
                     class="rounded-full bg-sky-300 p-2 text-black"
                 >
                     <!-- локально закреплен -->
-                     <PinIcon class="size-5"/>
+                    <PinIcon class="size-5" />
                 </div>
                 <div
                     v-if="globallyPinned"
@@ -224,16 +239,16 @@ const emit = defineEmits<{
                 <div
                     v-if="tile.handRaised"
                     data-test="participant-hand-raised-badge"
-                    class="bg-[#fbbc04]/90 rounded-full p-2 text-black"
+                    class="rounded-full bg-[#fbbc04]/90 p-2 text-black"
                 >
                     <!-- 🤚 -->
-                    <HandIcon class="size-5"/>
+                    <HandIcon class="size-5" />
                 </div>
                 <div
                     v-if="tile.screenShare"
                     class="rounded-full bg-sky-300 p-2 text-black"
                 >
-                    <CastIcon class="size-5"/>
+                    <CastIcon class="size-5" />
                 </div>
                 <!-- <span
                     v-if="active || tile.speaking"

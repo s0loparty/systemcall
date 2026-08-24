@@ -38,7 +38,7 @@ const emit = defineEmits<{
         aria-label="Управление звонком"
     >
         <button
-            class="group flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            class="group flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 microphoneEnabled
                     ? 'bg-[#3c4043] hover:bg-[#4a4d51]'
@@ -60,7 +60,7 @@ const emit = defineEmits<{
         </button>
 
         <button
-            class="group flex h-11 min-w-11 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            class="group flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 cameraEnabled
                     ? 'bg-[#3c4043] hover:bg-[#4a4d51]'
@@ -80,7 +80,7 @@ const emit = defineEmits<{
         </button>
 
         <button
-            class="flex size-11 items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            class="flex size-11 cursor-pointer items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 handRaised
                     ? 'bg-[#fbbc04] text-[#202124] hover:bg-[#ffd15c]'
@@ -98,7 +98,7 @@ const emit = defineEmits<{
 
         <button
             v-if="canShareScreen"
-            class="flex size-11 items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            class="flex size-11 cursor-pointer items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
             :class="
                 screenShareEnabled
                     ? 'bg-[#8ab4f8] text-[#202124] hover:bg-[#a8c7fa]'
@@ -118,7 +118,7 @@ const emit = defineEmits<{
         </button>
 
         <button
-            class="flex size-11 items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] cursor-pointer"
+            class="flex size-11 cursor-pointer items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96]"
             :class="
                 chatOpen
                     ? 'bg-[#8ab4f8] text-[#202124] hover:bg-[#a8c7fa]'
@@ -133,7 +133,7 @@ const emit = defineEmits<{
         </button>
 
         <button
-            class="flex h-11 min-w-14 items-center justify-center rounded-full bg-[#ea4335] px-4 transition-[background-color,scale] duration-150 ease-out hover:bg-[#f05246] active:scale-[0.96] cursor-pointer"
+            class="flex h-11 min-w-14 cursor-pointer items-center justify-center rounded-full bg-[#ea4335] px-4 transition-[background-color,scale] duration-150 ease-out hover:bg-[#f05246] active:scale-[0.96]"
             type="button"
             data-test="leave-call"
             aria-label="Отключиться"

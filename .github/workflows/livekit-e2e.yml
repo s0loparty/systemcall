@@ -1,0 +1,153 @@
+name: livekit e2e
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  livekit-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      redis:
+        image: redis:8.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:seIiB3mYvfRbcdm8pkdleIfF+EnxWpupz1p0yQ2I9Cg=
+      APP_DEBUG: false
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: redis
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: reverb
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: null
+      REVERB_APP_ID: local-app
+      REVERB_APP_KEY: local-key
+      REVERB_APP_SECRET: local-secret
+      REVERB_SERVER_HOST: 127.0.0.1
+      REVERB_SERVER_PORT: 8080
+      REVERB_HOST: 127.0.0.1
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
+      VITE_REVERB_APP_KEY: local-key
+      VITE_REVERB_HOST: 127.0.0.1
+      VITE_REVERB_PORT: 8080
+      VITE_REVERB_SCHEME: http
+      LIVEKIT_URL: ws://localhost:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: local-livekit-secret-local-livekit-secret
+      LIVEKIT_TOKEN_TTL: 3600
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci --no-audit
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Prepare SQLite database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+          php artisan migrate:fresh --force
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Start LiveKit
+        run: |
+          cat > /tmp/livekit-ci.yaml <<'YAML'
+          keys:
+            devkey: local-livekit-secret-local-livekit-secret
+          port: 7880
+          bind_addresses:
+            - "0.0.0.0"
+          log_level: info
+          rtc:
+            tcp_port: 7881
+            port_range_start: 50000
+            port_range_end: 50020
+            use_external_ip: false
+            node_ip: "127.0.0.1"
+          redis:
+            address: 127.0.0.1:6379
+          turn:
+            enabled: true
+            udp_port: 3478
+          YAML
+          docker run --rm -d --name livekit-ci --network host -v /tmp/livekit-ci.yaml:/livekit.yaml livekit/livekit-server:v1.13.4 --config /livekit.yaml
+
+      - name: Start Reverb
+        run: |
+          php artisan reverb:start --host=127.0.0.1 --port=8080 > storage/logs/reverb-ci.log 2>&1 &
+          echo $! > /tmp/reverb-ci.pid
+
+      - name: Run full browser E2E tests
+        run: php artisan test tests/Browser --compact
+
+      - name: Collect service logs
+        if: failure()
+        run: |
+          docker logs livekit-ci > storage/logs/livekit-ci.log 2>&1 || true
+
+      - name: Upload E2E artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: livekit-e2e-artifacts
+          path: |
+            tests/Browser/Screenshots
+            storage/logs
+            test-results
+            playwright-report
+          if-no-files-found: ignore
+
+      - name: Stop services
+        if: always()
+        run: |
+          if [ -f /tmp/reverb-ci.pid ]; then kill "$(cat /tmp/reverb-ci.pid)" || true; fi
+          docker rm -f livekit-ci || true

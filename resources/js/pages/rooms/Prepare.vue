@@ -59,12 +59,15 @@ async function continueToRoom(): Promise<void> {
 <template>
     <Head :title="`Подготовка: ${room.name}`" />
 
-    <main
-        class="min-h-dvh bg-gray-200 antialiased dark:bg-[#202124]"
-    >
+    <main class="min-h-dvh bg-gray-200 antialiased dark:bg-[#202124]">
         <div class="mx-auto grid max-w-2xl items-center gap-5 pt-[10vh]">
-            <Button :as="Link" :href="showRooms.url()" class="w-max" variant="ghost">
-                <ArrowLeftIcon class="size-4"/>
+            <Button
+                :as="Link"
+                :href="showRooms.url()"
+                class="w-max"
+                variant="ghost"
+            >
+                <ArrowLeftIcon class="size-4" />
                 <span>Вернуться назад</span>
             </Button>
             <section
@@ -103,7 +106,8 @@ async function continueToRoom(): Promise<void> {
                 />
 
                 <button
-                    class="mt-6 w-full rounded-md bg-green-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 cursor-pointer"
+                    data-test="continue-to-room"
+                    class="mt-6 w-full cursor-pointer rounded-md bg-green-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                     type="button"
                     :disabled="continueDisabled"
                     @click="continueToRoom"

@@ -22,9 +22,7 @@ export function useCallDeviceQuery() {
         const testingMediaMode =
             typeof window === 'undefined'
                 ? null
-                : new URLSearchParams(window.location.search).get(
-                      '_e2e_media',
-                  );
+                : new URLSearchParams(window.location.search).get('_e2e_media');
 
         return {
             ...(devices.audioInputId ? { audio: devices.audioInputId } : {}),

@@ -406,7 +406,7 @@ Implementation notes:
 - Chat sidebar now exposes stable `data-test` selectors for E2E assertions only;
   rendering still escapes message bodies through Vue interpolation.
 
-## Milestone E10 — CI integration `[ ]`
+## Milestone E10 — CI integration `[x]`
 Add browser tests to automated pipelines with clear cost boundaries.
 
 Recommended CI tiers:
@@ -415,18 +415,50 @@ Recommended CI tiers:
 - scheduled/manual: full LiveKit E2E with Reverb and browser media
 
 Tasks:
-- [ ] add browser smoke workflow
-- [ ] install Playwright browsers in CI
-- [ ] cache npm/composer dependencies
-- [ ] upload screenshots/videos/traces on failure
-- [ ] add optional manual LiveKit E2E workflow
-- [ ] document how to reproduce CI browser failures locally
+- [x] add browser smoke workflow
+- [x] install Playwright browsers in CI
+- [x] cache npm/composer dependencies
+- [x] upload screenshots/videos/traces on failure
+- [x] add optional manual LiveKit E2E workflow
+- [x] document how to reproduce CI browser failures locally
 
 Acceptance:
-- [ ] CI browser smoke is deterministic
-- [ ] failures include useful artifacts
-- [ ] full LiveKit E2E is available but not forced on every small PR unless the
+- [x] CI browser smoke is deterministic
+- [x] failures include useful artifacts
+- [x] full LiveKit E2E is available but not forced on every small PR unless the
       team decides otherwise
+
+Implementation notes:
+- `.github/workflows/tests.yml` runs the fast application checks on push/PR:
+  frontend build, Pint check, PHPStan, frontend typecheck/lint/format and
+  backend tests on SQLite.
+- `.github/workflows/browser-smoke.yml` runs deterministic Pest Browser smoke
+  tests on push/PR/manual dispatch. It installs Chromium through Playwright and
+  uploads browser artifacts/logs on failure.
+- `.github/workflows/livekit-e2e.yml` is scheduled/manual only. It starts Redis
+  as a GitHub Actions service, starts pinned `livekit/livekit-server:v1.13.4`
+  through Docker, starts Reverb locally, then runs the full `tests/Browser`
+  suite with real LiveKit/Reverb paths.
+- Reproduce PR smoke locally:
+
+```bash
+npm run build
+php artisan test tests/Browser/HomeSmokeTest.php tests/Browser/RoomNavigationSmokeTest.php --compact
+```
+
+- Reproduce full local LiveKit flow with Sail:
+
+```bash
+set -a
+. ./.env.local.test
+set +a
+./vendor/bin/sail up -d
+LIVEKIT_NODE_IP="$(docker network inspect systemcall-app_sail --format '{{range .IPAM.Config}}{{.Gateway}}{{end}}')" \
+docker compose -f compose.sail.yaml -f compose.sail-livekit.yaml up -d --force-recreate livekit
+./vendor/bin/sail artisan migrate:fresh --force
+./vendor/bin/sail npm run build
+./vendor/bin/sail artisan test tests/Browser --compact
+```
 
 ## Critical assertions checklist
 

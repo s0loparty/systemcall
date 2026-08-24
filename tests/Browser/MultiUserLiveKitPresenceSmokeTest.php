@@ -21,13 +21,15 @@ it('shows multi-user LiveKit presence and removes disconnected participants', fu
 
     $this->actingAs($owner);
     $ownerPage = visit($callUrl)
-        ->waitForText('connected')
+        ->wait(3)
+        ->assertScript('document.querySelector("[data-test=connection-state]").textContent.trim()', 'connected')
         ->assertSee($owner->name)
         ->assertScript('document.querySelectorAll("[data-test=participant-tile]").length', 1);
 
     $this->actingAs($participant);
     $participantPage = visit($callUrl)
-        ->waitForText('connected')
+        ->wait(3)
+        ->assertScript('document.querySelector("[data-test=connection-state]").textContent.trim()', 'connected')
         ->assertSee($participant->name);
 
     $ownerPage->wait(2)
@@ -45,7 +47,8 @@ it('shows multi-user LiveKit presence and removes disconnected participants', fu
         ->assertSee($participant->name)
         ->assertScript('document.querySelectorAll("[data-test=participant-tile]").length', 1)
         ->refresh()
-        ->waitForText('connected')
+        ->wait(3)
+        ->assertScript('document.querySelector("[data-test=connection-state]").textContent.trim()', 'connected')
         ->assertScript('document.querySelectorAll("[data-test=participant-tile]").length', 1)
         ->assertScript('new Set([...document.querySelectorAll("[data-test=participant-tile]")].map((tile) => tile.dataset.identity)).size', 1)
         ->assertNoJavaScriptErrors();

@@ -44,7 +44,7 @@ it('approves a waiting participant and moves them into the LiveKit call', functi
         ->click('@toggle-preview')
         ->wait()
         ->assertScript(e8PreviewVideoCount(), 1)
-        ->click('Отправить заявку')
+        ->click('@continue-to-room')
         ->assertPathEndsWith('/waiting')
         ->assertScript(e8WaitingStatus(), WaitingRoomStatus::Pending->value)
         ->assertScript(e8SelectedAudioText(), 'E2 Fake Microphone')
@@ -103,7 +103,7 @@ it('rejects a waiting participant and keeps them out of the LiveKit call', funct
 
     $this->actingAs($participant);
     $participantPage = visit($prepareUrl)
-        ->click('Отправить заявку')
+        ->click('@continue-to-room')
         ->assertPathEndsWith('/waiting')
         ->assertScript(e8WaitingStatus(), WaitingRoomStatus::Pending->value);
 

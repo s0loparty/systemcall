@@ -75,8 +75,9 @@ const pinnedTile = computed(() => {
         props.personalPinnedIdentity ?? props.globalPinnedIdentity;
 
     return pinnedIdentity
-        ? (orderedTiles.value.find((tile) => tile.identity === pinnedIdentity) ??
-              null)
+        ? (orderedTiles.value.find(
+              (tile) => tile.identity === pinnedIdentity,
+          ) ?? null)
         : null;
 });
 const focusedTile = computed(() => screenShareTile.value ?? pinnedTile.value);
@@ -100,9 +101,7 @@ const sideTiles = computed(() =>
         <ParticipantTile
             :tile="focusedTile"
             :active="focusedTile.identity === activeSpeakerIdentity"
-            :personally-pinned="
-                focusedTile.identity === personalPinnedIdentity
-            "
+            :personally-pinned="focusedTile.identity === personalPinnedIdentity"
             :globally-pinned="focusedTile.identity === globalPinnedIdentity"
             :actions="tileActionsByIdentity[focusedTile.identity]"
             :actions-disabled="actionsDisabled"

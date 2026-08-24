@@ -274,9 +274,7 @@ async function toggleGlobalPin(identity: string): Promise<void> {
         updateGlobalPin.url(props.room.public_id),
     );
 
-    setGlobalPinnedRoomMemberId(
-        response?.global_pinned_room_member_id ?? null,
-    );
+    setGlobalPinnedRoomMemberId(response?.global_pinned_room_member_id ?? null);
 }
 
 async function kickParticipant(identity: string): Promise<void> {

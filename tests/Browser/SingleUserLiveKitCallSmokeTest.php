@@ -21,7 +21,7 @@ it('connects one user to local LiveKit and controls local call state', function 
         '_e2e_media' => 'fake',
     ], false));
 
-    $page->waitForText('connected')
+    $page->wait(3)
         ->assertScript('document.querySelector("[data-test=connection-state]").textContent.trim()', 'connected')
         ->assertScript('document.querySelectorAll("[data-test=participant-tile][data-local=true]").length', 1)
         ->assertScript('document.querySelector("[data-test=participant-tile][data-local=true]").dataset.microphoneEnabled', 'false')
@@ -48,7 +48,7 @@ it('hides screen share control when member cannot publish screen', function () {
         'room' => $room,
         '_e2e_media' => 'fake',
     ], false))
-        ->waitForText('connected')
+        ->wait(3)
         ->assertScript('document.querySelector("[data-test=connection-state]").textContent.trim()', 'connected')
         ->assertNotPresent('@toggle-screen-share')
         ->assertNoJavaScriptErrors();

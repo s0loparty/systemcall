@@ -259,7 +259,9 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                     <Video
                         class="mx-auto size-9 text-neutral-400 dark:text-neutral-600"
                     />
-                    <p class="mt-3 font-medium text-neutral-950 dark:text-white">
+                    <p
+                        class="mt-3 font-medium text-neutral-950 dark:text-white"
+                    >
                         Комнат пока нет
                     </p>
                     <p class="mt-1 text-sm text-neutral-500">

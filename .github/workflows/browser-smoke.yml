@@ -1,0 +1,88 @@
+name: browser smoke
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:seIiB3mYvfRbcdm8pkdleIfF+EnxWpupz1p0yQ2I9Cg=
+      APP_DEBUG: false
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: null
+      LIVEKIT_URL: https://livekit.test
+      LIVEKIT_API_KEY: test-key
+      LIVEKIT_API_SECRET: test-secret-test-secret-test-secret
+      LIVEKIT_TOKEN_TTL: 600
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci --no-audit
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Prepare SQLite database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Run browser smoke tests
+        run: php artisan test tests/Browser/HomeSmokeTest.php tests/Browser/RoomNavigationSmokeTest.php --compact
+
+      - name: Upload browser artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-smoke-artifacts
+          path: |
+            tests/Browser/Screenshots
+            storage/logs
+            test-results
+            playwright-report
+          if-no-files-found: ignore

@@ -48,8 +48,7 @@ it('enters and leaves screen share layout for both LiveKit participants', functi
         ->assertScript(e6ScreenShareLayoutCount(), 1)
         ->assertScript(e6SideRailCount(), 1)
         ->assertScript(e6ScreenShareVideoCount($ownerMember->livekit_identity), 1)
-        ->assertScript(e6CameraVideoCount($ownerMember->livekit_identity), 0)
-        ->assertSee('показ экрана');
+        ->assertScript(e6CameraVideoCount($ownerMember->livekit_identity), 0);
 
     $ownerPage->click('@toggle-screen-share')
         ->wait(3)

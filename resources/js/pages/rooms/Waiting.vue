@@ -92,6 +92,12 @@ onMounted(() => {
     <main
         class="min-h-dvh bg-[#f8fafd] bg-[radial-gradient(circle_at_18%_0%,rgba(251,188,4,0.22),transparent_34%),radial-gradient(circle_at_84%_100%,rgba(138,180,248,0.22),transparent_32%)] p-4 text-neutral-950 antialiased dark:bg-[#202124]"
     >
+        <div
+            data-test="application-realtime-panel"
+            :data-echo-state="realtime.echoConnectionStatus.value"
+            class="hidden"
+        />
+
         <div class="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1fr_24rem]">
             <section class="grid gap-5">
                 <div

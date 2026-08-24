@@ -31,7 +31,7 @@ it('lets an authenticated user create a room and navigate the call flow before m
 
     $page = visit(route('rooms.index', absolute: false))
         ->assertSee('Ваши комнаты')
-        ->assertSee('Новая комната')
+        ->assertSee('Создать комнату')
         ->assertSee('Комнат пока нет')
         ->assertNoJavaScriptErrors();
 

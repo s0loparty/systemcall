@@ -1,4 +1,4 @@
-name: tests
+name: app checks
 
 on:
   push:
@@ -13,26 +13,74 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:seIiB3mYvfRbcdm8pkdleIfF+EnxWpupz1p0yQ2I9Cg=
+      APP_DEBUG: false
+      DB_CONNECTION: sqlite
+      DB_DATABASE: database/database.sqlite
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      BROADCAST_CONNECTION: null
+      LIVEKIT_URL: https://livekit.test
+      LIVEKIT_API_KEY: test-key
+      LIVEKIT_API_SECRET: test-secret-test-secret-test-secret
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
           tools: composer:v2
           coverage: none
 
       - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
 
-      - name: Setup Application
-        run: composer setup
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
 
-      - name: Run CI Checks
-        run: composer ci:check
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Node dependencies
+        run: npm ci --no-audit
+
+      - name: Prepare SQLite database
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: PHP format check
+        run: ./vendor/bin/pint --test --format agent
+
+      - name: PHP static analysis
+        run: ./vendor/bin/phpstan analyse
+
+      - name: Frontend typecheck
+        run: npm run types:check
+
+      - name: Frontend lint
+        run: npm run lint:check
+
+      - name: Frontend format check
+        run: npm run format:check
+
+      - name: Unit and feature tests
+        run: php artisan test --compact
