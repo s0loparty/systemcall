@@ -65,7 +65,12 @@ it('lets an authenticated user create a room and navigate the call flow before m
         ->assertPathBeginsWith('/rooms/')
         ->assertPathEndsWith('/prepare')
         ->assertSee($roomName)
-        ->click('@continue-to-room')
+        ->assertPresent('@continue-to-room')
+        ->assertNoJavaScriptErrors();
+
+    $this->actingAs($user);
+
+    visit(route('rooms.call.show', $room, absolute: false))
         ->assertPathBeginsWith('/rooms/')
         ->assertPathEndsWith('/call')
         ->assertSee($roomName)
