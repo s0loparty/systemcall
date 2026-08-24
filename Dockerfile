@@ -45,8 +45,9 @@ FROM dunglas/frankenphp:1-php8.4-trixie AS app
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl git unzip libpq-dev $PHPIZE_DEPS \
-    && install-php-extensions pcntl pdo_pgsql pgsql zip opcache intl bcmath \
+    && apt-get install -y --no-install-recommends curl git unzip libpq-dev libicu-dev libzip-dev $PHPIZE_DEPS \
+    && apt-mark manual libpq5 libicu76 libzip5 \
+    && docker-php-ext-install -j"$(nproc)" pcntl pdo_pgsql pgsql zip opcache intl bcmath \
     && git clone --depth 1 --branch 6.2.0 --recurse-submodules https://github.com/phpredis/phpredis.git /tmp/phpredis \
     && cd /tmp/phpredis \
     && phpize \
@@ -56,7 +57,7 @@ RUN apt-get update \
     && docker-php-ext-enable redis \
     && cd /app \
     && rm -rf /tmp/phpredis \
-    && apt-get purge -y --auto-remove libpq-dev $PHPIZE_DEPS \
+    && apt-get purge -y --auto-remove libpq-dev libicu-dev libzip-dev $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
 ENV APP_ENV=production \

@@ -1,7 +1,4 @@
-x-laravel-image: &laravel-image
-    build:
-        context: .
-        dockerfile: Dockerfile
+x-laravel-runtime: &laravel-runtime
     image: '${APP_IMAGE:-systemcall-app:production}'
     restart: unless-stopped
     networks:
@@ -67,7 +64,10 @@ x-laravel-environment: &laravel-environment
 
 services:
     app:
-        <<: *laravel-image
+        <<: *laravel-runtime
+        build:
+            context: .
+            dockerfile: Dockerfile
         environment:
             <<: *laravel-environment
         expose:
@@ -82,7 +82,7 @@ services:
             start_period: 30s
 
     worker:
-        <<: *laravel-image
+        <<: *laravel-runtime
         command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90 --max-time=3600
         environment:
             <<: *laravel-environment
@@ -90,7 +90,7 @@ services:
             disable: true
 
     scheduler:
-        <<: *laravel-image
+        <<: *laravel-runtime
         command: php artisan schedule:work
         environment:
             <<: *laravel-environment
@@ -98,7 +98,7 @@ services:
             disable: true
 
     reverb:
-        <<: *laravel-image
+        <<: *laravel-runtime
         command: php artisan reverb:start --host=0.0.0.0 --port=8080
         environment:
             <<: *laravel-environment
