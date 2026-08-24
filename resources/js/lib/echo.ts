@@ -26,9 +26,19 @@ function websocketHost(): string | undefined {
 }
 
 export function initializeEcho(): void {
+    const reverbAppKey = import.meta.env.VITE_REVERB_APP_KEY;
+
+    if (typeof reverbAppKey !== 'string' || reverbAppKey.trim() === '') {
+        configureEcho({
+            broadcaster: 'null',
+        });
+
+        return;
+    }
+
     configureEcho({
         broadcaster: 'reverb',
-        key: import.meta.env.VITE_REVERB_APP_KEY,
+        key: reverbAppKey,
         authEndpoint: '/broadcasting/room-auth',
         wsHost: websocketHost(),
         wsPort: optionalPort(import.meta.env.VITE_REVERB_PORT),

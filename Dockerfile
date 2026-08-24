@@ -18,6 +18,18 @@ FROM node:22-trixie-slim AS assets
 
 WORKDIR /app
 
+ARG VITE_APP_NAME=Systemcall
+ARG VITE_REVERB_APP_KEY=
+ARG VITE_REVERB_HOST=ws.call.example.com
+ARG VITE_REVERB_PORT=443
+ARG VITE_REVERB_SCHEME=https
+
+ENV VITE_APP_NAME=$VITE_APP_NAME \
+    VITE_REVERB_APP_KEY=$VITE_REVERB_APP_KEY \
+    VITE_REVERB_HOST=$VITE_REVERB_HOST \
+    VITE_REVERB_PORT=$VITE_REVERB_PORT \
+    VITE_REVERB_SCHEME=$VITE_REVERB_SCHEME
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends php-cli php-mbstring php-xml php-curl php-zip \
     && rm -rf /var/lib/apt/lists/*

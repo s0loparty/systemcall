@@ -72,7 +72,7 @@ PostgreSQL 18 Docker images store data under a versioned subdirectory. Keep the 
 
 Public Reverb host should be the WSS domain. Keep internal/public host variables separate where the framework requires it.
 
-Frontend Echo connects to the public Reverb WSS domain from `VITE_REVERB_*` values. Room application-channel authorization is still an HTTP request to the Laravel app at `/broadcasting/room-auth`; route `call.example.com` to `app:8000` before testing private room channels.
+Frontend Echo connects to the public Reverb WSS domain from `VITE_REVERB_*` values. These values are build-time inputs for the production Vite bundle, so set them explicitly in Dokploy and rebuild the image after changing them. Room application-channel authorization is still an HTTP request to the Laravel app at `/broadcasting/room-auth`; route `call.example.com` to `app:8000` before testing private room channels.
 
 Required Dokploy variables:
 ```text

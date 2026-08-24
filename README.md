@@ -264,7 +264,7 @@ LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
 ```
 
-`VITE_REVERB_APP_KEY` должен совпадать с `REVERB_APP_KEY`.
+`VITE_REVERB_APP_KEY` должен совпадать с `REVERB_APP_KEY`. Все `VITE_*` значения попадают в production JS bundle на этапе сборки образа, поэтому после их изменения в Dokploy нужен rebuild/redeploy image, не только restart контейнеров.
 
 ## Production deploy flow
 
