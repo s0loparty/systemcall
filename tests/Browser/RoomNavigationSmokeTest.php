@@ -59,8 +59,13 @@ it('lets an authenticated user create a room and navigate the call flow before m
         ->assertSourceMissing('/rooms/'.$room->public_id.'/call')
         ->assertNoJavaScriptErrors();
 
-    $page->navigate(route('rooms.call.prepare', $room, absolute: false))
-        ->click('Войти в звонок')
+    $this->actingAs($user);
+
+    visit(route('rooms.call.prepare', $room, absolute: false))
+        ->assertPathBeginsWith('/rooms/')
+        ->assertPathEndsWith('/prepare')
+        ->assertSee($roomName)
+        ->click('@continue-to-room')
         ->assertPathBeginsWith('/rooms/')
         ->assertPathEndsWith('/call')
         ->assertSee($roomName)
