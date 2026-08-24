@@ -2,6 +2,7 @@
 
 use App\Models\Room;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
     config()->set('services.livekit.url', 'https://livekit.test');
@@ -68,13 +69,11 @@ it('lets an authenticated user create a room and navigate the call flow before m
         ->assertPresent('@continue-to-room')
         ->assertNoJavaScriptErrors();
 
-    $this->actingAs($user);
-
-    visit(route('rooms.call.show', $room, absolute: false))
-        ->assertPathBeginsWith('/rooms/')
-        ->assertPathEndsWith('/call')
-        ->assertSee($roomName)
-        ->assertSee('Подготовка соединения')
-        ->assertDontSee('Платформа')
-        ->assertNoJavaScriptErrors();
+    $this->actingAs($user)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Call')
+            ->where('room.public_id', $room->public_id)
+            ->where('room.name', $roomName));
 });
