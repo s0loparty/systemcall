@@ -36,7 +36,7 @@ jobs:
       BROADCAST_CONNECTION: reverb
       REDIS_HOST: 127.0.0.1
       REDIS_PORT: 6379
-      REDIS_PASSWORD: null
+      REDIS_PASSWORD: 'null'
       REVERB_APP_ID: local-app
       REVERB_APP_KEY: local-key
       REVERB_APP_SECRET: local-secret
