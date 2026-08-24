@@ -10,13 +10,15 @@ import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQu
 import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomJoin } from '@/features/calls/composables/useRoomJoin';
 import type { CallPageProps } from '@/features/calls/types';
+import { home } from '@/routes';
 import { show as showCall, waiting as showWaiting } from '@/routes/rooms/call';
 import { index as showRooms } from '@/routes/rooms/index';
 
 const props = defineProps<CallPageProps>();
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user);
-const defaultDisplayName = computed(() => currentUser.value?.name ?? 'Гость');
+const isGuest = computed(() => currentUser.value === null);
+const defaultDisplayName = computed(() => currentUser.value?.name ?? '');
 const deviceQuery = useCallDeviceQuery();
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
@@ -28,8 +30,17 @@ const roomJoin = useRoomJoin(props.room.public_id, defaultDisplayName.value);
 const needsPassword = computed(
     () => props.room.has_password && !props.can_join_without_password,
 );
+const guestDisplayNameMissing = computed(
+    () => isGuest.value && roomJoin.joinRequest.display_name.trim() === '',
+);
+const backHref = computed(() =>
+    currentUser.value === null ? home.url() : showRooms.url(),
+);
 const continueDisabled = computed(
-    () => roomJoin.joinRequest.processing || roomJoin.tokenRequest.processing,
+    () =>
+        guestDisplayNameMissing.value ||
+        roomJoin.joinRequest.processing ||
+        roomJoin.tokenRequest.processing,
 );
 const hasJoinErrors = computed(
     () => Object.keys(roomJoin.joinRequest.errors).length > 0,
@@ -38,15 +49,19 @@ const hasJoinErrors = computed(
 async function continueToRoom(): Promise<void> {
     const query = deviceQuery.toQuery(devices.selectedDevices.value);
 
-    if (!props.room.waiting_room_enabled && !needsPassword.value) {
+    if (
+        !isGuest.value &&
+        !props.room.waiting_room_enabled &&
+        !needsPassword.value
+    ) {
         router.visit(showCall.url(props.room.public_id, { query }));
 
         return;
     }
 
-    const response = await roomJoin.joinAndIssueToken();
+    const response = await roomJoin.joinOnly();
 
-    if (response.kind === 'waiting-room') {
+    if ('waiting_room' in response) {
         router.visit(showWaiting.url(props.room.public_id, { query }));
 
         return;
@@ -63,7 +78,7 @@ async function continueToRoom(): Promise<void> {
         <div class="mx-auto grid max-w-2xl items-center gap-5 pt-[10vh]">
             <Button
                 :as="Link"
-                :href="showRooms.url()"
+                :href="backHref"
                 class="w-max"
                 variant="ghost"
             >
@@ -91,6 +106,34 @@ async function continueToRoom(): Promise<void> {
                     Выберите устройства перед входом. Камера и микрофон
                     необязательны: можно продолжить без них и включить позже.
                 </p>
+
+                <label v-if="isGuest" class="mt-5 block space-y-2">
+                    <span
+                        class="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+                    >
+                        Никнейм
+                    </span>
+                    <input
+                        v-model="roomJoin.joinRequest.display_name"
+                        data-test="guest-display-name"
+                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+                        maxlength="120"
+                        placeholder="Как вас показать участникам?"
+                        type="text"
+                    />
+                    <span
+                        v-if="
+                            roomJoin.joinRequest.errors.display_name ||
+                            guestDisplayNameMissing
+                        "
+                        class="block text-sm text-red-600 dark:text-red-300"
+                    >
+                        {{
+                            roomJoin.joinRequest.errors.display_name ??
+                            'Введите никнейм, чтобы войти в комнату.'
+                        }}
+                    </span>
+                </label>
 
                 <RoomPasswordPanel
                     v-if="needsPassword"

@@ -22,13 +22,10 @@ Route::match(['get', 'post'], 'broadcasting/room-auth', RoomBroadcastAuthControl
 
 Route::get('rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
 Route::get('rooms/{room}/prepare', [RoomCallController::class, 'prepare'])
-    ->middleware(['auth', 'verified'])
     ->name('rooms.call.prepare');
 Route::get('rooms/{room}/waiting', [RoomCallController::class, 'waiting'])
-    ->middleware(['auth', 'verified'])
     ->name('rooms.call.waiting');
 Route::get('rooms/{room}/call', [RoomCallController::class, 'show'])
-    ->middleware(['auth', 'verified'])
     ->name('rooms.call.show');
 Route::post('rooms/{room}/memberships', [RoomMembershipController::class, 'store'])
     ->middleware('throttle:20,1')

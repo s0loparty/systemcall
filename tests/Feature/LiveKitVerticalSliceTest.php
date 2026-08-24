@@ -39,18 +39,68 @@ test('room call flow pages render the LiveKit vertical slice props', function (s
     'call page' => ['rooms.call.show', 'rooms/Call'],
 ]);
 
-test('guests cannot open room call flow pages', function (string $routeName) {
+test('guests can open room preparation pages from shared links', function () {
+    $room = Room::factory()
+        ->public()
+        ->create([
+            'name' => 'Shared guest room',
+        ]);
+
+    $this->get(route('rooms.call.prepare', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Prepare')
+            ->where('room.public_id', $room->public_id)
+            ->where('room.name', 'Shared guest room'));
+});
+
+test('guests without server issued identity are redirected from call pages to preparation', function (string $routeName) {
     $room = Room::factory()
         ->public()
         ->create();
 
     $this->get(route($routeName, $room))
-        ->assertRedirect(route('login'));
+        ->assertRedirect(route('rooms.call.prepare', $room));
 })->with([
-    'prepare page' => 'rooms.call.prepare',
     'waiting page' => 'rooms.call.waiting',
     'call page' => 'rooms.call.show',
 ]);
+
+test('guest room joins require a display name before membership creation', function () {
+    $room = Room::factory()
+        ->public()
+        ->create();
+
+    $this->postJson(route('rooms.memberships.store', $room), [
+        'display_name' => '',
+    ])->assertInvalid(['display_name']);
+
+    expect(RoomMember::whereBelongsTo($room)->exists())->toBeFalse();
+});
+
+test('guests with server issued identity can open the call page', function () {
+    $room = Room::factory()
+        ->public()
+        ->create();
+
+    $joinResponse = $this->postJson(route('rooms.memberships.store', $room), [
+        'display_name' => 'Invited Guest',
+    ]);
+
+    $joinResponse->assertCreated();
+
+    $member = RoomMember::whereBelongsTo($room)->firstOrFail();
+
+    $this
+        ->withCredentials()
+        ->withCookie('video_call_guest_id', $member->guest_id)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Call')
+            ->where('current_room_member_id', $member->id)
+            ->where('room_members.0.display_name', 'Invited Guest'));
+});
 
 test('active room members can obtain scoped LiveKit tokens', function () {
     $owner = User::factory()->create();

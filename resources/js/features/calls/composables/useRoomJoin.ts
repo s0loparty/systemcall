@@ -38,7 +38,7 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
           }
         | { kind: 'waiting-room'; response: WaitingRoomJoinResponse }
     > {
-        const joinResponse = await joinRequest.post(joinRoom.url(roomPublicId));
+        const joinResponse = await joinOnly();
 
         if ('waiting_room' in joinResponse) {
             return {
@@ -51,6 +51,10 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
             ...(await issueToken()),
             member: joinResponse.member,
         };
+    }
+
+    async function joinOnly(): Promise<JoinRoomResponse> {
+        return await joinRequest.post(joinRoom.url(roomPublicId));
     }
 
     async function issueToken(): Promise<{
@@ -79,6 +83,7 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
         joinRequest,
         tokenRequest,
         subroomTokenRequest,
+        joinOnly,
         joinAndIssueToken,
         issueToken,
         issueSubroomToken,

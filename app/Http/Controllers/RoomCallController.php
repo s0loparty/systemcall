@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\WaitingRoomMember;
 use App\Services\LiveKit\LiveKitTokenService;
 use App\Support\GuestIdentity;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -25,13 +26,21 @@ class RoomCallController extends Controller
         return Inertia::render('rooms/Prepare', $this->pageProps($request, $room, $liveKit, $guestIdentity));
     }
 
-    public function waiting(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): Response
+    public function waiting(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): RedirectResponse|Response
     {
+        if ($this->guestNeedsPrepare($request, $room, $guestIdentity)) {
+            return to_route('rooms.call.prepare', $room);
+        }
+
         return Inertia::render('rooms/Waiting', $this->pageProps($request, $room, $liveKit, $guestIdentity, true));
     }
 
-    public function show(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): Response
+    public function show(Request $request, Room $room, LiveKitTokenService $liveKit, GuestIdentity $guestIdentity): RedirectResponse|Response
     {
+        if ($this->guestNeedsPrepare($request, $room, $guestIdentity)) {
+            return to_route('rooms.call.prepare', $room);
+        }
+
         return Inertia::render('rooms/Call', $this->pageProps($request, $room, $liveKit, $guestIdentity));
     }
 
@@ -91,6 +100,16 @@ class RoomCallController extends Controller
         $mode = $request->query('_e2e_media');
 
         return in_array($mode, ['fake', 'error'], true) ? $mode : null;
+    }
+
+    private function guestNeedsPrepare(Request $request, Room $room, GuestIdentity $guestIdentity): bool
+    {
+        if ($request->user() instanceof User) {
+            return false;
+        }
+
+        return $this->currentRoomMemberId($request, $room, $guestIdentity) === null
+            && $this->currentWaitingRoomEntry($request, $room, $guestIdentity) === null;
     }
 
     private function canOpen(Request $request, Room $room): bool

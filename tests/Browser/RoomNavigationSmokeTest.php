@@ -11,14 +11,16 @@ beforeEach(function () {
     config()->set('services.livekit.token_ttl', 600);
 });
 
-it('redirects guests away from protected room preparation pages', function () {
+it('lets guests open shared room preparation links before entering a nickname', function () {
     $room = Room::factory()->public()->create([
-        'name' => 'E1 Protected Prepare Room',
+        'name' => 'E1 Shared Guest Room',
     ]);
 
     visit(route('rooms.call.prepare', $room, absolute: false))
-        ->assertPathContains('/login')
-        ->assertSee('Войти')
+        ->assertPathEndsWith('/prepare')
+        ->assertSee('E1 Shared Guest Room')
+        ->assertSee('Никнейм')
+        ->assertPresent('@continue-to-room')
         ->assertNoJavaScriptErrors();
 });
 
