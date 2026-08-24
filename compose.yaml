@@ -30,7 +30,7 @@ x-laravel-environment: &laravel-environment
     DB_PORT: '5432'
     DB_DATABASE: '${DB_DATABASE:-systemcall}'
     DB_USERNAME: '${DB_USERNAME:-systemcall}'
-    DB_PASSWORD: '${DB_PASSWORD:-}'
+    DB_PASSWORD: '${DB_PASSWORD:?DB_PASSWORD is required for PostgreSQL}'
     SESSION_DRIVER: redis
     SESSION_LIFETIME: '${SESSION_LIFETIME:-120}'
     SESSION_ENCRYPT: 'true'
@@ -113,7 +113,7 @@ services:
         environment:
             POSTGRES_DB: '${DB_DATABASE:-systemcall}'
             POSTGRES_USER: '${DB_USERNAME:-systemcall}'
-            POSTGRES_PASSWORD: '${DB_PASSWORD:-}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:?DB_PASSWORD is required for PostgreSQL}'
         volumes:
             - 'postgres-data:/var/lib/postgresql'
         networks:

@@ -227,9 +227,9 @@ APP_URL=https://call.example.com
 DB_CONNECTION=pgsql
 DB_HOST=postgres
 DB_PORT=5432
-DB_DATABASE=
-DB_USERNAME=
-DB_PASSWORD=
+DB_DATABASE=systemcall
+DB_USERNAME=systemcall
+DB_PASSWORD=generate-long-random-password
 
 REDIS_HOST=redis
 REDIS_PORT=6379

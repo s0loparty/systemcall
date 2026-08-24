@@ -117,6 +117,10 @@ LIVEKIT_TOKEN_TTL=3600
 VIDEO_CALL_WAITING_ROOM_STALE_MINUTES=30
 ```
 
+`DB_PASSWORD` is mandatory for production. The official PostgreSQL image
+refuses to initialize with an empty `POSTGRES_PASSWORD`, so Dokploy must provide
+a real generated password before first deploy.
+
 ## Firewall
 Allow:
 ```text
