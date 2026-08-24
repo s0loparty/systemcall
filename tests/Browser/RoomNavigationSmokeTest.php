@@ -24,6 +24,23 @@ it('lets guests open shared room preparation links before entering a nickname', 
         ->assertNoJavaScriptErrors();
 });
 
+it('lets guests enter a nickname and continue from shared room links', function () {
+    $room = Room::factory()->public()->create([
+        'name' => 'E1 Guest Join Room',
+        'waiting_room_enabled' => true,
+    ]);
+
+    visit(route('rooms.call.prepare', $room, absolute: false))
+        ->assertSee('E1 Guest Join Room')
+        ->assertSee('Никнейм')
+        ->fill('[data-test="guest-display-name"]', 'Browser Guest')
+        ->assertValue('[data-test="guest-display-name"]', 'Browser Guest')
+        ->click('@continue-to-room')
+        ->assertPathEndsWith('/waiting')
+        ->assertSee('Заявка в зал ожидания отправлена')
+        ->assertNoJavaScriptErrors();
+});
+
 it('lets an authenticated user create a room and navigate the call flow before media setup', function () {
     $user = User::factory()->create([
         'name' => 'E1 Browser User',

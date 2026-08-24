@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ArrowLeftIcon } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import Button from '@/components/ui/button/Button.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
@@ -16,10 +16,11 @@ import { index as showRooms } from '@/routes/rooms/index';
 
 const props = defineProps<CallPageProps>();
 const page = usePage();
-const currentUser = computed(() => page.props.auth.user);
+const currentUser = computed(() => page.props.auth.user ?? null);
 const isGuest = computed(() => currentUser.value === null);
 const defaultDisplayName = computed(() => currentUser.value?.name ?? '');
 const deviceQuery = useCallDeviceQuery();
+const joinErrorMessage = ref<string | null>(null);
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     autoSelectCameraAfterPermission: true,
@@ -33,9 +34,7 @@ const needsPassword = computed(
 const guestDisplayNameMissing = computed(
     () => isGuest.value && roomJoin.joinRequest.display_name.trim() === '',
 );
-const backHref = computed(() =>
-    currentUser.value === null ? home.url() : showRooms.url(),
-);
+const backHref = computed(() => (isGuest.value ? home.url() : showRooms.url()));
 const continueDisabled = computed(
     () =>
         guestDisplayNameMissing.value ||
@@ -45,8 +44,25 @@ const continueDisabled = computed(
 const hasJoinErrors = computed(
     () => Object.keys(roomJoin.joinRequest.errors).length > 0,
 );
+const continueButtonLabel = computed(() => {
+    if (guestDisplayNameMissing.value) {
+        return 'Введите никнейм';
+    }
+
+    if (roomJoin.joinRequest.processing || roomJoin.tokenRequest.processing) {
+        return 'Проверяем доступ...';
+    }
+
+    return props.room.waiting_room_enabled ? 'Подключиться' : 'Войти в звонок';
+});
 
 async function continueToRoom(): Promise<void> {
+    if (continueDisabled.value) {
+        return;
+    }
+
+    joinErrorMessage.value = null;
+
     const query = deviceQuery.toQuery(devices.selectedDevices.value);
 
     if (
@@ -59,7 +75,18 @@ async function continueToRoom(): Promise<void> {
         return;
     }
 
-    const response = await roomJoin.joinOnly();
+    const response = await roomJoin.joinOnly().catch((error: unknown) => {
+        joinErrorMessage.value =
+            error instanceof Error
+                ? error.message
+                : 'Не удалось отправить заявку на подключение.';
+
+        return null;
+    });
+
+    if (response === null) {
+        return;
+    }
 
     if ('waiting_room' in response) {
         router.visit(showWaiting.url(props.room.public_id, { query }));
@@ -76,12 +103,7 @@ async function continueToRoom(): Promise<void> {
 
     <main class="min-h-dvh bg-gray-200 antialiased dark:bg-[#202124]">
         <div class="mx-auto grid max-w-2xl items-center gap-5 pt-[10vh]">
-            <Button
-                :as="Link"
-                :href="backHref"
-                class="w-max"
-                variant="ghost"
-            >
+            <Button :as="Link" :href="backHref" class="w-max" variant="ghost">
                 <ArrowLeftIcon class="size-4" />
                 <span>Вернуться назад</span>
             </Button>
@@ -147,6 +169,11 @@ async function continueToRoom(): Promise<void> {
                     class="mt-5"
                     message="Проверьте пароль или параметры входа."
                 />
+                <CallError
+                    v-if="joinErrorMessage"
+                    class="mt-5"
+                    :message="joinErrorMessage"
+                />
 
                 <button
                     data-test="continue-to-room"
@@ -155,13 +182,7 @@ async function continueToRoom(): Promise<void> {
                     :disabled="continueDisabled"
                     @click="continueToRoom"
                 >
-                    {{
-                        continueDisabled
-                            ? 'Проверяем доступ...'
-                            : room.waiting_room_enabled
-                              ? 'Подключиться'
-                              : 'Войти в звонок'
-                    }}
+                    {{ continueButtonLabel }}
                 </button>
             </section>
 
