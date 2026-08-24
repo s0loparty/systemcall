@@ -46,7 +46,7 @@ WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl git unzip libpq-dev \
-    && install-php-extensions pcntl pdo_pgsql pgsql redis zip opcache intl bcmath \
+    && install-php-extensions pcntl pdo_pgsql pgsql redis-6.2.0 zip opcache intl bcmath \
     && apt-get purge -y --auto-remove libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
