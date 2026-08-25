@@ -78,6 +78,44 @@ test('guest room joins require a display name before membership creation', funct
     expect(RoomMember::whereBelongsTo($room)->exists())->toBeFalse();
 });
 
+test('room owners keep moderation rights after leaving and joining again', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create();
+
+    RoomMember::factory()
+        ->owner()
+        ->for($room)
+        ->for($owner)
+        ->create([
+            'left_at' => now(),
+        ]);
+
+    $joinResponse = $this->actingAs($owner)
+        ->postJson(route('rooms.memberships.store', $room));
+
+    $joinResponse
+        ->assertCreated()
+        ->assertJsonPath('member.role', RoomRole::Owner->value);
+
+    $member = RoomMember::query()
+        ->whereBelongsTo($room)
+        ->whereBelongsTo($owner)
+        ->whereNull('left_at')
+        ->firstOrFail();
+
+    expect($member->role)->toBe(RoomRole::Owner);
+
+    $this->actingAs($owner)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('current_room_member_id', $member->id)
+            ->where('can_moderate_members', true));
+});
+
 test('guests with server issued identity can open the call page', function () {
     $room = Room::factory()
         ->public()

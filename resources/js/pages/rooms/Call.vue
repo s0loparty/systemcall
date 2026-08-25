@@ -22,6 +22,7 @@ import {
 import { update as updateGlobalPin } from '@/routes/rooms/global_pin';
 import { update as updateHand } from '@/routes/rooms/hand';
 import { ban, kick } from '@/routes/rooms/members';
+import { update as updateRole } from '@/routes/rooms/members/role';
 
 type MemberResponse = {
     member: RoomMemberSummary;
@@ -49,6 +50,12 @@ const globalPinRequest = useHttp<
 });
 const kickRequest = useHttp<Record<string, never>, MemberResponse>({});
 const banRequest = useHttp<Record<string, never>, unknown>({});
+const roleRequest = useHttp<
+    { role: RoomMemberSummary['role'] },
+    MemberResponse
+>({
+    role: 'participant',
+});
 
 const call = useCallSession({
     roomPublicId: props.room.public_id,
@@ -174,6 +181,10 @@ const tileActionsByIdentity = computed(() =>
         actions[tile.identity] = {
             canPersonalPin: canTarget,
             canGlobalPin: canTarget && props.can_moderate_members,
+            canPromoteModerator:
+                canTarget &&
+                currentRoomMember.value?.role === 'owner' &&
+                member?.role === 'participant',
             canKick: canModerateTarget,
             canBan: canModerateTarget,
         };
@@ -184,6 +195,7 @@ const tileActionsByIdentity = computed(() =>
 const tileActionsBusy = computed(
     () =>
         globalPinRequest.processing ||
+        roleRequest.processing ||
         kickRequest.processing ||
         banRequest.processing,
 );
@@ -299,6 +311,32 @@ async function kickParticipant(identity: string): Promise<void> {
     removeRoomMember(response?.member?.id ?? member.id);
 }
 
+async function promoteModerator(identity: string): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (
+        !member ||
+        currentRoomMember.value?.role !== 'owner' ||
+        member.role !== 'participant' ||
+        roleRequest.processing
+    ) {
+        return;
+    }
+
+    roleRequest.role = 'moderator';
+
+    const response = await roleRequest.patch(
+        updateRole.url({
+            room: props.room.public_id,
+            roomMember: member.id,
+        }),
+    );
+
+    if (response?.member) {
+        upsertRoomMember(response.member);
+    }
+}
+
 async function banParticipant(identity: string): Promise<void> {
     const member = memberByIdentity(identity);
 
@@ -389,6 +427,7 @@ onMounted(() => {
                 @media-host="setMediaHost"
                 @pin-personal="togglePersonalPin"
                 @pin-global="toggleGlobalPin"
+                @promote-moderator="promoteModerator"
                 @kick="kickParticipant"
                 @ban="banParticipant"
             />

@@ -24,6 +24,7 @@ const emit = defineEmits<{
     'media-host': [identity: string, element: HTMLElement | null];
     'pin-personal': [identity: string];
     'pin-global': [identity: string];
+    'promote-moderator': [identity: string];
     kick: [identity: string];
     ban: [identity: string];
 }>();
@@ -120,6 +121,9 @@ const sideTiles = computed(() =>
             "
             @pin-personal="(identity) => emit('pin-personal', identity)"
             @pin-global="(identity) => emit('pin-global', identity)"
+            @promote-moderator="
+                (identity) => emit('promote-moderator', identity)
+            "
             @kick="(identity) => emit('kick', identity)"
             @ban="(identity) => emit('ban', identity)"
         />
@@ -144,6 +148,9 @@ const sideTiles = computed(() =>
                 "
                 @pin-personal="(identity) => emit('pin-personal', identity)"
                 @pin-global="(identity) => emit('pin-global', identity)"
+                @promote-moderator="
+                    (identity) => emit('promote-moderator', identity)
+                "
                 @kick="(identity) => emit('kick', identity)"
                 @ban="(identity) => emit('ban', identity)"
             />
@@ -184,6 +191,9 @@ const sideTiles = computed(() =>
             "
             @pin-personal="(identity) => emit('pin-personal', identity)"
             @pin-global="(identity) => emit('pin-global', identity)"
+            @promote-moderator="
+                (identity) => emit('promote-moderator', identity)
+            "
             @kick="(identity) => emit('kick', identity)"
             @ban="(identity) => emit('ban', identity)"
         />

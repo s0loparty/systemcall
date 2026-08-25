@@ -56,7 +56,7 @@ class JoinRoomAction
         if ($isNewMember) {
             $member->forceFill([
                 'display_name' => $this->displayName($user, $data),
-                'role' => RoomRole::Participant,
+                'role' => $this->role($room, $user),
                 'livekit_identity' => 'room-member:'.Str::uuid(),
                 'joined_at' => now(),
             ]);
@@ -70,6 +70,15 @@ class JoinRoomAction
         }
 
         return $member;
+    }
+
+    private function role(Room $room, ?User $user): RoomRole
+    {
+        if ($user instanceof User && $room->owner()->is($user)) {
+            return RoomRole::Owner;
+        }
+
+        return RoomRole::Participant;
     }
 
     private function canAttemptJoin(Room $room, ?User $user): bool

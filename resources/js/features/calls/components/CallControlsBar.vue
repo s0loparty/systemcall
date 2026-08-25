@@ -99,32 +99,6 @@ const emit = defineEmits<{
                 </TooltipContent>
             </Tooltip>
 
-            <Tooltip v-if="waitingRoomEnabled && canModerateWaitingRoom">
-                <TooltipTrigger as-child>
-                    <button
-                        class="relative flex size-11 cursor-pointer items-center justify-center rounded-md bg-slate-100 text-slate-950 transition-[background-color,scale] duration-150 ease-out hover:bg-slate-200 active:scale-[0.96]"
-                        type="button"
-                        data-test="toggle-waiting-room-dialog"
-                        :data-count="waitingRoomEntries.length"
-                        aria-label="Открыть зал ожидания"
-                        @click="waitingRoomDialogOpen = true"
-                    >
-                        <UserRoundCheck class="size-5" />
-                        <Badge
-                            v-if="waitingRoomEntries.length > 0"
-                            data-test="call-waiting-room-count"
-                            :data-count="waitingRoomEntries.length"
-                            class="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[11px] leading-none text-white"
-                        >
-                            {{ waitingRoomEntries.length }}
-                        </Badge>
-                    </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>Зал ожидания</p>
-                </TooltipContent>
-            </Tooltip>
-
             <Tooltip>
                 <TooltipTrigger as-child>
                     <button
@@ -159,6 +133,32 @@ const emit = defineEmits<{
                                 : 'Включить камеру'
                         }}
                     </p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="waitingRoomEnabled && canModerateWaitingRoom">
+                <TooltipTrigger as-child>
+                    <button
+                        class="relative flex size-11 cursor-pointer items-center justify-center rounded-md bg-slate-100 text-slate-950 transition-[background-color,scale] duration-150 ease-out hover:bg-slate-200 active:scale-[0.96]"
+                        type="button"
+                        data-test="toggle-waiting-room-dialog"
+                        :data-count="waitingRoomEntries.length"
+                        aria-label="Открыть зал ожидания"
+                        @click="waitingRoomDialogOpen = true"
+                    >
+                        <UserRoundCheck class="size-5" />
+                        <Badge
+                            v-if="waitingRoomEntries.length > 0"
+                            data-test="call-waiting-room-count"
+                            :data-count="waitingRoomEntries.length"
+                            class="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[11px] leading-none text-white"
+                        >
+                            {{ waitingRoomEntries.length }}
+                        </Badge>
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>Зал ожидания</p>
                 </TooltipContent>
             </Tooltip>
 
