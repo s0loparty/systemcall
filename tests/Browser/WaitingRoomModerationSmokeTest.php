@@ -37,11 +37,9 @@ it('approves a waiting participant and moves them into the LiveKit call', functi
     $this->actingAs($participant);
     $participantPage = visit($prepareUrl)
         ->assertSee('Подготовка к звонку')
-        ->click('@refresh-devices')
         ->wait()
         ->select('@audio-input-select', 'e2-mic')
         ->select('@video-input-select', 'e2-camera')
-        ->click('@toggle-preview')
         ->wait()
         ->assertScript(e8PreviewVideoCount(), 1)
         ->click('@continue-to-room')
@@ -139,6 +137,48 @@ it('rejects a waiting participant and keeps them out of the LiveKit call', funct
         ->and(RoomMember::query()->whereBelongsTo($room)->whereBelongsTo($participant)->exists())->toBeFalse();
 });
 
+it('lets call moderators manage the waiting room from the call controls', function () {
+    [$owner, $participant, $room] = prepareE8Room('E8 Call Controls Waiting Room');
+    $callUrl = route('rooms.call.show', [
+        'room' => $room,
+        '_e2e_media' => 'fake',
+    ], false);
+
+    $approvedEntry = WaitingRoomMember::factory()
+        ->for($room)
+        ->guest()
+        ->create([
+            'display_name' => 'E8 Guest Waiting',
+        ]);
+    $rejectedEntry = WaitingRoomMember::factory()
+        ->for($room)
+        ->for($participant)
+        ->create([
+            'display_name' => $participant->name,
+        ]);
+
+    $this->actingAs($owner);
+    visit($callUrl)
+        ->assertSee($room->name)
+        ->assertScript(e8CallWaitingRoomCount(), '2')
+        ->click('@toggle-waiting-room-dialog')
+        ->assertSee('Зал ожидания')
+        ->assertSee('E8 Guest Waiting')
+        ->assertSee($participant->name)
+        ->click(e8ApproveSelector($approvedEntry->id))
+        ->wait()
+        ->assertScript(e8CallWaitingRoomCount(), '1')
+        ->click(e8RejectSelector($rejectedEntry->id))
+        ->wait()
+        ->assertScript(e8CallWaitingRoomCount(), '0')
+        ->assertNoJavaScriptErrors();
+
+    expect($approvedEntry->fresh()->status)->toBe(WaitingRoomStatus::Approved)
+        ->and(RoomMember::query()->whereBelongsTo($room)->where('guest_id', $approvedEntry->guest_id)->exists())->toBeTrue()
+        ->and($rejectedEntry->fresh()->status)->toBe(WaitingRoomStatus::Rejected)
+        ->and(RoomMember::query()->whereBelongsTo($room)->whereBelongsTo($participant)->exists())->toBeFalse();
+});
+
 /**
  * @return array{User, User, Room}
  */
@@ -177,6 +217,11 @@ function e8EchoState(): string
 function e8PendingCount(): string
 {
     return 'document.querySelector("[data-test=waiting-room-pending-count]").dataset.count';
+}
+
+function e8CallWaitingRoomCount(): string
+{
+    return 'document.querySelector("[data-test=toggle-waiting-room-dialog]").dataset.count';
 }
 
 function e8WaitingStatus(): string

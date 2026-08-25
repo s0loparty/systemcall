@@ -6,27 +6,44 @@ import {
     MicOff,
     MonitorUp,
     PhoneOff,
+    UserRoundCheck,
     Video,
     VideoOff,
 } from '@lucide/vue';
+import { ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import type { WaitingRoomEntry } from '../types';
+import WaitingRoomModeratorPanel from './WaitingRoomModeratorPanel.vue';
 
 type Props = {
+    roomPublicId: string;
     microphoneEnabled: boolean;
     cameraEnabled: boolean;
     screenShareEnabled: boolean;
     canShareScreen: boolean;
+    waitingRoomEnabled: boolean;
+    canModerateWaitingRoom: boolean;
+    waitingRoomEntries: WaitingRoomEntry[];
     handRaised: boolean;
     chatOpen: boolean;
     busy: boolean;
 };
 
 const props = defineProps<Props>();
+const waitingRoomDialogOpen = ref(false);
 
 const emit = defineEmits<{
     toggleMicrophone: [];
@@ -34,6 +51,7 @@ const emit = defineEmits<{
     toggleScreenShare: [];
     toggleHand: [];
     toggleChat: [];
+    waitingRoomEntryDecided: [entryId: number];
     leave: [];
 }>();
 </script>
@@ -78,6 +96,32 @@ const emit = defineEmits<{
                                 : 'Включить микрофон'
                         }}
                     </p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="waitingRoomEnabled && canModerateWaitingRoom">
+                <TooltipTrigger as-child>
+                    <button
+                        class="relative flex size-11 cursor-pointer items-center justify-center rounded-md bg-slate-100 text-slate-950 transition-[background-color,scale] duration-150 ease-out hover:bg-slate-200 active:scale-[0.96]"
+                        type="button"
+                        data-test="toggle-waiting-room-dialog"
+                        :data-count="waitingRoomEntries.length"
+                        aria-label="Открыть зал ожидания"
+                        @click="waitingRoomDialogOpen = true"
+                    >
+                        <UserRoundCheck class="size-5" />
+                        <Badge
+                            v-if="waitingRoomEntries.length > 0"
+                            data-test="call-waiting-room-count"
+                            :data-count="waitingRoomEntries.length"
+                            class="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[11px] leading-none text-white"
+                        >
+                            {{ waitingRoomEntries.length }}
+                        </Badge>
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>Зал ожидания</p>
                 </TooltipContent>
             </Tooltip>
 
@@ -217,4 +261,25 @@ const emit = defineEmits<{
             </Tooltip>
         </TooltipProvider>
     </nav>
+
+    <Dialog v-model:open="waitingRoomDialogOpen">
+        <DialogContent
+            class="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-md border-slate-200 bg-white p-0 sm:max-w-xl"
+        >
+            <DialogHeader class="px-5 pt-5">
+                <DialogTitle>Зал ожидания</DialogTitle>
+                <DialogDescription>
+                    Проверьте заявки и решите, кого пустить в звонок.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="px-5 pb-5">
+                <WaitingRoomModeratorPanel
+                    :room-public-id="roomPublicId"
+                    :entries="waitingRoomEntries"
+                    @decided="emit('waitingRoomEntryDecided', $event)"
+                />
+            </div>
+        </DialogContent>
+    </Dialog>
 </template>

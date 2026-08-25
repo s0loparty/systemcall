@@ -98,7 +98,9 @@ const {
     appendRoomMessage,
     globalPinnedRoomMemberId,
     echoConnectionStatus,
+    waitingRoomEntries,
     removeRoomMember,
+    removeWaitingRoomEntry,
     setGlobalPinnedRoomMemberId,
 } = realtime;
 
@@ -122,6 +124,9 @@ const canShareScreen = computed(
 );
 const raisedHandsCount = computed(
     () => roomMembers.value.filter((member) => member.hand_raised_at).length,
+);
+const pendingWaitingRoomEntries = computed(() =>
+    waitingRoomEntries.value.filter((entry) => entry.status === 'pending'),
 );
 const tilesWithApplicationState = computed<ParticipantTile[]>(() =>
     tiles.value.map((tile) => {
@@ -449,10 +454,14 @@ onMounted(() => {
         />
 
         <CallControlsBar
+            :room-public-id="room.public_id"
             :microphone-enabled="microphoneEnabled"
             :camera-enabled="cameraEnabled"
             :screen-share-enabled="screenShareEnabled"
             :can-share-screen="canShareScreen"
+            :waiting-room-enabled="room.waiting_room_enabled"
+            :can-moderate-waiting-room="can_moderate_waiting_room"
+            :waiting-room-entries="pendingWaitingRoomEntries"
             :hand-raised="handRaised"
             :chat-open="chatOpen"
             :busy="busy || handRequest.processing"
@@ -461,6 +470,7 @@ onMounted(() => {
             @toggle-screen-share="toggleScreenShare"
             @toggle-hand="toggleHand"
             @toggle-chat="chatOpen = !chatOpen"
+            @waiting-room-entry-decided="removeWaitingRoomEntry"
             @leave="leaveCall"
         />
     </main>

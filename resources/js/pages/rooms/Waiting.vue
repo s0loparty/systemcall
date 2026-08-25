@@ -203,12 +203,9 @@ onMounted(() => {
                     :selected-video-input-id="
                         devices.selectedDevices.value.videoInputId
                     "
-                    :preview-enabled="devices.previewEnabled.value"
+                    :preview-has-video="devices.previewHasVideo.value"
                     :preview-loading="devices.previewLoading.value"
                     :error="devices.deviceErrorMessage.value"
-                    @refresh="devices.loadDevices(true)"
-                    @preview="devices.startPreview"
-                    @stop-preview="devices.stopPreview"
                     @update-audio-input="devices.setAudioInput"
                     @update-video-input="devices.setVideoInput"
                     @preview-host="devices.setPreviewHost"

@@ -18,9 +18,11 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     });
     const previewEnabled = ref(false);
     const previewLoading = ref(false);
+    const previewHasVideo = ref(false);
     const deviceErrorMessage = ref<string | null>(null);
     const previewHost = ref<HTMLElement | null>(null);
     const previewTracks = ref<LocalTrack[]>([]);
+    let previewGeneration = 0;
 
     async function loadDevices(requestPermissions = false): Promise<void> {
         if (options.testingMediaMode === 'fake') {
@@ -29,7 +31,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             return;
         }
 
-        if (options.testingMediaMode === 'error' && requestPermissions) {
+        if (options.testingMediaMode === 'error') {
             audioInputs.value = [];
             videoInputs.value = [];
             deviceErrorMessage.value = 'E2 permission denied';
@@ -45,6 +47,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
 
             audioInputs.value = nextAudioInputs;
             videoInputs.value = nextVideoInputs;
+            deviceErrorMessage.value = null;
 
             if (
                 requestPermissions &&
@@ -62,44 +65,63 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
                     videoInputId: nextVideoInputs[0].deviceId,
                 };
             }
+
+            if (
+                requestPermissions &&
+                selectedDevices.value.videoInputId !== ''
+            ) {
+                void startPreview();
+            }
         } catch (error) {
-            deviceErrorMessage.value = formatDeviceError(error);
+            if (
+                requestPermissions ||
+                (audioInputs.value.length === 0 &&
+                    videoInputs.value.length === 0)
+            ) {
+                deviceErrorMessage.value = formatDeviceError(error);
+            }
         }
     }
 
     async function startPreview(): Promise<void> {
-        await stopPreview();
+        const generation = ++previewGeneration;
+
+        await stopPreview(false);
 
         previewLoading.value = true;
         deviceErrorMessage.value = null;
 
         try {
-            if (
-                selectedDevices.value.audioInputId === '' &&
-                selectedDevices.value.videoInputId === ''
-            ) {
-                deviceErrorMessage.value =
-                    'Выберите камеру или микрофон для предпросмотра.';
+            if (selectedDevices.value.videoInputId === '') {
+                await stopPreview();
 
                 return;
             }
 
-            previewTracks.value =
+            const nextPreviewTracks =
                 options.testingMediaMode === 'fake'
                     ? testingPreviewTracks()
                     : await createLocalTracks({
-                          audio: selectedDevices.value.audioInputId
-                              ? { deviceId: selectedDevices.value.audioInputId }
-                              : false,
+                          audio: false,
                           video: selectedDevices.value.videoInputId
                               ? { deviceId: selectedDevices.value.videoInputId }
                               : false,
                       });
+
+            if (generation !== previewGeneration) {
+                nextPreviewTracks.forEach((track) => track.stop());
+
+                return;
+            }
+
+            previewTracks.value = nextPreviewTracks;
             previewEnabled.value = true;
 
             await nextTick();
-            renderPreview();
-            await loadDevices();
+
+            if (generation === previewGeneration) {
+                renderPreview();
+            }
         } catch (error) {
             previewEnabled.value = false;
             deviceErrorMessage.value = formatDeviceError(error);
@@ -108,14 +130,23 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         }
     }
 
-    async function stopPreview(): Promise<void> {
+    async function stopPreview(invalidate = true): Promise<void> {
+        if (invalidate) {
+            previewGeneration++;
+        }
+
         previewTracks.value.forEach((track) => track.stop());
         previewTracks.value = [];
         previewEnabled.value = false;
+        previewHasVideo.value = false;
         previewHost.value?.replaceChildren();
     }
 
     function setPreviewHost(element: HTMLElement | null): void {
+        if (previewHost.value === element) {
+            return;
+        }
+
         previewHost.value = element;
         renderPreview();
     }
@@ -125,10 +156,6 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             ...selectedDevices.value,
             audioInputId: deviceId,
         };
-
-        if (previewEnabled.value) {
-            void startPreview();
-        }
     }
 
     function setVideoInput(deviceId: string): void {
@@ -137,9 +164,14 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             videoInputId: deviceId,
         };
 
-        if (previewEnabled.value) {
+        if (deviceId !== '') {
             void startPreview();
+
+            return;
         }
+
+        void stopPreview();
+        deviceErrorMessage.value = null;
     }
 
     function renderPreview(): void {
@@ -148,6 +180,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         }
 
         previewHost.value.replaceChildren();
+        let hasVideo = false;
 
         previewTracks.value.forEach((track) => {
             if (track.kind !== Track.Kind.Video) {
@@ -163,7 +196,12 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             }
 
             previewHost.value?.append(element);
+            hasVideo = true;
         });
+
+        if (previewHasVideo.value !== hasVideo) {
+            previewHasVideo.value = hasVideo;
+        }
     }
 
     function loadTestingDevices(requestPermissions: boolean): void {
@@ -176,6 +214,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
 
         audioInputs.value = nextAudioInputs;
         videoInputs.value = nextVideoInputs;
+        deviceErrorMessage.value = null;
 
         if (
             requestPermissions &&
@@ -186,6 +225,10 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
                 ...selectedDevices.value,
                 videoInputId: nextVideoInputs[0].deviceId,
             };
+        }
+
+        if (requestPermissions && selectedDevices.value.videoInputId !== '') {
+            void startPreview();
         }
     }
 
@@ -230,11 +273,27 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     }
 
     onBeforeUnmount(() => {
+        navigator.mediaDevices?.removeEventListener(
+            'devicechange',
+            handleDeviceChange,
+        );
         void stopPreview();
     });
 
-    onMounted(() => {
+    function handleDeviceChange(): void {
         void loadDevices();
+    }
+
+    onMounted(async () => {
+        await loadDevices();
+        navigator.mediaDevices?.addEventListener(
+            'devicechange',
+            handleDeviceChange,
+        );
+
+        if (selectedDevices.value.videoInputId !== '') {
+            void startPreview();
+        }
     });
 
     return {
@@ -243,6 +302,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         selectedDevices,
         previewEnabled,
         previewLoading,
+        previewHasVideo,
         deviceErrorMessage,
         loadDevices,
         startPreview,

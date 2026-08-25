@@ -1,23 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import {
-    ArrowLeft,
-    ArrowRight,
-    CheckCircle2,
-    DoorOpen,
-    UserRound,
-    Video,
-} from '@lucide/vue';
+import { ArrowLeft, ArrowRight } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import CallError from '@/features/calls/components/CallError.vue';
@@ -128,128 +114,87 @@ async function continueToRoom(): Promise<void> {
         <div
             class="relative mx-auto grid min-h-dvh max-w-6xl gap-6 px-5 py-6 sm:px-8"
         >
-            <header class="flex items-center justify-between gap-4">
-                <Button as-child variant="ghost" class="rounded-md">
-                    <Link :href="backHref">
-                        <ArrowLeft class="size-4" />
-                        Вернуться назад
-                    </Link>
-                </Button>
+            <section class="mx-auto grid w-full max-w-5xl gap-5">
+                <div class="py-4 text-center sm:pt-8 sm:pb-2">
+                    <h1
+                        class="text-4xl font-semibold tracking-tight text-balance text-slate-950"
+                    >
+                        {{ room.name }}
+                    </h1>
+                    <p class="mt-4 text-base leading-7 text-slate-600">
+                        {{
+                            room.description ??
+                            'Проверьте устройства перед входом в комнату.'
+                        }}
+                    </p>
+                </div>
 
-                <Badge
-                    variant="outline"
-                    class="rounded-md border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-700"
-                >
-                    <span class="size-2 rounded-full bg-emerald-500" />
-                    Подготовка к звонку
-                </Badge>
-            </header>
-
-            <section
-                class="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start"
-            >
                 <div class="grid gap-5">
                     <Card
-                        class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-2xl shadow-violet-100/60 backdrop-blur"
+                        class="w-full flex-row gap-0 rounded-md border-slate-200/80 bg-white/90 p-0 shadow-sm"
                     >
-                        <CardHeader class="text-center">
-                            <div
-                                class="mx-auto flex size-16 items-center justify-center rounded-md bg-gradient-to-br from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-200"
-                            >
-                                <Video class="size-7" />
-                            </div>
-                            <Badge
-                                variant="outline"
-                                class="mx-auto mt-4 rounded-md bg-violet-50 text-violet-700"
-                            >
-                                Комната готова
-                            </Badge>
-                            <CardTitle
-                                class="mt-2 text-3xl font-semibold tracking-tight"
-                            >
-                                {{ room.name }}
-                            </CardTitle>
-                            <CardDescription
-                                class="mx-auto max-w-xl text-base leading-7"
-                            >
-                                {{
-                                    room.description ??
-                                    'Проверьте устройства перед входом в комнату.'
-                                }}
-                            </CardDescription>
-                        </CardHeader>
-
-                        <CardContent class="grid gap-3 sm:grid-cols-2">
-                            <div
-                                class="rounded-md border border-slate-200 bg-slate-50 p-4"
-                            >
-                                <CheckCircle2 class="size-5 text-emerald-500" />
-                                <p class="mt-3 text-sm font-semibold">
-                                    Устройства необязательны
-                                </p>
+                        <CardContent
+                            class="grid w-full gap-5 p-4 lg:grid-cols-[1fr_20rem]"
+                        >
+                            <div v-if="isGuest" class="grid gap-2">
+                                <Label for="guest-display-name">Никнейм</Label>
+                                <Input
+                                    id="guest-display-name"
+                                    v-model="roomJoin.joinRequest.display_name"
+                                    data-test="guest-display-name"
+                                    maxlength="120"
+                                    placeholder="Как вас показать участникам?"
+                                    type="text"
+                                />
                                 <p
-                                    class="mt-1 text-xs leading-5 text-slate-500"
+                                    v-if="
+                                        roomJoin.joinRequest.errors
+                                            .display_name ||
+                                        guestDisplayNameMissing
+                                    "
+                                    class="text-sm text-red-600"
                                 >
-                                    Можно войти без камеры и микрофона, затем
-                                    включить их позже.
+                                    {{
+                                        roomJoin.joinRequest.errors
+                                            .display_name ??
+                                        'Введите никнейм, чтобы войти в комнату.'
+                                    }}
                                 </p>
                             </div>
-                            <div
-                                class="rounded-md border border-slate-200 bg-slate-50 p-4"
-                            >
-                                <DoorOpen class="size-5 text-violet-500" />
-                                <p class="mt-3 text-sm font-semibold">
-                                    Вход через подготовку
-                                </p>
-                                <p
-                                    class="mt-1 text-xs leading-5 text-slate-500"
-                                >
-                                    Участники сначала проверяют имя и
-                                    устройства.
+                            <div v-else>
+                                <CardTitle>Готовы войти?</CardTitle>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Вы подключаетесь как
+                                    {{ defaultDisplayName }}.
                                 </p>
                             </div>
-                        </CardContent>
-                    </Card>
 
-                    <Card
-                        v-if="isGuest"
-                        class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-                    >
-                        <CardHeader>
-                            <div
-                                class="flex size-11 items-center justify-center rounded-md bg-violet-50 text-violet-600"
-                            >
-                                <UserRound class="size-5" />
+                            <div class="space-y-2">
+                                <Button
+                                    data-test="continue-to-room"
+                                    class="h-12 w-full rounded-md bg-linear-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500 disabled:opacity-60"
+                                    type="button"
+                                    :disabled="continueDisabled"
+                                    @click="continueToRoom"
+                                >
+                                    {{ continueButtonLabel }}
+                                    <ArrowRight
+                                        v-if="!continueDisabled"
+                                        class="size-4"
+                                    />
+                                </Button>
+                                <Button
+                                    as-child
+                                    variant="outline"
+                                    class="h-12 w-full rounded-md"
+                                    type="button"
+                                >
+                                    <Link :href="backHref">
+                                        <ArrowLeft class="size-4" />
+                                        Вернуться назад
+                                    </Link>
+                                </Button>
                             </div>
-                            <CardTitle>Как вас представить?</CardTitle>
-                            <CardDescription>
-                                Никнейм нужен, чтобы участники понимали, кто
-                                подключается.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Label for="guest-display-name">Никнейм</Label>
-                            <Input
-                                id="guest-display-name"
-                                v-model="roomJoin.joinRequest.display_name"
-                                data-test="guest-display-name"
-                                class="mt-2"
-                                maxlength="120"
-                                placeholder="Как вас показать участникам?"
-                                type="text"
-                            />
-                            <p
-                                v-if="
-                                    roomJoin.joinRequest.errors.display_name ||
-                                    guestDisplayNameMissing
-                                "
-                                class="mt-2 text-sm text-red-600"
-                            >
-                                {{
-                                    roomJoin.joinRequest.errors.display_name ??
-                                    'Введите никнейм, чтобы войти в комнату.'
-                                }}
-                            </p>
                         </CardContent>
                     </Card>
 
@@ -267,9 +212,7 @@ async function continueToRoom(): Promise<void> {
                         v-if="joinErrorMessage"
                         :message="joinErrorMessage"
                     />
-                </div>
 
-                <div class="grid gap-5">
                     <DeviceSetupPanel
                         :audio-inputs="devices.audioInputs.value"
                         :video-inputs="devices.videoInputs.value"
@@ -279,39 +222,13 @@ async function continueToRoom(): Promise<void> {
                         :selected-video-input-id="
                             devices.selectedDevices.value.videoInputId
                         "
-                        :preview-enabled="devices.previewEnabled.value"
+                        :preview-has-video="devices.previewHasVideo.value"
                         :preview-loading="devices.previewLoading.value"
                         :error="devices.deviceErrorMessage.value"
-                        @refresh="devices.loadDevices(true)"
-                        @preview="devices.startPreview"
-                        @stop-preview="devices.stopPreview"
                         @update-audio-input="devices.setAudioInput"
                         @update-video-input="devices.setVideoInput"
                         @preview-host="devices.setPreviewHost"
                     />
-
-                    <Card
-                        class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-                    >
-                        <CardContent class="p-4">
-                            <Button
-                                data-test="continue-to-room"
-                                class="h-12 w-full rounded-md bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500 disabled:opacity-60"
-                                type="button"
-                                :disabled="continueDisabled"
-                                @click="continueToRoom"
-                            >
-                                {{ continueButtonLabel }}
-                                <ArrowRight
-                                    v-if="!continueDisabled"
-                                    class="size-4"
-                                />
-                            </Button>
-                            <p class="mt-3 text-center text-xs text-slate-500">
-                                Перед входом можно изменить выбор устройств.
-                            </p>
-                        </CardContent>
-                    </Card>
                 </div>
             </section>
         </div>

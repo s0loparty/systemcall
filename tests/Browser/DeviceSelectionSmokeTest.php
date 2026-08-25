@@ -39,21 +39,15 @@ it('refreshes fake media devices, auto-selects camera, previews video, and prese
         ->assertScript('document.querySelector("[data-test=audio-input-select] option:checked").textContent.trim()', 'Без микрофона')
         ->assertScript('document.querySelector("[data-test=video-input-select] option:checked").textContent.trim()', 'Без камеры');
 
-    $page->click('@refresh-devices')
-        ->wait()
+    $page->wait()
         ->assertScript('[...document.querySelectorAll("[data-test=audio-input-select] option")].map((option) => option.textContent.trim()).includes("E2 Fake Microphone")', true)
         ->assertScript('[...document.querySelectorAll("[data-test=video-input-select] option")].map((option) => option.textContent.trim()).includes("E2 Fake Camera")', true)
         ->assertScript('document.querySelector("[data-test=audio-input-select]").value', '')
         ->assertScript('document.querySelector("[data-test=video-input-select]").value', 'e2-camera')
-        ->select('@audio-input-select', 'e2-mic')
-        ->click('@toggle-preview')
-        ->wait()
-        ->assertSee('Остановить предпросмотр')
         ->assertScript('document.querySelectorAll("[data-test=preview-host] video").length', 1)
-        ->click('@toggle-preview')
+        ->select('@audio-input-select', 'e2-mic')
         ->wait()
-        ->assertSee('Предпросмотр')
-        ->assertScript('document.querySelectorAll("[data-test=preview-host] video").length', 0)
+        ->assertScript('document.querySelectorAll("[data-test=preview-host] video").length', 1)
         ->click('Войти в звонок')
         ->assertPathEndsWith('/call')
         ->assertScript('new URLSearchParams(window.location.search).get("audio")', 'e2-mic')
@@ -72,8 +66,7 @@ it('shows device permission errors without crashing the preparation page', funct
     ], false))
         ->assertSee('Подготовка к звонку');
 
-    $page->click('@refresh-devices')
-        ->wait()
+    $page->wait()
         ->assertSee('E2 permission denied')
         ->assertSee('Подготовка к звонку')
         ->assertNoJavaScriptErrors();
