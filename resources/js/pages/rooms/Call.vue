@@ -123,6 +123,11 @@ const currentRoomMember = computed(() =>
 const handRaised = computed(() =>
     Boolean(currentRoomMember.value?.hand_raised_at),
 );
+const canModerateMembers = computed(() => {
+    const role = currentRoomMember.value?.role;
+
+    return role === 'owner' || role === 'moderator';
+});
 const canShareScreen = computed(
     () =>
         currentRoomMember.value?.can_publish_screen ??
@@ -180,7 +185,7 @@ const tileActionsByIdentity = computed(() =>
 
         actions[tile.identity] = {
             canPersonalPin: canTarget,
-            canGlobalPin: canTarget && props.can_moderate_members,
+            canGlobalPin: canTarget && canModerateMembers.value,
             canPromoteModerator:
                 canTarget &&
                 currentRoomMember.value?.role === 'owner' &&
@@ -204,7 +209,7 @@ function canModerateRoomMember(member: RoomMemberSummary): boolean {
     const currentMember = currentRoomMember.value;
 
     if (
-        !props.can_moderate_members ||
+        !canModerateMembers.value ||
         !currentMember ||
         member.id === currentMember.id ||
         member.left_at !== null

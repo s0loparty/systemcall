@@ -116,6 +116,28 @@ test('room owners keep moderation rights after leaving and joining again', funct
             ->where('can_moderate_members', true));
 });
 
+test('room owner active memberships are normalized after stale participant role regression', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create();
+    $member = RoomMember::factory()
+        ->for($room)
+        ->for($owner)
+        ->create([
+            'role' => RoomRole::Participant,
+        ]);
+
+    $this->actingAs($owner)
+        ->postJson(route('rooms.memberships.store', $room))
+        ->assertOk()
+        ->assertJsonPath('member.id', $member->id)
+        ->assertJsonPath('member.role', RoomRole::Owner->value);
+
+    expect($member->fresh()->role)->toBe(RoomRole::Owner);
+});
+
 test('guests with server issued identity can open the call page', function () {
     $room = Room::factory()
         ->public()

@@ -53,13 +53,19 @@ class JoinRoomAction
         $member = RoomMember::query()->firstOrNew($attributes);
         $isNewMember = ! $member->exists;
 
+        $role = $this->role($room, $user);
+
         if ($isNewMember) {
             $member->forceFill([
                 'display_name' => $this->displayName($user, $data),
-                'role' => $this->role($room, $user),
+                'role' => $role,
                 'livekit_identity' => 'room-member:'.Str::uuid(),
                 'joined_at' => now(),
             ]);
+        }
+
+        if (! $isNewMember && $member->role !== $role && $role === RoomRole::Owner) {
+            $member->forceFill(['role' => $role]);
         }
 
         $member->save();
