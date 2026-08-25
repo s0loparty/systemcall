@@ -156,7 +156,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Authenticated shell now uses light SaaS background, polished sticky header and compact sidebar.
+- Sidebar keeps only implemented routes: `Панель`, `Комнаты`.
+- Starter-kit footer links removed from visible app shell.
+- No new shadcn component required for D1.
 
 ## Milestone D2 — Public Welcome/Auth
 

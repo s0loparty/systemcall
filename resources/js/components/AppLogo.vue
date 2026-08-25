@@ -7,13 +7,16 @@ const name = usePage().props.name;
 
 <template>
     <div
-        class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
+        class="flex aspect-square size-9 items-center justify-center rounded-md bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-sm shadow-indigo-500/25"
     >
-        <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
+        <AppLogoIcon class="size-5 fill-current" />
     </div>
-    <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold">{{
-            name
-        }}</span>
+    <div class="ml-1 grid flex-1 text-left">
+        <span class="truncate text-sm leading-tight font-semibold">
+            {{ name }}
+        </span>
+        <span class="truncate text-xs text-sidebar-foreground/55">
+            Видеокомнаты
+        </span>
     </div>
 </template>
