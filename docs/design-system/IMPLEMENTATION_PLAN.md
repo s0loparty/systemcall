@@ -286,7 +286,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Prepare page redesigned with product room header, separate guest nickname card and clear continue action.
+- Device setup panel redesigned with selectors, preview, refresh and preview actions preserved.
+- Existing `data-test` selectors and continue flow kept for browser tests.
+- Raw room ID and internal media/runtime wording absent from visible prepare UI.
 
 ## Milestone D6 — Waiting Room
 

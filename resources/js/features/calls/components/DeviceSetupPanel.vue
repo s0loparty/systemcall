@@ -1,4 +1,15 @@
 <script setup lang="ts">
+import { Camera, Mic, RefreshCw, Video, VideoOff } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+
 type Props = {
     audioInputs: MediaDeviceInfo[];
     videoInputs: MediaDeviceInfo[];
@@ -22,30 +33,66 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <section
-        class="grid gap-4 rounded-md border border-neutral-200 bg-white p-4 shadow-sm lg:grid-cols-[minmax(0,1fr)_18rem] dark:border-neutral-800 dark:bg-neutral-950"
-    >
-        <div class="space-y-4">
+    <Card class="rounded-md border-slate-200/80 bg-white/90 shadow-sm">
+        <CardHeader
+            class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start"
+        >
             <div>
-                <h2
-                    class="text-base font-semibold text-neutral-950 dark:text-white"
+                <div
+                    class="flex size-11 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
                 >
-                    Устройства
-                </h2>
-                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                    <Video class="size-5" />
+                </div>
+                <CardTitle class="mt-4">Устройства</CardTitle>
+                <CardDescription class="mt-1 leading-6">
                     Камера и микрофон необязательны. Можно войти без них и
                     включить позже.
-                </p>
+                </CardDescription>
             </div>
 
-            <div class="grid gap-3 md:grid-cols-2">
-                <label class="space-y-1 text-sm font-medium">
-                    <span class="text-neutral-700 dark:text-neutral-300">
-                        Микрофон
+            <div
+                class="relative min-h-56 overflow-hidden rounded-md bg-slate-950 shadow-inner"
+            >
+                <div
+                    :ref="
+                        (element) =>
+                            emit('preview-host', element as HTMLElement | null)
+                    "
+                    data-test="preview-host"
+                    class="absolute inset-0 [&_video]:h-full [&_video]:w-full [&_video]:scale-x-[-1] [&_video]:object-cover"
+                />
+                <div
+                    v-if="!previewEnabled"
+                    data-test="preview-empty-state"
+                    class="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-300"
+                >
+                    <VideoOff class="size-8 text-slate-500" />
+                    <span>
+                        Выберите камеру и запустите предпросмотр, чтобы
+                        проверить изображение.
                     </span>
+                </div>
+            </div>
+        </CardHeader>
+
+        <CardContent class="grid gap-5">
+            <div class="grid gap-3 md:grid-cols-2">
+                <div class="grid gap-2">
+                    <Label
+                        for="audio-input-select"
+                        class="flex items-center gap-2 text-sm font-semibold"
+                    >
+                        <span
+                            class="flex size-8 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
+                        >
+                            <Mic class="size-4" />
+                        </span>
+                        Микрофон
+                    </Label>
                     <select
+                        id="audio-input-select"
                         data-test="audio-input-select"
-                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+                        class="h-10 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
                         :value="selectedAudioInputId"
                         @change="
                             emit(
@@ -63,15 +110,24 @@ const emit = defineEmits<{
                             {{ device.label || 'Микрофон' }}
                         </option>
                     </select>
-                </label>
+                </div>
 
-                <label class="space-y-1 text-sm font-medium">
-                    <span class="text-neutral-700 dark:text-neutral-300">
+                <div class="grid gap-2">
+                    <Label
+                        for="video-input-select"
+                        class="flex items-center gap-2 text-sm font-semibold"
+                    >
+                        <span
+                            class="flex size-8 items-center justify-center rounded-md bg-violet-50 text-violet-600"
+                        >
+                            <Camera class="size-4" />
+                        </span>
                         Камера
-                    </span>
+                    </Label>
                     <select
+                        id="video-input-select"
                         data-test="video-input-select"
-                        class="w-full rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-950 shadow-xs transition outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-neutral-800 dark:bg-neutral-900 dark:text-white"
+                        class="h-10 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
                         :value="selectedVideoInputId"
                         @change="
                             emit(
@@ -89,28 +145,30 @@ const emit = defineEmits<{
                             {{ device.label || 'Камера' }}
                         </option>
                     </select>
-                </label>
+                </div>
             </div>
 
             <p
                 v-if="error"
-                class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-200"
+                class="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
             >
                 {{ error }}
             </p>
 
-            <div class="flex flex-wrap gap-2">
-                <button
+            <div class="flex flex-col gap-2 sm:flex-row">
+                <Button
                     data-test="refresh-devices"
-                    class="rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                    class="rounded-md"
                     type="button"
+                    variant="outline"
                     @click="emit('refresh')"
                 >
+                    <RefreshCw class="size-4" />
                     Обновить устройства
-                </button>
-                <button
+                </Button>
+                <Button
                     data-test="toggle-preview"
-                    class="rounded-md border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-800 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-900"
+                    class="rounded-md bg-slate-950 text-white hover:bg-slate-800"
                     type="button"
                     :disabled="previewLoading"
                     @click="
@@ -124,29 +182,8 @@ const emit = defineEmits<{
                               ? 'Остановить предпросмотр'
                               : 'Предпросмотр'
                     }}
-                </button>
+                </Button>
             </div>
-        </div>
-
-        <div
-            class="relative min-h-48 overflow-hidden rounded-3xl bg-neutral-950 shadow-inner"
-        >
-            <div
-                :ref="
-                    (element) =>
-                        emit('preview-host', element as HTMLElement | null)
-                "
-                data-test="preview-host"
-                class="absolute inset-0 [&_video]:h-full [&_video]:w-full [&_video]:scale-x-[-1] [&_video]:object-cover"
-            />
-            <div
-                v-if="!previewEnabled"
-                data-test="preview-empty-state"
-                class="absolute inset-0 flex items-center justify-center px-6 text-center text-sm text-neutral-400"
-            >
-                Выберите камеру и запустите предпросмотр, чтобы проверить
-                доступ.
-            </div>
-        </div>
-    </section>
+        </CardContent>
+    </Card>
 </template>
