@@ -251,7 +251,15 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- `/rooms` redesigned with compact product header, stats, creation card and room list cards.
+- Create-room form keeps existing field names and submit behavior.
+- Native visibility select kept to preserve browser test coverage and regular form serialization.
+- Existing shadcn `Card`, `Button`, `Badge`, `Input` and `Label` reused; no new dependency needed.
+- No fake search/filter controls added.
 
 ## Milestone D5 — Prepare Page
 
