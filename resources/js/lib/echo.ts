@@ -26,6 +26,10 @@ function websocketHost(): string | undefined {
 }
 
 export function initializeEcho(): void {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
     const reverbAppKey = import.meta.env.VITE_REVERB_APP_KEY;
 
     if (typeof reverbAppKey !== 'string' || reverbAppKey.trim() === '') {
