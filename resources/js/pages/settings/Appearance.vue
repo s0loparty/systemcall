@@ -2,6 +2,13 @@
 import { Head } from '@inertiajs/vue3';
 import AppearanceTabs from '@/components/AppearanceTabs.vue';
 import Heading from '@/components/Heading.vue';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { edit } from '@/routes/appearance';
 
 defineOptions({
@@ -24,9 +31,22 @@ defineOptions({
     <div class="space-y-6">
         <Heading
             variant="small"
-            title="Настройки внешнего вида"
-            description="Измените оформление вашего аккаунта"
+            title="Внешний вид"
+            description="Выберите оформление интерфейса для текущего устройства."
         />
-        <AppearanceTabs />
+
+        <Card
+            class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm"
+        >
+            <CardHeader>
+                <CardTitle>Тема интерфейса</CardTitle>
+                <CardDescription>
+                    Настройка сохраняется в браузере и применяется сразу.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <AppearanceTabs />
+            </CardContent>
+        </Card>
     </div>
 </template>

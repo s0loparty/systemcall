@@ -59,17 +59,17 @@ const emit = defineEmits<{
         :data-camera-enabled="tile.camera ? 'true' : 'false'"
         :data-screen-share-enabled="tile.screenShare ? 'true' : 'false'"
         :data-hand-raised="tile.handRaised ? 'true' : 'false'"
-        class="group relative overflow-hidden bg-[#1f1f1f] transition-transform duration-200 ease-out active:scale-[0.995]"
+        class="group relative overflow-hidden border border-slate-200/80 bg-[#161719] shadow-[0_24px_70px_rgba(15,23,42,0.14)] transition-[box-shadow,border-color] duration-200 ease-out"
         :class="[
             size === 'share'
-                ? 'h-full min-h-96 rounded-[1.75rem]'
+                ? 'h-full min-h-96 rounded-md'
                 : size === 'compact'
-                  ? 'min-h-36 rounded-3xl'
-                  : 'min-h-64 rounded-[1.75rem]',
+                  ? 'min-h-36 rounded-md'
+                  : 'min-h-64 rounded-md',
             personallyPinned || globallyPinned
-                ? 'ring-2 ring-sky-400/70'
+                ? 'border-violet-300 ring-2 ring-violet-400/55'
                 : tile.speaking
-                  ? 'ring-2 ring-emerald-400/70'
+                  ? 'border-emerald-300 ring-2 ring-emerald-400/65'
                   : '',
         ]"
     >
@@ -99,13 +99,13 @@ const emit = defineEmits<{
                     actions.canBan)
             "
             data-test="participant-tile-actions"
-            class="pointer-events-none absolute top-3 right-3 z-10 flex translate-y-1 items-center gap-1 rounded-full bg-[#202124]/88 p-1 opacity-0 shadow-[0_10px_30px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.10)] backdrop-blur-xl transition duration-150 ease-out group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
+            class="pointer-events-none absolute top-3 right-3 z-10 flex translate-y-1 items-center gap-1 rounded-md border border-white/10 bg-slate-950/82 p-1 opacity-0 shadow-[0_18px_45px_rgba(0,0,0,0.32)] backdrop-blur-xl transition duration-150 ease-out group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100"
         >
             <TooltipProvider :delay-duration="120">
                 <Tooltip v-if="actions.canPersonalPin">
                     <TooltipTrigger as-child>
                         <button
-                            class="flex size-9 items-center justify-center rounded-full text-white/85 transition hover:bg-white/14 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex size-9 items-center justify-center rounded-md text-white/85 transition hover:bg-white/14 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                             type="button"
                             data-test="pin-personal-participant"
                             :disabled="actionsDisabled"
@@ -134,7 +134,7 @@ const emit = defineEmits<{
                 <Tooltip v-if="actions.canGlobalPin">
                     <TooltipTrigger as-child>
                         <button
-                            class="flex size-9 items-center justify-center rounded-full text-sky-100 transition hover:bg-sky-400/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex size-9 items-center justify-center rounded-md text-sky-100 transition hover:bg-sky-400/20 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                             type="button"
                             data-test="pin-global-participant"
                             :disabled="actionsDisabled"
@@ -163,7 +163,7 @@ const emit = defineEmits<{
                 <Tooltip v-if="actions.canKick">
                     <TooltipTrigger as-child>
                         <button
-                            class="flex size-9 items-center justify-center rounded-full text-orange-100 transition hover:bg-orange-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex size-9 items-center justify-center rounded-md text-orange-100 transition hover:bg-orange-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                             type="button"
                             data-test="kick-participant"
                             :disabled="actionsDisabled"
@@ -181,7 +181,7 @@ const emit = defineEmits<{
                 <Tooltip v-if="actions.canBan">
                     <TooltipTrigger as-child>
                         <button
-                            class="flex size-9 items-center justify-center rounded-full text-red-100 transition hover:bg-red-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex size-9 items-center justify-center rounded-md text-red-100 transition hover:bg-red-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                             type="button"
                             data-test="ban-participant"
                             :disabled="actionsDisabled"
@@ -198,7 +198,7 @@ const emit = defineEmits<{
             </TooltipProvider>
         </div>
         <div
-            class="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#343434,#1f1f1f_62%)] text-5xl font-semibold text-neutral-400 empty:hidden"
+            class="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#30343b,#151618_62%)] text-5xl font-semibold text-slate-300 empty:hidden"
         >
             <span
                 v-if="!tile.camera && !(tile.screenShare && size === 'share')"
@@ -208,16 +208,16 @@ const emit = defineEmits<{
             </span>
         </div>
         <div
-            class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-black/80 via-black/35 to-transparent p-4 text-white"
+            class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-black/82 via-black/35 to-transparent p-4 text-white"
         >
             <div>
                 <p class="text-sm font-medium drop-shadow">
                     {{ tile.name }}
-                    <span v-if="tile.local" class="text-neutral-300">(вы)</span>
+                    <span v-if="tile.local" class="text-white/65">(вы)</span>
                 </p>
             </div>
             <div class="flex flex-wrap justify-end gap-1.5">
-                <div class="rounded-full bg-black/50 p-2">
+                <div class="rounded-md bg-black/50 p-2">
                     <component
                         :is="tile.microphone ? MicIcon : MicOffIcon"
                         class="size-5"
@@ -225,28 +225,28 @@ const emit = defineEmits<{
                 </div>
                 <div
                     v-if="personallyPinned"
-                    class="rounded-full bg-sky-300 p-2 text-black"
+                    class="rounded-md bg-sky-300 p-2 text-black"
                 >
                     <!-- локально закреплен -->
                     <PinIcon class="size-5" />
                 </div>
                 <div
                     v-if="globallyPinned"
-                    class="rounded-full bg-indigo-300 p-2 text-black"
+                    class="rounded-md bg-indigo-300 p-2 text-black"
                 >
                     <EarthIcon class="size-5" />
                 </div>
                 <div
                     v-if="tile.handRaised"
                     data-test="participant-hand-raised-badge"
-                    class="rounded-full bg-[#fbbc04]/90 p-2 text-black"
+                    class="rounded-md bg-[#fbbc04]/90 p-2 text-black"
                 >
                     <!-- 🤚 -->
                     <HandIcon class="size-5" />
                 </div>
                 <div
                     v-if="tile.screenShare"
-                    class="rounded-full bg-sky-300 p-2 text-black"
+                    class="rounded-md bg-sky-300 p-2 text-black"
                 >
                     <CastIcon class="size-5" />
                 </div>

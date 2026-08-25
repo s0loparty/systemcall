@@ -331,29 +331,29 @@ onMounted(() => {
     <Head :title="`Звонок: ${room.name}`" />
 
     <main
-        class="relative h-dvh overflow-hidden bg-[#202124] text-white antialiased"
+        class="relative h-dvh overflow-hidden bg-[#f7f7fb] text-slate-950 antialiased"
     >
         <div
-            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(138,180,248,0.10),transparent_30%),radial-gradient(circle_at_80%_100%,rgba(129,201,149,0.08),transparent_30%)]"
+            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(124,92,255,0.12),transparent_28%),radial-gradient(circle_at_82%_0%,rgba(59,130,246,0.08),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.08),transparent_30%)]"
         />
         <header
-            class="pointer-events-none fixed inset-x-0 top-0 z-20 bg-linear-to-b from-[#202124]/95 via-[#202124]/72 to-transparent px-5 py-4"
+            class="pointer-events-none fixed inset-x-0 top-0 z-20 bg-linear-to-b from-[#f7f7fb]/96 via-[#f7f7fb]/76 to-transparent px-5 py-4"
         >
             <div class="flex items-center justify-between gap-4">
                 <div class="min-w-0">
                     <h1
-                        class="truncate text-lg font-medium tracking-tight text-white"
+                        class="truncate text-lg font-semibold tracking-tight text-slate-950"
                     >
                         {{ room.name }}
                     </h1>
                 </div>
                 <div
-                    class="flex items-center gap-2 text-xs text-white/70 tabular-nums"
+                    class="flex items-center gap-2 text-xs text-slate-600 tabular-nums"
                 >
                     <span
                         data-test="raised-hands-count"
                         :data-count="raisedHandsCount"
-                        class="rounded-full bg-white/10 px-3 py-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                        class="rounded-md border border-slate-200 bg-white/85 px-3 py-1 shadow-sm"
                     >
                         Руки: {{ raisedHandsCount }}
                     </span>
@@ -391,10 +391,10 @@ onMounted(() => {
 
         <div
             v-if="!connected"
-            class="fixed inset-0 z-10 flex items-center justify-center bg-[#202124]/78 p-4 backdrop-blur-sm"
+            class="fixed inset-0 z-10 flex items-center justify-center bg-white/72 p-4 backdrop-blur-sm"
         >
             <div
-                class="w-full max-w-md rounded-md bg-[#2b2c2f] p-5 shadow-[0_24px_90px_rgba(0,0,0,0.45),inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                class="w-full max-w-md rounded-md border border-slate-200 bg-white p-5 shadow-[0_24px_90px_rgba(15,23,42,0.16)]"
             >
                 <h2 class="text-lg font-semibold">
                     {{
@@ -405,20 +405,20 @@ onMounted(() => {
                               : 'Подготовка соединения'
                     }}
                 </h2>
-                <p class="mt-2 text-sm text-white/60">
+                <p class="mt-2 text-sm text-slate-500">
                     Камеру и микрофон можно оставить выключенными.
                 </p>
 
                 <RoomPasswordPanel
                     v-if="needsPassword"
                     v-model:password="joinRequest.password"
-                    class="mt-4 border-white/10 bg-neutral-950"
+                    class="mt-4"
                     :error="joinRequest.errors.password"
                 />
 
                 <button
                     v-if="needsPassword"
-                    class="mt-4 w-full rounded-2xl bg-white px-5 py-3 text-sm font-medium text-neutral-950 transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    class="mt-4 w-full rounded-md bg-violet-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-60"
                     type="button"
                     :disabled="busy"
                     @click="connectToCall"

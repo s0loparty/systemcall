@@ -9,6 +9,12 @@ import {
     Video,
     VideoOff,
 } from '@lucide/vue';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type Props = {
     microphoneEnabled: boolean;
@@ -34,112 +40,181 @@ const emit = defineEmits<{
 
 <template>
     <nav
-        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-full bg-[#202124]/95 p-2 text-white shadow-[0_18px_70px_rgba(0,0,0,0.42),inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-xl"
+        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 p-2 text-slate-950 shadow-[0_18px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl"
         aria-label="Управление звонком"
     >
-        <button
-            class="group flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-            :class="
-                microphoneEnabled
-                    ? 'bg-[#3c4043] hover:bg-[#4a4d51]'
-                    : 'bg-[#ea4335] hover:bg-[#f05246]'
-            "
-            type="button"
-            data-test="toggle-microphone"
-            :disabled="busy"
-            :aria-label="
-                microphoneEnabled ? 'Выключить микрофон' : 'Включить микрофон'
-            "
-            @click="emit('toggleMicrophone')"
-        >
-            <Mic v-if="props.microphoneEnabled" class="size-5" />
-            <MicOff v-else class="size-5" />
-            <span class="hidden pr-1 sm:inline">
-                {{ microphoneEnabled ? 'Микрофон' : 'Выкл.' }}
-            </span>
-        </button>
+        <TooltipProvider :delay-duration="120">
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <button
+                        class="group flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+                        :class="
+                            microphoneEnabled
+                                ? 'bg-slate-100 text-slate-950 hover:bg-slate-200'
+                                : 'bg-red-500 text-white hover:bg-red-600'
+                        "
+                        type="button"
+                        data-test="toggle-microphone"
+                        :disabled="busy"
+                        :aria-label="
+                            microphoneEnabled
+                                ? 'Выключить микрофон'
+                                : 'Включить микрофон'
+                        "
+                        @click="emit('toggleMicrophone')"
+                    >
+                        <Mic v-if="props.microphoneEnabled" class="size-5" />
+                        <MicOff v-else class="size-5" />
+                        <span class="hidden pr-1 sm:inline">
+                            {{ microphoneEnabled ? 'Микрофон' : 'Выкл.' }}
+                        </span>
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>
+                        {{
+                            microphoneEnabled
+                                ? 'Выключить микрофон'
+                                : 'Включить микрофон'
+                        }}
+                    </p>
+                </TooltipContent>
+            </Tooltip>
 
-        <button
-            class="group flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-            :class="
-                cameraEnabled
-                    ? 'bg-[#3c4043] hover:bg-[#4a4d51]'
-                    : 'bg-[#ea4335] hover:bg-[#f05246]'
-            "
-            type="button"
-            data-test="toggle-camera"
-            :disabled="busy"
-            :aria-label="cameraEnabled ? 'Выключить камеру' : 'Включить камеру'"
-            @click="emit('toggleCamera')"
-        >
-            <Video v-if="props.cameraEnabled" class="size-5" />
-            <VideoOff v-else class="size-5" />
-            <span class="hidden pr-1 sm:inline">
-                {{ cameraEnabled ? 'Камера' : 'Выкл.' }}
-            </span>
-        </button>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <button
+                        class="group flex h-11 min-w-11 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+                        :class="
+                            cameraEnabled
+                                ? 'bg-slate-100 text-slate-950 hover:bg-slate-200'
+                                : 'bg-red-500 text-white hover:bg-red-600'
+                        "
+                        type="button"
+                        data-test="toggle-camera"
+                        :disabled="busy"
+                        :aria-label="
+                            cameraEnabled
+                                ? 'Выключить камеру'
+                                : 'Включить камеру'
+                        "
+                        @click="emit('toggleCamera')"
+                    >
+                        <Video v-if="props.cameraEnabled" class="size-5" />
+                        <VideoOff v-else class="size-5" />
+                        <span class="hidden pr-1 sm:inline">
+                            {{ cameraEnabled ? 'Камера' : 'Выкл.' }}
+                        </span>
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>
+                        {{
+                            cameraEnabled
+                                ? 'Выключить камеру'
+                                : 'Включить камеру'
+                        }}
+                    </p>
+                </TooltipContent>
+            </Tooltip>
 
-        <button
-            class="flex size-11 cursor-pointer items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-            :class="
-                handRaised
-                    ? 'bg-[#fbbc04] text-[#202124] hover:bg-[#ffd15c]'
-                    : 'bg-[#3c4043] hover:bg-[#4a4d51]'
-            "
-            type="button"
-            data-test="toggle-hand"
-            :data-hand-raised="handRaised ? 'true' : 'false'"
-            :disabled="busy"
-            :aria-label="handRaised ? 'Опустить руку' : 'Поднять руку'"
-            @click="emit('toggleHand')"
-        >
-            <Hand class="size-5" />
-        </button>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-11 cursor-pointer items-center justify-center rounded-md transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+                        :class="
+                            handRaised
+                                ? 'bg-amber-300 text-slate-950 hover:bg-amber-200'
+                                : 'bg-slate-100 text-slate-950 hover:bg-slate-200'
+                        "
+                        type="button"
+                        data-test="toggle-hand"
+                        :data-hand-raised="handRaised ? 'true' : 'false'"
+                        :disabled="busy"
+                        :aria-label="
+                            handRaised ? 'Опустить руку' : 'Поднять руку'
+                        "
+                        @click="emit('toggleHand')"
+                    >
+                        <Hand class="size-5" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>{{ handRaised ? 'Опустить руку' : 'Поднять руку' }}</p>
+                </TooltipContent>
+            </Tooltip>
 
-        <button
-            v-if="canShareScreen"
-            class="flex size-11 cursor-pointer items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
-            :class="
-                screenShareEnabled
-                    ? 'bg-[#8ab4f8] text-[#202124] hover:bg-[#a8c7fa]'
-                    : 'bg-[#3c4043] hover:bg-[#4a4d51]'
-            "
-            type="button"
-            data-test="toggle-screen-share"
-            :disabled="busy"
-            :aria-label="
-                screenShareEnabled
-                    ? 'Остановить показ экрана'
-                    : 'Показать экран'
-            "
-            @click="emit('toggleScreenShare')"
-        >
-            <MonitorUp class="size-5" />
-        </button>
+            <Tooltip v-if="canShareScreen">
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-11 cursor-pointer items-center justify-center rounded-md transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+                        :class="
+                            screenShareEnabled
+                                ? 'bg-violet-600 text-white hover:bg-violet-500'
+                                : 'bg-slate-100 text-slate-950 hover:bg-slate-200'
+                        "
+                        type="button"
+                        data-test="toggle-screen-share"
+                        :disabled="busy"
+                        :aria-label="
+                            screenShareEnabled
+                                ? 'Остановить показ экрана'
+                                : 'Показать экран'
+                        "
+                        @click="emit('toggleScreenShare')"
+                    >
+                        <MonitorUp class="size-5" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>
+                        {{
+                            screenShareEnabled
+                                ? 'Остановить показ экрана'
+                                : 'Показать экран'
+                        }}
+                    </p>
+                </TooltipContent>
+            </Tooltip>
 
-        <button
-            class="flex size-11 cursor-pointer items-center justify-center rounded-full transition-[background-color,scale] duration-150 ease-out active:scale-[0.96]"
-            :class="
-                chatOpen
-                    ? 'bg-[#8ab4f8] text-[#202124] hover:bg-[#a8c7fa]'
-                    : 'bg-[#3c4043] hover:bg-[#4a4d51]'
-            "
-            type="button"
-            data-test="toggle-chat"
-            :aria-label="chatOpen ? 'Закрыть чат' : 'Открыть чат'"
-            @click="emit('toggleChat')"
-        >
-            <MessageSquare class="size-5" />
-        </button>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-11 cursor-pointer items-center justify-center rounded-md transition-[background-color,scale] duration-150 ease-out active:scale-[0.96]"
+                        :class="
+                            chatOpen
+                                ? 'bg-violet-600 text-white hover:bg-violet-500'
+                                : 'bg-slate-100 text-slate-950 hover:bg-slate-200'
+                        "
+                        type="button"
+                        data-test="toggle-chat"
+                        :aria-label="chatOpen ? 'Закрыть чат' : 'Открыть чат'"
+                        @click="emit('toggleChat')"
+                    >
+                        <MessageSquare class="size-5" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>{{ chatOpen ? 'Закрыть чат' : 'Открыть чат' }}</p>
+                </TooltipContent>
+            </Tooltip>
 
-        <button
-            class="flex h-11 min-w-14 cursor-pointer items-center justify-center rounded-full bg-[#ea4335] px-4 transition-[background-color,scale] duration-150 ease-out hover:bg-[#f05246] active:scale-[0.96]"
-            type="button"
-            data-test="leave-call"
-            aria-label="Отключиться"
-            @click="emit('leave')"
-        >
-            <PhoneOff class="size-5" />
-        </button>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex h-11 min-w-14 cursor-pointer items-center justify-center rounded-md bg-red-500 px-4 text-white transition-[background-color,scale] duration-150 ease-out hover:bg-red-600 active:scale-[0.96]"
+                        type="button"
+                        data-test="leave-call"
+                        aria-label="Отключиться"
+                        @click="emit('leave')"
+                    >
+                        <PhoneOff class="size-5" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>Отключиться</p>
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
     </nav>
 </template>

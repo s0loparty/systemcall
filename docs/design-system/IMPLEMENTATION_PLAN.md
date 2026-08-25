@@ -355,7 +355,15 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- In-call page redesigned as a light product workspace with hidden connection hooks kept only for tests.
+- Participant grid keeps large screen-share/pinned stage with a scrollable vertical participant rail.
+- Tile ordering now follows `pinned -> raised hand -> active speaker -> original order`.
+- Participant tiles, hover moderation actions, call controls and chat sidebar were aligned with the design system and rounded-md surfaces.
+- Visible call UI no longer exposes Reverb/LiveKit/internal runtime wording.
 
 ## Milestone D8 — Settings & Account
 
@@ -379,7 +387,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Profile, security and appearance settings pages now use shadcn card-based sections aligned with the product design system.
+- Password, 2FA and recovery-code flows remain clear and accessible with existing form actions preserved.
+- Account deletion is visually separated as a destructive red card and keeps the confirmation dialog/password check.
+- Existing settings and two-factor tests pass.
 
 ## Milestone D9 — Polish & Regression
 

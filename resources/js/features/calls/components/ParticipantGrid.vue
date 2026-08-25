@@ -46,6 +46,15 @@ const orderedTiles = computed(() => {
                 return left.tile.handRaised ? -1 : 1;
             }
 
+            const leftActive =
+                left.tile.identity === props.activeSpeakerIdentity;
+            const rightActive =
+                right.tile.identity === props.activeSpeakerIdentity;
+
+            if (leftActive !== rightActive) {
+                return leftActive ? -1 : 1;
+            }
+
             return left.index - right.index;
         })
         .map(({ tile }) => tile);
@@ -96,7 +105,7 @@ const sideTiles = computed(() =>
         :data-test="
             screenShareTile ? 'screen-share-layout' : 'focused-tile-layout'
         "
-        class="mx-auto grid h-full w-full max-w-[96rem] flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2.35fr)_minmax(14rem,0.65fr)] xl:grid-cols-[minmax(0,2.6fr)_minmax(18rem,0.72fr)]"
+        class="mx-auto grid h-full w-full max-w-[96rem] flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2.45fr)_minmax(15rem,0.72fr)] xl:grid-cols-[minmax(0,2.7fr)_minmax(18rem,0.72fr)]"
     >
         <ParticipantTile
             :tile="focusedTile"
@@ -117,7 +126,7 @@ const sideTiles = computed(() =>
 
         <aside
             data-test="participant-side-rail"
-            class="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-[1.75rem] bg-black/10 p-1 pr-2"
+            class="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-md border border-slate-200/80 bg-white/70 p-2 shadow-sm backdrop-blur"
             aria-label="Участники звонка"
         >
             <ParticipantTile
@@ -141,7 +150,7 @@ const sideTiles = computed(() =>
 
             <div
                 v-if="sideTiles.length === 0"
-                class="flex min-h-36 items-center justify-center rounded-3xl bg-[#1f1f1f] px-4 text-center text-sm text-neutral-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                class="flex min-h-36 items-center justify-center rounded-md border border-dashed border-slate-200 bg-slate-50 px-4 text-center text-sm text-slate-500"
             >
                 Остальные участники появятся здесь.
             </div>
@@ -181,7 +190,7 @@ const sideTiles = computed(() =>
 
         <div
             v-if="tiles.length === 0"
-            class="flex min-h-96 items-center justify-center rounded-[1.75rem] bg-[#1f1f1f] text-center text-sm text-neutral-400 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+            class="flex min-h-96 items-center justify-center rounded-md border border-dashed border-slate-200 bg-white/75 text-center text-sm text-slate-500 shadow-sm"
         >
             Войдите в звонок. Камеру и микрофон можно оставить выключенными.
         </div>

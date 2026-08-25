@@ -2,10 +2,16 @@
 import { Form } from '@inertiajs/vue3';
 import { ShieldCheck } from '@lucide/vue';
 import { onUnmounted, ref } from 'vue';
-import Heading from '@/components/Heading.vue';
 import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import { disable, enable } from '@/routes/two-factor';
 
@@ -29,59 +35,85 @@ onUnmounted(() => clearTwoFactorAuthData());
 
 <template>
     <div v-if="canManageTwoFactor" class="space-y-6">
-        <Heading
-            variant="small"
-            title="Двухфакторная аутентификация"
-            description="Управляйте настройками двухфакторной аутентификации"
-        />
-
-        <div
-            v-if="!twoFactorEnabled"
-            class="flex flex-col items-start justify-start space-y-4"
+        <Card
+            class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm"
         >
-            <p class="text-sm text-muted-foreground">
-                Когда вы включите двухфакторную аутентификацию, при входе
-                потребуется безопасный код. Его можно получить в TOTP-приложении
-                на телефоне.
-            </p>
-
-            <div>
-                <Button v-if="hasSetupData" @click="showSetupModal = true">
-                    <ShieldCheck />Продолжить настройку
-                </Button>
-                <Form
-                    v-else
-                    v-bind="enable.form()"
-                    @success="showSetupModal = true"
-                    #default="{ processing }"
+            <CardHeader>
+                <CardTitle class="flex items-center gap-2">
+                    <ShieldCheck class="size-5 text-violet-600" />
+                    Двухфакторная аутентификация
+                </CardTitle>
+                <CardDescription>
+                    Дополнительный одноразовый код защищает вход, даже если
+                    пароль стал известен посторонним.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div
+                    v-if="!twoFactorEnabled"
+                    class="flex flex-col items-start justify-start gap-4"
                 >
-                    <Button type="submit" :disabled="processing">
-                        Включить 2FA
-                    </Button>
-                </Form>
-            </div>
-        </div>
-
-        <div v-else class="flex flex-col items-start justify-start space-y-4">
-            <p class="text-sm text-muted-foreground">
-                При входе потребуется безопасный одноразовый код из
-                TOTP-приложения на телефоне.
-            </p>
-
-            <div class="relative inline">
-                <Form v-bind="disable.form()" #default="{ processing }">
-                    <Button
-                        variant="destructive"
-                        type="submit"
-                        :disabled="processing"
+                    <div
+                        class="rounded-md border border-violet-100 bg-violet-50 p-4 text-sm text-violet-950"
                     >
-                        Отключить 2FA
-                    </Button>
-                </Form>
-            </div>
+                        Включите 2FA и подключите TOTP-приложение на телефоне.
+                        После настройки вход будет подтверждаться безопасным
+                        кодом.
+                    </div>
 
-            <TwoFactorRecoveryCodes />
-        </div>
+                    <div>
+                        <Button
+                            v-if="hasSetupData"
+                            class="rounded-md"
+                            @click="showSetupModal = true"
+                        >
+                            <ShieldCheck />Продолжить настройку
+                        </Button>
+                        <Form
+                            v-else
+                            v-bind="enable.form()"
+                            @success="showSetupModal = true"
+                            #default="{ processing }"
+                        >
+                            <Button
+                                class="rounded-md"
+                                type="submit"
+                                :disabled="processing"
+                            >
+                                Включить 2FA
+                            </Button>
+                        </Form>
+                    </div>
+                </div>
+
+                <div
+                    v-else
+                    class="flex flex-col items-start justify-start gap-4"
+                >
+                    <div
+                        class="rounded-md border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950"
+                    >
+                        2FA включена. При входе потребуется одноразовый код из
+                        приложения-аутентификатора.
+                    </div>
+
+                    <div class="relative inline">
+                        <Form v-bind="disable.form()" #default="{ processing }">
+                            <Button
+                                class="rounded-md"
+                                variant="destructive"
+                                type="submit"
+                                :disabled="processing"
+                            >
+                                Отключить 2FA
+                            </Button>
+                        </Form>
+                    </div>
+
+                    <TwoFactorRecoveryCodes />
+                </div>
+            </CardContent>
+        </Card>
 
         <TwoFactorSetupModal
             v-model:isOpen="showSetupModal"
