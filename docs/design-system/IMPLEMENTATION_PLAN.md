@@ -218,7 +218,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Dashboard redesigned as product overview with hero, feature cards and quick actions.
+- Primary route to rooms is visible in hero and quick-action section.
+- Stack/local/debug copy removed from visible dashboard UI.
+- Used existing shadcn `Card`, `Button` and `Badge`; no new component dependency needed.
 
 ## Milestone D4 — Rooms Index
 
