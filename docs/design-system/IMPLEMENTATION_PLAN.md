@@ -416,7 +416,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Visible product copy audit completed for redesigned frontend pages; remaining technical strings are hidden test hooks, comments or docs/tests.
+- Accessibility polish added for appearance controls and 2FA/recovery-code controls.
+- Removed unused pre-redesign call UI panels that exposed internal realtime/media wording.
+- Responsive/product surface checks covered by existing browser smoke and frontend build/type/lint/format checks.
 
 ## Working Checklist For Each Milestone
 

@@ -53,10 +53,22 @@ onMounted(async () => {
             <div
                 class="flex flex-col gap-3 select-none sm:flex-row sm:items-center sm:justify-between"
             >
-                <Button @click="toggleRecoveryCodesVisibility" class="w-fit">
+                <Button
+                    type="button"
+                    @click="toggleRecoveryCodesVisibility"
+                    class="w-fit"
+                >
+                    <span class="sr-only">
+                        {{
+                            isRecoveryCodesVisible
+                                ? 'Скрыть коды восстановления'
+                                : 'Показать коды восстановления'
+                        }}
+                    </span>
                     <component
                         :is="isRecoveryCodesVisible ? EyeOff : Eye"
                         class="size-4"
+                        aria-hidden="true"
                     />
                     {{ isRecoveryCodesVisible ? 'Скрыть' : 'Показать' }}
                     коды восстановления
