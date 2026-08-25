@@ -318,7 +318,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Waiting page redesigned with product room header, selected-device cards and matching device preview panel.
+- Waiting status states now use clear pending/approved/rejected cards without internal runtime wording.
+- Moderator panel redesigned as entry review queue with existing approve/reject hooks preserved.
+- Other waiting participants shown as compact product cards.
 
 ## Milestone D7 — Call Experience
 

@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { ArrowRight, Camera, Clock3, Mic, Users } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import WaitingRoomModeratorPanel from '@/features/calls/components/WaitingRoomModeratorPanel.vue';
@@ -71,7 +81,9 @@ function deviceLabel(
     );
 }
 
-function goToCall(): void {
+async function goToCall(): Promise<void> {
+    await devices.stopPreview();
+
     router.visit(
         showCall.url(props.room.public_id, {
             query: deviceQuery.toQuery(devices.selectedDevices.value),
@@ -90,61 +102,93 @@ onMounted(() => {
     <Head :title="`Ожидание: ${room.name}`" />
 
     <main
-        class="min-h-dvh bg-[#f8fafd] bg-[radial-gradient(circle_at_18%_0%,rgba(251,188,4,0.22),transparent_34%),radial-gradient(circle_at_84%_100%,rgba(138,180,248,0.22),transparent_32%)] p-4 text-neutral-950 antialiased dark:bg-[#202124]"
+        class="relative min-h-dvh overflow-hidden bg-[#fbfaff] p-4 text-slate-950 antialiased sm:p-6"
     >
+        <div
+            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(251,191,36,0.18),transparent_30%),radial-gradient(circle_at_84%_6%,rgba(124,92,255,0.14),transparent_24%),radial-gradient(circle_at_50%_88%,rgba(16,185,129,0.10),transparent_24%)]"
+        />
+
         <div
             data-test="application-realtime-panel"
             :data-echo-state="realtime.echoConnectionStatus.value"
             class="hidden"
         />
 
-        <div class="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[1fr_24rem]">
+        <div
+            class="relative mx-auto grid max-w-6xl gap-5 lg:grid-cols-[minmax(0,1fr)_24rem]"
+        >
             <section class="grid gap-5">
-                <div
-                    class="rounded-md bg-white/92 p-6 shadow-[0_24px_90px_rgba(60,64,67,0.16),inset_0_0_0_1px_rgba(60,64,67,0.08)] backdrop-blur dark:bg-[#2b2c2f] dark:text-white"
+                <Card
+                    class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-2xl shadow-violet-100/60 backdrop-blur"
                 >
-                    <p class="text-sm font-medium text-amber-600">
-                        Зал ожидания
-                    </p>
-                    <h1
-                        class="mt-2 text-3xl font-semibold tracking-tight text-neutral-950 dark:text-white"
-                    >
-                        {{ room.name }}
-                    </h1>
-                    <p
-                        class="mt-3 text-sm leading-6 text-neutral-500 dark:text-neutral-400"
-                    >
-                        Модератор должен подтвердить вход. Пока вы ожидаете,
-                        можно проверить выбранные устройства.
-                    </p>
+                    <CardHeader>
+                        <div
+                            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+                        >
+                            <div>
+                                <Badge
+                                    variant="outline"
+                                    class="rounded-md border-amber-100 bg-amber-50 px-3 py-1.5 text-amber-700"
+                                >
+                                    <Clock3 class="size-3.5" />
+                                    Зал ожидания
+                                </Badge>
+                                <CardTitle
+                                    class="mt-4 text-3xl tracking-tight md:text-4xl"
+                                >
+                                    {{ room.name }}
+                                </CardTitle>
+                                <CardDescription
+                                    class="mt-2 max-w-2xl text-base leading-7"
+                                >
+                                    Модератор проверит заявку и откроет доступ к
+                                    комнате. Пока можно изменить устройства и
+                                    убедиться, что всё готово.
+                                </CardDescription>
+                            </div>
 
-                    <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                            <div
+                                class="flex size-14 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-violet-600 text-white shadow-lg shadow-amber-100"
+                            >
+                                <Users class="size-6" />
+                            </div>
+                        </div>
+                    </CardHeader>
+
+                    <CardContent class="grid gap-3 sm:grid-cols-2">
                         <div
                             data-test="selected-audio-device"
-                            class="rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900"
+                            class="rounded-md border border-slate-200 bg-slate-50 p-4"
                         >
-                            <p class="text-xs text-neutral-500">Микрофон</p>
+                            <Mic class="size-5 text-emerald-600" />
+                            <p class="mt-3 text-xs font-medium text-slate-500">
+                                Микрофон
+                            </p>
                             <p
-                                class="mt-1 text-sm font-medium text-neutral-950 dark:text-white"
+                                class="mt-1 text-sm font-semibold text-slate-950"
                             >
                                 {{ selectedAudioLabel }}
                             </p>
                         </div>
                         <div
                             data-test="selected-video-device"
-                            class="rounded-2xl bg-neutral-100 p-4 dark:bg-neutral-900"
+                            class="rounded-md border border-slate-200 bg-slate-50 p-4"
                         >
-                            <p class="text-xs text-neutral-500">Камера</p>
+                            <Camera class="size-5 text-violet-600" />
+                            <p class="mt-3 text-xs font-medium text-slate-500">
+                                Камера
+                            </p>
                             <p
-                                class="mt-1 text-sm font-medium text-neutral-950 dark:text-white"
+                                class="mt-1 text-sm font-semibold text-slate-950"
                             >
                                 {{ selectedVideoLabel }}
                             </p>
                         </div>
-                    </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 <WaitingRoomStatusPanel :entry="currentWaitingRoomEntry" />
+
                 <CallError
                     v-if="rejected"
                     message="Заявка отклонена. Обратитесь к модератору комнаты."
@@ -170,60 +214,64 @@ onMounted(() => {
                     @preview-host="devices.setPreviewHost"
                 />
 
-                <button
+                <Button
                     v-if="currentWaitingRoomEntry?.status === 'approved'"
-                    class="w-full rounded-2xl bg-neutral-950 px-5 py-3 text-sm font-medium text-white transition hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                    class="h-11 w-full rounded-md bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                     type="button"
                     @click="goToCall"
                 >
                     Войти в звонок
-                </button>
+                    <ArrowRight class="size-4" />
+                </Button>
             </section>
 
             <aside class="grid content-start gap-4">
-                <section
+                <Card
                     data-test="other-waiting-list"
-                    class="rounded-3xl border border-neutral-200 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950"
+                    class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
                 >
-                    <div class="flex items-center justify-between gap-3">
-                        <h2
-                            class="text-sm font-medium text-neutral-950 dark:text-white"
-                        >
-                            Другие ожидающие
-                        </h2>
-                        <span
-                            class="rounded-full bg-neutral-100 px-2.5 py-1 text-xs text-neutral-600 dark:bg-neutral-900 dark:text-neutral-300"
-                        >
-                            {{ otherWaitingEntries.length }}
-                        </span>
-                    </div>
-
-                    <p
-                        v-if="otherWaitingEntries.length === 0"
-                        class="mt-3 text-sm text-neutral-500 dark:text-neutral-400"
+                    <CardHeader
+                        class="flex flex-row items-start justify-between gap-3"
                     >
-                        Пока больше никто не ожидает.
-                    </p>
+                        <div>
+                            <CardTitle class="text-base">
+                                Другие ожидающие
+                            </CardTitle>
+                            <CardDescription>
+                                Участники, которые тоже ждут решения.
+                            </CardDescription>
+                        </div>
+                        <Badge variant="secondary" class="rounded-md">
+                            {{ otherWaitingEntries.length }}
+                        </Badge>
+                    </CardHeader>
 
-                    <ol v-else class="mt-3 grid gap-2">
-                        <li
-                            v-for="entry in otherWaitingEntries"
-                            :key="entry.id"
-                            data-test="other-waiting-entry"
-                            :data-entry-id="entry.id"
-                            class="rounded-2xl bg-neutral-100 p-3 text-sm dark:bg-neutral-900"
+                    <CardContent>
+                        <p
+                            v-if="otherWaitingEntries.length === 0"
+                            class="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500"
                         >
-                            <p
-                                class="font-medium text-neutral-950 dark:text-white"
+                            Пока больше никто не ожидает.
+                        </p>
+
+                        <ol v-else class="grid gap-2">
+                            <li
+                                v-for="entry in otherWaitingEntries"
+                                :key="entry.id"
+                                data-test="other-waiting-entry"
+                                :data-entry-id="entry.id"
+                                class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm"
                             >
-                                {{ entry.display_name }}
-                            </p>
-                            <p class="text-xs text-neutral-500">
-                                {{ entry.guest ? 'Гость' : 'Пользователь' }}
-                            </p>
-                        </li>
-                    </ol>
-                </section>
+                                <p class="font-semibold text-slate-950">
+                                    {{ entry.display_name }}
+                                </p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ entry.guest ? 'Гость' : 'Пользователь' }}
+                                </p>
+                            </li>
+                        </ol>
+                    </CardContent>
+                </Card>
 
                 <WaitingRoomModeratorPanel
                     v-if="
