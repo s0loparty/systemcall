@@ -53,6 +53,37 @@ it('lets room owners promote and confirm destructive tile actions', function () 
     expect($participantMember->fresh()->left_at)->not->toBeNull();
 });
 
+it('keeps owner kick and ban tile actions visible after refreshing the call page', function () {
+    [$owner, $participant, $room, , $participantMember] = prepareParticipantModerationRoom();
+    $callUrl = route('rooms.call.show', [
+        'room' => $room,
+        '_e2e_media' => 'fake',
+    ], false);
+
+    $this->actingAs($owner);
+    $ownerPage = visit($callUrl)
+        ->wait(3)
+        ->assertScript(pmConnectionState(), 'connected');
+
+    $this->actingAs($participant);
+    visit($callUrl)
+        ->wait(3)
+        ->assertScript(pmConnectionState(), 'connected')
+        ->assertNoJavaScriptErrors();
+
+    $ownerPage->wait(3)
+        ->assertScript(pmTileCount(), 2)
+        ->assertScript(pmTileActionCount($participantMember->livekit_identity, 'kick-participant'), 1)
+        ->assertScript(pmTileActionCount($participantMember->livekit_identity, 'ban-participant'), 1)
+        ->refresh()
+        ->wait(5)
+        ->assertScript(pmConnectionState(), 'connected')
+        ->assertScript(pmTileCount(), 2)
+        ->assertScript(pmTileActionCount($participantMember->livekit_identity, 'kick-participant'), 1)
+        ->assertScript(pmTileActionCount($participantMember->livekit_identity, 'ban-participant'), 1)
+        ->assertNoJavaScriptErrors();
+});
+
 /**
  * @return array{User, User, Room, RoomMember, RoomMember}
  */
@@ -102,6 +133,11 @@ function pmTileCount(): string
 function pmClickTileAction(string $identity, string $action): string
 {
     return '(() => { document.querySelector('.json_encode(pmTileSelector($identity).' [data-test='.$action.']').').click(); return true; })()';
+}
+
+function pmTileActionCount(string $identity, string $action): string
+{
+    return 'document.querySelectorAll('.json_encode(pmTileSelector($identity).' [data-test='.$action.']').').length';
 }
 
 function pmTileSelector(string $identity): string
