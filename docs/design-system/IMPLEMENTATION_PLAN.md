@@ -122,7 +122,13 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Existing shadcn component inventory confirmed.
+- Gap list confirmed: install `switch`, `tabs`, `textarea`, `popover` or `command` only when milestone needs them.
+- No runtime UI behavior changed in D0.
 
 ## Milestone D1 — App Shell & Navigation
 
@@ -365,4 +371,3 @@ Status:
 7. Run frontend checks.
 8. Update this plan status.
 9. Commit changes when requested.
-
