@@ -188,7 +188,14 @@ Acceptance criteria:
 
 Status:
 
-- [ ] Pending
+- [x] Completed
+
+Notes:
+
+- Public welcome page redesigned as light SaaS landing with product-facing copy.
+- Visible public copy no longer exposes local/runtime implementation terms.
+- Auth layouts now share the same Systemcall visual direction.
+- Login, registration, password reset, password confirmation, email verification and 2FA form behavior kept unchanged.
 
 ## Milestone D3 — Dashboard
 

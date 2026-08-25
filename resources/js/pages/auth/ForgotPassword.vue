@@ -12,7 +12,7 @@ import { email } from '@/routes/password';
 defineOptions({
     layout: {
         title: 'Восстановление пароля',
-        description: 'Введите email, чтобы получить ссылку для сброса пароля',
+        description: 'Отправим ссылку для безопасного возвращения в аккаунт.',
     },
 });
 
@@ -48,7 +48,7 @@ defineProps<{
 
             <div class="my-6 flex items-center justify-start">
                 <Button
-                    class="w-full"
+                    class="w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                     :disabled="processing"
                     data-test="email-password-reset-link-button"
                 >

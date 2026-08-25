@@ -15,7 +15,7 @@ import { request } from '@/routes/password';
 defineOptions({
     layout: {
         title: 'Вход в аккаунт',
-        description: 'Введите email и пароль, чтобы войти',
+        description: 'Откройте свои комнаты и продолжите работу со встречами.',
     },
 });
 
@@ -89,7 +89,7 @@ defineProps<{
 
             <Button
                 type="submit"
-                class="mt-4 w-full"
+                class="mt-4 w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                 :tabindex="4"
                 :disabled="processing"
                 data-test="login-button"

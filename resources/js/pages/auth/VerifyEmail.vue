@@ -9,8 +9,7 @@ import { send } from '@/routes/verification';
 defineOptions({
     layout: {
         title: 'Подтверждение email',
-        description:
-            'Подтвердите email по ссылке, которую мы только что отправили.',
+        description: 'Проверьте почту, чтобы завершить настройку аккаунта.',
     },
 });
 
@@ -35,7 +34,10 @@ defineProps<{
         class="space-y-6 text-center"
         v-slot="{ processing }"
     >
-        <Button :disabled="processing" variant="secondary">
+        <Button
+            :disabled="processing"
+            class="bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
+        >
             <Spinner v-if="processing" />
             Отправить письмо повторно
         </Button>

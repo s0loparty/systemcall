@@ -11,7 +11,7 @@ defineOptions({
     layout: {
         title: 'Подтверждение пароля',
         description:
-            'Это защищенная область приложения. Подтвердите пароль, чтобы продолжить.',
+            'Подтвердите доступ перед выполнением защищенного действия.',
     },
 });
 </script>
@@ -41,7 +41,7 @@ defineOptions({
 
             <div class="flex items-center">
                 <Button
-                    class="w-full"
+                    class="w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                     :disabled="processing"
                     data-test="confirm-password-button"
                 >

@@ -12,7 +12,7 @@ import { update } from '@/routes/password';
 defineOptions({
     layout: {
         title: 'Сброс пароля',
-        description: 'Введите новый пароль',
+        description: 'Задайте новый пароль и вернитесь к своим комнатам.',
     },
 });
 
@@ -78,7 +78,7 @@ const inputEmail = ref(props.email);
 
             <Button
                 type="submit"
-                class="mt-4 w-full"
+                class="mt-4 w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                 :disabled="processing"
                 data-test="reset-password-button"
             >

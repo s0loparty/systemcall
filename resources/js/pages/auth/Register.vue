@@ -17,7 +17,7 @@ defineProps<{
 defineOptions({
     layout: {
         title: 'Создание аккаунта',
-        description: 'Введите данные, чтобы создать аккаунт',
+        description: 'Создайте рабочее пространство для комнат и приглашений.',
     },
 });
 </script>
@@ -91,7 +91,7 @@ defineOptions({
 
             <Button
                 type="submit"
-                class="mt-2 w-full"
+                class="mt-2 w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                 tabindex="5"
                 :disabled="processing"
                 data-test="register-user-button"
