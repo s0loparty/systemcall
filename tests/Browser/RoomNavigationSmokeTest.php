@@ -61,7 +61,7 @@ it('lets an authenticated user create a room and navigate the call flow before m
         ->click('Создать и войти')
         ->assertPathBeginsWith('/rooms/')
         ->assertPathEndsWith('/prepare')
-        ->assertSee('Подготовка к звонку')
+        ->assertSee('Готовы войти?')
         ->assertSee($roomName)
         ->assertSee('Микрофон')
         ->assertSee('Камера')

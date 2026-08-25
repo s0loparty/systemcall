@@ -131,7 +131,7 @@ test('room owner active memberships are normalized after stale participant role 
 
     $this->actingAs($owner)
         ->postJson(route('rooms.memberships.store', $room))
-        ->assertOk()
+        ->assertCreated()
         ->assertJsonPath('member.id', $member->id)
         ->assertJsonPath('member.role', RoomRole::Owner->value);
 
