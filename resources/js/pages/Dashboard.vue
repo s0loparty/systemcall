@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
+
 import {
     ArrowRight,
     CheckCircle2,
-    Clock3,
     MessageSquare,
-    Plus,
     ShieldCheck,
-    Sparkles,
     Users,
     Video,
 } from '@lucide/vue';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +19,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+
 import { dashboard } from '@/routes';
+
 import { index as roomsIndex } from '@/routes/rooms';
 
 defineOptions({
@@ -54,60 +55,35 @@ const featureCards = [
             'Используйте чат, поднятые руки, закрепления участников и показ экрана.',
     },
 ];
-
-const quickActions = [
-    {
-        icon: Plus,
-        title: 'Создать комнату',
-        description: 'Откройте раздел комнат и запустите новую встречу.',
-    },
-    {
-        icon: Users,
-        title: 'Пригласить гостей',
-        description:
-            'Поделитесь ссылкой и пустите участников через подготовку.',
-    },
-    {
-        icon: Clock3,
-        title: 'Проверить встречу',
-        description:
-            'Зайдите в комнату заранее и проверьте камеру с микрофоном.',
-    },
-];
 </script>
 
 <template>
     <Head title="Панель" />
 
     <div class="p-3 sm:p-5">
-        <div class="mx-auto grid max-w-7xl gap-5">
-            <Card
-                class="relative overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-            >
-                <div
-                    class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_10%,rgba(124,92,255,0.18),transparent_30%),radial-gradient(circle_at_90%_70%,rgba(59,130,246,0.12),transparent_24%)]"
-                />
-
+        <div class="pt-5">
+            <!-- Hero -->
+            <Card class="border-border/60 bg-white/70 shadow-sm">
                 <CardContent
-                    class="relative grid gap-8 p-6 md:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
+                    class="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
                 >
                     <div>
                         <Badge
                             variant="outline"
-                            class="rounded-md border-emerald-100 bg-emerald-50 px-3 py-1.5 text-emerald-700"
+                            class="gap-1.5 border-border/60 bg-white px-3 py-1.5"
                         >
                             <span class="size-2 rounded-full bg-emerald-500" />
                             Готово к встречам
                         </Badge>
 
                         <h1
-                            class="mt-5 max-w-3xl text-4xl font-semibold tracking-tight text-balance text-slate-950 md:text-5xl"
+                            class="mt-5 max-w-3xl text-3xl font-light tracking-tight text-balance sm:text-4xl"
                         >
                             Управляйте групповыми звонками из одного места.
                         </h1>
 
                         <p
-                            class="mt-4 max-w-2xl text-base leading-7 text-slate-600"
+                            class="mt-4 max-w-2xl text-base leading-7 text-muted-foreground"
                         >
                             Создавайте комнаты, приглашайте команду и гостей,
                             управляйте доступом и проводите встречи без сложной
@@ -117,9 +93,12 @@ const quickActions = [
                         <div class="mt-7 flex flex-wrap gap-3">
                             <Button
                                 as-child
-                                class="h-11 rounded-md bg-gradient-to-r from-violet-600 to-blue-600 px-5 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
+                                class="h-11 rounded-full bg-neutral-900 px-6 text-white hover:bg-neutral-700"
                             >
-                                <Link :href="roomsIndex()">
+                                <Link
+                                    :href="roomsIndex()"
+                                    class="flex items-center gap-2"
+                                >
                                     Открыть комнаты
                                     <ArrowRight class="size-4" />
                                 </Link>
@@ -127,127 +106,169 @@ const quickActions = [
                         </div>
                     </div>
 
+                    <!-- Командная комната -->
                     <div
-                        class="rounded-md border border-slate-200 bg-white/90 p-4 shadow-lg shadow-violet-100/60"
+                        class="rounded-xl border border-border/60 bg-white p-4 shadow-sm"
                     >
-                        <div
-                            class="rounded-md bg-gradient-to-br from-slate-950 to-slate-800 p-5 text-white"
-                        >
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <p class="font-semibold">
-                                        Командная комната
-                                    </p>
-                                    <p class="mt-1 text-sm text-slate-300">
-                                        звонок для команды и гостей
-                                    </p>
-                                </div>
-                                <Badge
-                                    class="rounded-md bg-emerald-400 text-slate-950 hover:bg-emerald-400"
-                                >
-                                    активна
-                                </Badge>
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="font-semibold">Командная комната</p>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    звонок для команд и гостей
+                                </p>
                             </div>
+                            <Badge
+                                class="rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                            >
+                                активна
+                            </Badge>
+                        </div>
 
-                            <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                                <div
-                                    class="rounded-md border border-white/10 bg-white/10 p-4"
+                        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                            <div
+                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3"
+                            >
+                                <Users class="size-4 text-muted-foreground" />
+                                <span class="text-sm font-medium"
+                                    >Участники готовы</span
                                 >
-                                    <Users class="size-5 text-violet-200" />
-                                    <p class="mt-8 text-sm font-semibold">
-                                        Участники готовы
-                                    </p>
+                            </div>
+                            <div
+                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3"
+                            >
+                                <CheckCircle2 class="size-4 text-emerald-500" />
+                                <span class="text-sm font-medium"
+                                    >Доступ настроен</span
+                                >
+                            </div>
+                        </div>
+
+                        <div class="mt-4 flex items-center gap-3">
+                            <div class="flex -space-x-2">
+                                <div
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                >
+                                    А
                                 </div>
                                 <div
-                                    class="rounded-md border border-white/10 bg-white/10 p-4"
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
                                 >
-                                    <CheckCircle2
-                                        class="size-5 text-emerald-200"
-                                    />
-                                    <p class="mt-8 text-sm font-semibold">
-                                        Доступ настроен
-                                    </p>
+                                    М
+                                </div>
+                                <div
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                >
+                                    К
+                                </div>
+                                <div
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                >
+                                    +3
                                 </div>
                             </div>
+                            <a
+                                href="#"
+                                class="text-sm font-medium text-foreground hover:underline"
+                                >Присоединиться →</a
+                            >
                         </div>
                     </div>
                 </CardContent>
             </Card>
 
-            <section class="grid gap-4 md:grid-cols-3">
+            <!-- Features -->
+            <section class="mt-6 grid gap-4 md:grid-cols-3">
                 <Card
                     v-for="feature in featureCards"
                     :key="feature.title"
-                    class="rounded-md border-slate-200/80 bg-white/90 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-100"
+                    class="border-border/60 bg-white/70 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
                 >
                     <CardHeader>
                         <div
-                            class="flex size-11 items-center justify-center rounded-md bg-violet-50 text-violet-600"
+                            class="flex size-11 items-center justify-center rounded-full border border-border/60 bg-white"
                         >
-                            <component :is="feature.icon" class="size-5" />
+                            <component
+                                :is="feature.icon"
+                                class="size-5 text-foreground"
+                            />
                         </div>
-                        <CardTitle class="text-lg">
+                        <CardTitle class="text-lg font-semibold">
                             {{ feature.title }}
                         </CardTitle>
-                        <CardDescription class="leading-6">
+                        <CardDescription
+                            class="leading-6 text-muted-foreground"
+                        >
                             {{ feature.description }}
                         </CardDescription>
                     </CardHeader>
                 </Card>
             </section>
 
-            <Card class="rounded-md border-slate-200/80 bg-white/90 shadow-sm">
-                <CardHeader
-                    class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+            <!-- Call to action -->
+            <div
+                class="mt-6 rounded-xl border border-border/60 bg-neutral-900 p-6 text-white"
+            >
+                <div
+                    class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                     <div>
-                        <CardTitle>Быстрые действия</CardTitle>
-                        <CardDescription>
-                            Основной сценарий начинается в разделе комнат.
-                        </CardDescription>
+                        <h3 class="text-lg font-light">Готовы начать?</h3>
+                        <p
+                            class="mt-1 text-sm text-neutral-300 leading-relaxed"
+                        >
+                            Создайте комнату, настройте доступ и отправьте
+                            ссылку участникам.
+                        </p>
                     </div>
-                    <Button variant="outline" as-child class="rounded-md">
-                        <Link :href="roomsIndex()">
-                            Перейти к комнатам
-                            <ArrowRight class="size-4" />
-                        </Link>
-                    </Button>
-                </CardHeader>
-
-                <CardContent class="grid gap-3 md:grid-cols-3">
-                    <article
-                        v-for="action in quickActions"
-                        :key="action.title"
-                        class="rounded-md border border-slate-200 bg-slate-50/80 p-4"
+                    <Link
+                        :href="roomsIndex()"
+                        class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
                     >
-                        <div class="flex items-start gap-3">
-                            <div
-                                class="flex size-10 shrink-0 items-center justify-center rounded-md bg-white text-slate-700 shadow-sm"
-                            >
-                                <component :is="action.icon" class="size-5" />
-                            </div>
-                            <div>
-                                <h2 class="font-semibold text-slate-950">
-                                    {{ action.title }}
-                                </h2>
-                                <p
-                                    class="mt-1 text-sm leading-6 text-slate-600"
-                                >
-                                    {{ action.description }}
-                                </p>
-                            </div>
-                        </div>
-                    </article>
-                </CardContent>
-            </Card>
-
-            <div
-                class="rounded-md border border-slate-200/80 bg-white/70 p-4 text-sm leading-6 text-slate-500"
-            >
-                <Sparkles class="mr-2 inline size-4 text-violet-500" />
-                Создайте комнату, настройте доступ и отправьте ссылку
-                участникам.
+                        Создать комнату
+                        <ArrowRight class="size-4" />
+                    </Link>
+                </div>
             </div>
+
+            <!-- Footer -->
+            <footer class="mt-8 border-t border-border/60 pt-6">
+                <div
+                    class="flex flex-col items-start justify-between gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center"
+                >
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1.5">
+                            <span
+                                class="inline-block size-2 rounded-full bg-emerald-500"
+                            ></span>
+                            онлайн
+                        </span>
+                        <span>•</span>
+                        <span>готово для команд</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <a
+                            href="#"
+                            class="transition hover:text-foreground hover:underline underline-offset-2"
+                            >Помощь</a
+                        >
+                        <a
+                            href="#"
+                            class="transition hover:text-foreground hover:underline underline-offset-2"
+                            >API</a
+                        >
+                        <a
+                            href="#"
+                            class="transition hover:text-foreground hover:underline underline-offset-2"
+                            >Блог</a
+                        >
+                    </div>
+                </div>
+                <div
+                    class="mt-4 text-center text-[11px] text-muted-foreground/60"
+                >
+                    Systemcall · групповые видеокомнаты · минимализм
+                </div>
+            </footer>
         </div>
     </div>
 </template>

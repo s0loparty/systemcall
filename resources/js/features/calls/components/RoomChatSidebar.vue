@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useHttp } from '@inertiajs/vue3';
+
 import { X } from '@lucide/vue';
+
 import { store as storeMessage } from '@/routes/rooms/messages';
+
 import type { RoomMessageSummary } from '../types';
 
 type Props = {

@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import { Camera, Mic, VideoOff } from '@lucide/vue';
+
+import { computed } from 'vue';
+
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+
+import type { AcceptableValue } from 'reka-ui';
 
 type Props = {
     audioInputs: MediaDeviceInfo[];
@@ -13,135 +25,190 @@ type Props = {
     error: string | null;
 };
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const emit = defineEmits<{
     'update-audio-input': [deviceId: string];
     'update-video-input': [deviceId: string];
     'preview-host': [element: HTMLElement | null];
 }>();
+
+const disabledDeviceValue = 'none';
+const selectedAudioInputValue = computed(
+    () => props.selectedAudioInputId || disabledDeviceValue,
+);
+const selectedVideoInputValue = computed(
+    () => props.selectedVideoInputId || disabledDeviceValue,
+);
+const selectableAudioInputs = computed(() =>
+    props.audioInputs.filter((device) => device.deviceId !== ''),
+);
+const selectableVideoInputs = computed(() =>
+    props.videoInputs.filter((device) => device.deviceId !== ''),
+);
+
+function normalizeDeviceValue(value: AcceptableValue): string {
+    if (typeof value !== 'string' || value === disabledDeviceValue) {
+        return '';
+    }
+
+    return value;
+}
+
+function updateAudioInput(value: AcceptableValue): void {
+    emit('update-audio-input', normalizeDeviceValue(value));
+}
+
+function updateVideoInput(value: AcceptableValue): void {
+    emit('update-video-input', normalizeDeviceValue(value));
+}
 </script>
 
 <template>
-    <Card
-        class="overflow-hidden rounded-md border-slate-200/80 bg-white/95 shadow-sm"
+    <section
+        data-test="device-setup-panel"
+        :data-audio-input-count="selectableAudioInputs.length"
+        :data-video-input-count="selectableVideoInputs.length"
+        :data-selected-audio-input-id="selectedAudioInputId"
+        :data-selected-video-input-id="selectedVideoInputId"
     >
-        <CardContent class="grid gap-8 p-6 lg:grid-cols-[1fr_0.95fr]">
-            <div class="grid content-start gap-6">
+        <Card class="border-border/60 bg-white/70 shadow-sm p-0">
+            <CardContent class="p-6 sm:p-8 space-y-6">
+                <!-- Header -->
                 <div>
-                    <CardTitle>Устройства</CardTitle>
-                    <p class="mt-2 max-w-md text-sm leading-6 text-slate-600">
+                    <CardTitle class="text-lg font-semibold"
+                        >Устройства</CardTitle
+                    >
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Камера и микрофон необязательны. Можно войти без них и
                         включить позже.
                     </p>
                 </div>
 
+                <!-- Device selects -->
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="grid gap-2">
+                    <!-- Microphone -->
+                    <div class="space-y-1.5">
                         <Label
-                            for="audio-input-select"
-                            class="flex items-center gap-3 text-sm font-semibold"
+                            class="text-sm font-medium flex items-center gap-2"
                         >
-                            <span
-                                class="flex size-8 items-center justify-center rounded-md bg-emerald-50 text-emerald-600"
-                            >
-                                <Mic class="size-4" />
-                            </span>
+                            <Mic class="h-4 w-4" />
                             Микрофон
                         </Label>
-                        <select
-                            id="audio-input-select"
-                            data-test="audio-input-select"
-                            class="h-11 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-                            :value="selectedAudioInputId"
-                            @change="
-                                emit(
-                                    'update-audio-input',
-                                    ($event.target as HTMLSelectElement).value,
-                                )
-                            "
+                        <Select
+                            :model-value="selectedAudioInputValue"
+                            @update:model-value="updateAudioInput"
                         >
-                            <option value="">Без микрофона</option>
-                            <option
-                                v-for="device in audioInputs"
-                                :key="device.deviceId"
-                                :value="device.deviceId"
+                            <SelectTrigger
+                                data-test="audio-input-select"
+                                class="rounded-lg border-border/60 bg-white/80 w-full"
                             >
-                                {{ device.label || 'Микрофон' }}
-                            </option>
-                        </select>
+                                <SelectValue placeholder="Выберите микрофон" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem :value="disabledDeviceValue">
+                                    <span class="flex items-center gap-2">
+                                        <Mic class="h-4 w-4" />
+                                        Без микрофона
+                                    </span>
+                                </SelectItem>
+                                <SelectItem
+                                    v-for="device in selectableAudioInputs"
+                                    :key="device.deviceId"
+                                    :value="device.deviceId"
+                                >
+                                    {{
+                                        device.label ||
+                                        `Микрофон ${device.deviceId.slice(0, 6)}`
+                                    }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
-                    <div class="grid gap-2">
+                    <!-- Camera -->
+                    <div class="space-y-1.5">
                         <Label
-                            for="video-input-select"
-                            class="flex items-center gap-3 text-sm font-semibold"
+                            class="text-sm font-medium flex items-center gap-2"
                         >
-                            <span
-                                class="flex size-8 items-center justify-center rounded-md bg-violet-50 text-violet-600"
-                            >
-                                <Camera class="size-4" />
-                            </span>
+                            <Camera class="h-4 w-4" />
                             Камера
                         </Label>
-                        <select
-                            id="video-input-select"
-                            data-test="video-input-select"
-                            class="h-11 w-full rounded-md border border-input bg-white px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
-                            :value="selectedVideoInputId"
-                            @change="
-                                emit(
-                                    'update-video-input',
-                                    ($event.target as HTMLSelectElement).value,
-                                )
-                            "
+                        <Select
+                            :model-value="selectedVideoInputValue"
+                            @update:model-value="updateVideoInput"
                         >
-                            <option value="">Без камеры</option>
-                            <option
-                                v-for="device in videoInputs"
-                                :key="device.deviceId"
-                                :value="device.deviceId"
+                            <SelectTrigger
+                                data-test="video-input-select"
+                                class="rounded-lg border-border/60 bg-white/80 w-full"
                             >
-                                {{ device.label || 'Камера' }}
-                            </option>
-                        </select>
+                                <SelectValue placeholder="Выберите камеру" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem :value="disabledDeviceValue">
+                                    <span class="flex items-center gap-2">
+                                        <Camera class="h-4 w-4" />
+                                        Без камеры
+                                    </span>
+                                </SelectItem>
+                                <SelectItem
+                                    v-for="device in selectableVideoInputs"
+                                    :key="device.deviceId"
+                                    :value="device.deviceId"
+                                >
+                                    {{
+                                        device.label ||
+                                        `Камера ${device.deviceId.slice(0, 6)}`
+                                    }}
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
 
-                <p
+                <!-- Error message -->
+                <div
                     v-if="error"
-                    class="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700"
+                    class="rounded-xl border border-red-200/60 bg-red-50/50 p-3"
                 >
-                    {{ error }}
-                </p>
-            </div>
+                    <p class="text-sm text-red-700">{{ error }}</p>
+                </div>
 
-            <div
-                class="relative min-h-64 overflow-hidden rounded-md bg-slate-950 shadow-inner"
-            >
-                <div
-                    :ref="
-                        (element) =>
-                            emit('preview-host', element as HTMLElement | null)
-                    "
-                    data-test="preview-host"
-                    class="absolute inset-0 [&_video]:h-full [&_video]:w-full [&_video]:scale-x-[-1] [&_video]:object-cover"
-                />
-                <div
-                    v-if="!previewHasVideo"
-                    data-test="preview-empty-state"
-                    class="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-300"
-                >
-                    <VideoOff class="size-8 text-slate-500" />
-                    <span>Выберите камеру, чтобы увидеть превью.</span>
+                <!-- Camera preview -->
+                <div>
+                    <div
+                        class="relative aspect-video overflow-hidden rounded-xl border border-border/60 bg-slate-950"
+                    >
+                        <div
+                            :ref="
+                                (element) =>
+                                    emit(
+                                        'preview-host',
+                                        element as HTMLElement | null,
+                                    )
+                            "
+                            data-test="preview-host"
+                            class="absolute inset-0 [&_video]:h-full [&_video]:w-full [&_video]:scale-x-[-1] [&_video]:object-cover"
+                        />
+                        <div
+                            v-if="!previewHasVideo"
+                            data-test="preview-empty-state"
+                            class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center"
+                        >
+                            <VideoOff class="h-12 w-12 text-white/40" />
+                            <span class="text-sm text-white/70"
+                                >Выберите камеру, чтобы увидеть превью.</span
+                            >
+                        </div>
+                        <div
+                            v-if="previewLoading"
+                            class="absolute bottom-0 left-0 right-0 bg-black/50 px-3 py-2 text-center text-xs font-medium text-white"
+                        >
+                            Обновляем превью...
+                        </div>
+                    </div>
                 </div>
-                <div
-                    v-if="previewLoading"
-                    class="absolute inset-x-0 bottom-0 bg-black/50 px-3 py-2 text-center text-xs font-medium text-white"
-                >
-                    Обновляем превью...
-                </div>
-            </div>
-        </CardContent>
-    </Card>
+            </CardContent>
+        </Card>
+    </section>
 </template>

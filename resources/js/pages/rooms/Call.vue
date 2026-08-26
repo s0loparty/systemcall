@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, router, useHttp, usePage } from '@inertiajs/vue3';
+
 import { computed, onMounted, ref } from 'vue';
+
 import CallControlsBar from '@/features/calls/components/CallControlsBar.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
@@ -15,6 +17,7 @@ import type {
     ParticipantTileActions,
     RoomMemberSummary,
 } from '@/features/calls/types';
+
 import {
     prepare as showPrepare,
     waiting as showWaiting,
@@ -212,7 +215,7 @@ function canModerateRoomMember(member: RoomMemberSummary): boolean {
         !canModerateMembers.value ||
         !currentMember ||
         member.id === currentMember.id ||
-        member.left_at !== null
+        member.left_at != null
     ) {
         return false;
     }

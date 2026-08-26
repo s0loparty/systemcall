@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
-import {
-    ArrowRight,
-    DoorOpen,
-    Lock,
-    Plus,
-    ShieldCheck,
-    Video,
-} from '@lucide/vue';
-import { computed } from 'vue';
-import InputError from '@/components/InputError.vue';
+
+import { ArrowRight, DoorOpen, Lock, ShieldCheck, Video } from '@lucide/vue';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,11 +12,16 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
 import { dashboard } from '@/routes';
+
 import { store as storeRoom } from '@/routes/rooms';
 import { prepare as prepareCall } from '@/routes/rooms/call';
+
+import InputError from '@/components/InputError.vue';
 
 type RoomSummary = {
     public_id: string;
@@ -37,7 +35,7 @@ type RoomSummary = {
     ended_at: string | null;
 };
 
-const props = defineProps<{
+defineProps<{
     rooms: RoomSummary[];
 }>();
 
@@ -56,16 +54,6 @@ defineOptions({
     },
 });
 
-const activeRooms = computed(() =>
-    props.rooms.filter((room) => room.status === 'active'),
-);
-const waitingRoomCount = computed(
-    () => props.rooms.filter((room) => room.waiting_room_enabled).length,
-);
-const privateRoomsCount = computed(
-    () => props.rooms.filter((room) => room.visibility === 'private').length,
-);
-
 function visibilityLabel(visibility: RoomSummary['visibility']): string {
     return visibility === 'public' ? 'публичная' : 'приватная';
 }
@@ -74,70 +62,34 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
 <template>
     <Head title="Комнаты" />
 
-    <div class="p-3 sm:p-5">
-        <div class="mx-auto grid max-w-7xl gap-5">
-            <section
-                class="grid gap-4 rounded-md border border-slate-200/80 bg-white/90 p-4 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center"
+    <div class="px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+        <!-- Page header -->
+        <div class="mb-6 sm:mb-8">
+            <h1
+                class="text-2xl font-light tracking-tight sm:text-3xl lg:text-4xl"
             >
-                <div>
-                    <Badge
-                        variant="outline"
-                        class="rounded-md border-violet-100 bg-violet-50 px-3 py-1.5 text-violet-700"
-                    >
-                        <Video class="size-3.5" />
-                        Комнаты
-                    </Badge>
-                    <h1
-                        class="mt-4 text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl"
-                    >
-                        Создавайте встречи и приглашайте участников.
-                    </h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                        Настройте доступ, пароль и зал ожидания. Перед входом
-                        участники попадут на подготовку устройств.
-                    </p>
-                </div>
+                Создавайте встречи и приглашайте участников.
+            </h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+                Настройте доступ, пароль и зал ожидания. Перед входом участники
+                попадут на подготовку устройств.
+            </p>
+        </div>
 
-                <div class="grid grid-cols-3 gap-2 sm:min-w-96">
-                    <div class="rounded-md bg-slate-50 p-3">
-                        <p class="text-2xl font-semibold text-slate-950">
-                            {{ rooms.length }}
-                        </p>
-                        <p class="text-xs text-slate-500">всего</p>
-                    </div>
-                    <div class="rounded-md bg-emerald-50 p-3">
-                        <p class="text-2xl font-semibold text-emerald-700">
-                            {{ activeRooms.length }}
-                        </p>
-                        <p class="text-xs text-emerald-700/75">активны</p>
-                    </div>
-                    <div class="rounded-md bg-amber-50 p-3">
-                        <p class="text-2xl font-semibold text-amber-700">
-                            {{ waitingRoomCount }}
-                        </p>
-                        <p class="text-xs text-amber-700/75">ожидание</p>
-                    </div>
-                </div>
-            </section>
-
-            <div class="grid gap-5 xl:grid-cols-[25rem_minmax(0,1fr)]">
-                <Card
-                    class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-                >
-                    <CardHeader class="pb-4">
+        <div class="grid gap-6 lg:grid-cols-[380px_1fr]">
+            <!-- Left column: Create room form -->
+            <div class="order-2 lg:order-1">
+                <Card class="border-border/60 bg-white/70 shadow-sm">
+                    <CardHeader class="pb-3 sm:pb-4">
                         <div class="flex items-start justify-between gap-4">
                             <div>
-                                <CardTitle class="text-2xl">
-                                    Создать комнату
-                                </CardTitle>
-                                <CardDescription class="mt-1 leading-6">
+                                <CardTitle
+                                    class="text-lg font-semibold sm:text-xl"
+                                    >Создать комнату</CardTitle
+                                >
+                                <CardDescription class="mt-1 text-sm leading-6">
                                     Быстрый старт звонка с настройками доступа.
                                 </CardDescription>
-                            </div>
-                            <div
-                                class="flex size-11 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100"
-                            >
-                                <Plus class="size-5" />
                             </div>
                         </div>
                     </CardHeader>
@@ -149,39 +101,47 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                             class="grid gap-4"
                             v-slot="{ errors, processing }"
                         >
+                            <!-- Room name -->
                             <div class="grid gap-1.5">
-                                <Label for="name">Название комнаты</Label>
+                                <Label for="name" class="text-sm"
+                                    >Название комнаты</Label
+                                >
                                 <Input
                                     id="name"
                                     name="name"
                                     required
                                     maxlength="120"
                                     placeholder="Ежедневный созвон"
+                                    class="rounded-lg border-border/60 bg-white/80 text-sm"
                                 />
                                 <InputError :message="errors.name" />
                             </div>
 
+                            <!-- Description -->
                             <div class="grid gap-1.5">
-                                <Label for="description">Описание</Label>
+                                <Label for="description" class="text-sm"
+                                    >Описание</Label
+                                >
                                 <textarea
                                     id="description"
                                     name="description"
                                     maxlength="2000"
-                                    class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="min-h-20 w-full rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
                                     placeholder="Коротко о встрече"
                                 />
                                 <InputError :message="errors.description" />
                             </div>
 
-                            <div
-                                class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1"
-                            >
+                            <!-- Visibility & Participants -->
+                            <div class="grid gap-3 sm:grid-cols-2">
                                 <div class="grid gap-1.5">
-                                    <Label for="visibility">Доступность</Label>
+                                    <Label for="visibility" class="text-sm"
+                                        >Доступность</Label
+                                    >
                                     <select
                                         id="visibility"
                                         name="visibility"
-                                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                        class="h-9 rounded-lg border border-border/60 bg-white/80 px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                         required
                                     >
                                         <option value="public">
@@ -195,9 +155,11 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                 </div>
 
                                 <div class="grid gap-1.5">
-                                    <Label for="max_participants">
-                                        Участники
-                                    </Label>
+                                    <Label
+                                        for="max_participants"
+                                        class="text-sm"
+                                        >Участники</Label
+                                    >
                                     <Input
                                         id="max_participants"
                                         name="max_participants"
@@ -205,6 +167,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                         min="2"
                                         max="500"
                                         placeholder="Без лимита"
+                                        class="rounded-lg border-border/60 bg-white/80 text-sm"
                                     />
                                     <InputError
                                         :message="errors.max_participants"
@@ -212,8 +175,11 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                 </div>
                             </div>
 
+                            <!-- Password -->
                             <div class="grid gap-1.5">
-                                <Label for="password">Пароль</Label>
+                                <Label for="password" class="text-sm"
+                                    >Пароль</Label
+                                >
                                 <Input
                                     id="password"
                                     name="password"
@@ -222,27 +188,27 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                     maxlength="255"
                                     autocomplete="new-password"
                                     placeholder="Необязательно"
+                                    class="rounded-lg border-border/60 bg-white/80 text-sm"
                                 />
                                 <InputError :message="errors.password" />
                             </div>
 
+                            <!-- Waiting room -->
                             <label
-                                class="flex items-start gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm"
+                                class="flex items-start gap-3 rounded-lg border border-border/60 bg-white/80 p-3 text-sm"
                             >
-                                <input
-                                    class="mt-1 size-4 rounded border-slate-300 text-violet-600"
-                                    type="checkbox"
+                                <Checkbox
                                     name="waiting_room_enabled"
                                     value="1"
+                                    class="mt-0.5 shrink-0"
                                 />
                                 <span>
                                     <span
-                                        class="block font-medium text-slate-950"
+                                        class="block font-medium text-foreground"
+                                        >Зал ожидания</span
                                     >
-                                        Зал ожидания
-                                    </span>
                                     <span
-                                        class="block text-xs leading-5 text-slate-500"
+                                        class="block text-xs leading-5 text-muted-foreground"
                                     >
                                         Участники войдут после одобрения.
                                     </span>
@@ -250,7 +216,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                             </label>
 
                             <Button
-                                class="h-10 w-full rounded-md bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
+                                class="h-10 w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 text-sm"
                                 type="submit"
                                 :disabled="processing"
                             >
@@ -259,147 +225,211 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                         ? 'Создаем...'
                                         : 'Создать и войти'
                                 }}
-                                <ArrowRight v-if="!processing" class="size-4" />
+                                <ArrowRight
+                                    v-if="!processing"
+                                    class="ml-2 size-4"
+                                />
                             </Button>
                         </Form>
                     </CardContent>
                 </Card>
+            </div>
 
-                <Card
-                    class="min-w-0 rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-                >
-                    <CardHeader
-                        class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-                    >
-                        <div>
-                            <CardTitle>Ваши комнаты</CardTitle>
-                            <CardDescription class="mt-1 leading-6">
-                                Откройте подготовку, проверьте устройства и
-                                войдите в звонок.
-                            </CardDescription>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2">
-                            <Badge
-                                variant="outline"
-                                class="rounded-md bg-slate-50"
-                            >
-                                <Video class="size-3.5" />
-                                {{ rooms.length }}
-                            </Badge>
-                            <Badge
-                                v-if="privateRoomsCount > 0"
-                                variant="outline"
-                                class="rounded-md bg-blue-50 text-blue-700"
-                            >
-                                <Lock class="size-3.5" />
-                                {{ privateRoomsCount }}
-                            </Badge>
+            <!-- Right column: Rooms list -->
+            <div class="order-1 lg:order-2">
+                <Card class="border-border/60 bg-white/70 shadow-sm">
+                    <CardHeader class="pb-3 sm:pb-4">
+                        <div
+                            class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
+                        >
+                            <div>
+                                <CardTitle class="text-lg sm:text-xl"
+                                    >Ваши комнаты</CardTitle
+                                >
+                                <CardDescription class="mt-1 text-sm leading-6">
+                                    Откройте подготовку, проверьте устройства и
+                                    войдите в звонок.
+                                </CardDescription>
+                            </div>
+                            <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                                <Badge
+                                    variant="outline"
+                                    class="border-border/60 bg-white/50 text-xs"
+                                >
+                                    <Video class="size-3 mr-1" />
+                                    {{ rooms.length }}
+                                </Badge>
+                                <Badge
+                                    v-if="
+                                        rooms.filter(
+                                            (r) => r.visibility === 'private',
+                                        ).length > 0
+                                    "
+                                    variant="outline"
+                                    class="border-border/60 bg-white/50 text-xs"
+                                >
+                                    <Lock class="size-3 mr-1" />
+                                    {{
+                                        rooms.filter(
+                                            (r) => r.visibility === 'private',
+                                        ).length
+                                    }}
+                                </Badge>
+                            </div>
                         </div>
                     </CardHeader>
 
                     <CardContent>
+                        <!-- Empty state -->
                         <div
                             v-if="rooms.length === 0"
-                            class="rounded-md border border-dashed border-slate-300 bg-slate-50/70 p-8 text-center"
+                            class="rounded-xl border border-dashed border-border/60 bg-white/50 p-6 sm:p-8 text-center"
                         >
                             <div
-                                class="mx-auto flex size-12 items-center justify-center rounded-md bg-white text-slate-500 shadow-sm"
+                                class="mx-auto flex size-12 items-center justify-center rounded-full border border-border/60 bg-white"
                             >
-                                <Video class="size-6" />
+                                <Video class="size-6 text-muted-foreground" />
                             </div>
-                            <p class="mt-4 font-semibold text-slate-950">
+                            <p class="mt-4 font-semibold text-foreground">
                                 Комнат пока нет
                             </p>
-                            <p class="mt-1 text-sm text-slate-500">
+                            <p class="mt-1 text-sm text-muted-foreground">
                                 Создайте первую комнату в форме рядом.
                             </p>
                         </div>
 
-                        <div v-else class="grid gap-3">
+                        <!-- Rooms list -->
+                        <div v-else class="space-y-3">
                             <article
                                 v-for="room in rooms"
                                 :key="room.public_id"
-                                class="group grid gap-3 rounded-md border border-slate-200 bg-white p-4 transition hover:-translate-y-0.5 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/70 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                                class="group rounded-xl border border-border/60 bg-white/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:shadow-md"
                             >
-                                <div class="min-w-0">
-                                    <div
-                                        class="flex min-w-0 flex-wrap items-center gap-2"
-                                    >
+                                <div
+                                    class="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-center"
+                                >
+                                    <div class="min-w-0">
                                         <div
-                                            class="flex size-10 shrink-0 items-center justify-center rounded-md bg-violet-50 text-violet-600"
+                                            class="flex flex-wrap items-center gap-2"
                                         >
-                                            <Video class="size-5" />
-                                        </div>
-                                        <div class="min-w-0">
+                                            <div
+                                                class="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-white sm:size-10"
+                                            >
+                                                <Video
+                                                    class="size-4 text-foreground sm:size-5"
+                                                />
+                                            </div>
                                             <h3
-                                                class="truncate font-semibold text-slate-950"
+                                                class="font-semibold text-foreground truncate text-sm sm:text-base"
                                             >
                                                 {{ room.name }}
                                             </h3>
-                                            <div
-                                                class="mt-1 flex flex-wrap gap-1.5"
-                                            >
-                                                <Badge
-                                                    variant="secondary"
-                                                    class="rounded-md"
-                                                >
-                                                    {{
-                                                        visibilityLabel(
-                                                            room.visibility,
-                                                        )
-                                                    }}
-                                                </Badge>
-                                                <Badge
-                                                    v-if="
-                                                        room.waiting_room_enabled
-                                                    "
-                                                    class="rounded-md bg-amber-100 text-amber-700 hover:bg-amber-100"
-                                                >
-                                                    <DoorOpen class="size-3" />
-                                                    зал ожидания
-                                                </Badge>
-                                                <Badge
-                                                    v-if="room.has_password"
-                                                    class="rounded-md bg-blue-100 text-blue-700 hover:bg-blue-100"
-                                                >
-                                                    <ShieldCheck
-                                                        class="size-3"
-                                                    />
-                                                    пароль
-                                                </Badge>
-                                            </div>
                                         </div>
+
+                                        <div
+                                            class="mt-2 flex flex-wrap gap-1.5"
+                                        >
+                                            <Badge
+                                                variant="secondary"
+                                                class="bg-white/50 border-border/60 text-[10px] sm:text-xs"
+                                            >
+                                                {{
+                                                    visibilityLabel(
+                                                        room.visibility,
+                                                    )
+                                                }}
+                                            </Badge>
+                                            <Badge
+                                                v-if="room.waiting_room_enabled"
+                                                class="bg-amber-50 text-amber-700 border-amber-200/60 text-[10px] sm:text-xs"
+                                            >
+                                                <DoorOpen
+                                                    class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
+                                                />
+                                                зал ожидания
+                                            </Badge>
+                                            <Badge
+                                                v-if="room.has_password"
+                                                class="bg-blue-50 text-blue-700 border-blue-200/60 text-[10px] sm:text-xs"
+                                            >
+                                                <ShieldCheck
+                                                    class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
+                                                />
+                                                пароль
+                                            </Badge>
+                                        </div>
+
+                                        <p
+                                            class="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6"
+                                        >
+                                            {{
+                                                room.description ??
+                                                'Описание пока не добавлено.'
+                                            }}
+                                        </p>
                                     </div>
 
-                                    <p
-                                        class="mt-3 line-clamp-2 text-sm leading-6 text-slate-500"
+                                    <Button
+                                        as-child
+                                        class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 sm:w-auto sm:px-5"
+                                        size="sm"
                                     >
-                                        {{
-                                            room.description ??
-                                            'Описание пока не добавлено.'
-                                        }}
-                                    </p>
+                                        <Link
+                                            :href="prepareCall(room.public_id)"
+                                            class="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                                        >
+                                            Подготовиться
+                                            <ArrowRight
+                                                class="size-3.5 sm:size-4"
+                                            />
+                                        </Link>
+                                    </Button>
                                 </div>
-
-                                <Button
-                                    as-child
-                                    class="h-10 rounded-md bg-slate-950 px-4 text-white hover:bg-slate-800 sm:w-auto"
-                                    size="sm"
-                                >
-                                    <Link
-                                        class="w-full sm:w-auto"
-                                        :href="prepareCall(room.public_id)"
-                                    >
-                                        Подготовиться
-                                        <ArrowRight class="size-4" />
-                                    </Link>
-                                </Button>
                             </article>
                         </div>
                     </CardContent>
                 </Card>
             </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="mt-8 border-t border-border/60 pt-6">
+            <div
+                class="flex flex-col items-start justify-between gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center"
+            >
+                <div class="flex items-center gap-3">
+                    <span class="flex items-center gap-1.5">
+                        <span
+                            class="inline-block size-2 rounded-full bg-emerald-500"
+                        ></span>
+                        онлайн
+                    </span>
+                    <span class="hidden sm:inline">•</span>
+                    <span>готово для команд</span>
+                </div>
+                <div class="flex flex-wrap gap-3 sm:gap-4">
+                    <a
+                        href="#"
+                        class="transition hover:text-foreground hover:underline underline-offset-2"
+                        >Помощь</a
+                    >
+                    <a
+                        href="#"
+                        class="transition hover:text-foreground hover:underline underline-offset-2"
+                        >API</a
+                    >
+                    <a
+                        href="#"
+                        class="transition hover:text-foreground hover:underline underline-offset-2"
+                        >Блог</a
+                    >
+                </div>
+            </div>
+            <div
+                class="mt-4 text-center text-[10px] text-muted-foreground/60 sm:text-[11px]"
+            >
+                Systemcall · групповые видеокомнаты · минимализм
+            </div>
+        </footer>
     </div>
 </template>

@@ -129,13 +129,21 @@ class RoomCallController extends Controller
 
     private function canJoinWithoutPassword(Request $request, Room $room): bool
     {
-        if ($room->visibility === RoomVisibility::Public || $room->password_hash === null) {
+        if ($room->password_hash === null) {
             return true;
         }
 
         $user = $request->user();
 
-        return $user instanceof User && $room->members()
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if ($room->owner()->is($user)) {
+            return true;
+        }
+
+        return $room->members()
             ->whereBelongsTo($user)
             ->whereNull('left_at')
             ->exists();
@@ -190,6 +198,7 @@ class RoomCallController extends Controller
                 'can_publish_video' => $member->can_publish_video,
                 'can_publish_screen' => $member->can_publish_screen,
                 'hand_raised_at' => $member->hand_raised_at?->toISOString(),
+                'left_at' => $member->left_at?->toISOString(),
             ])
             ->all();
     }

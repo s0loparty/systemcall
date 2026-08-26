@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ArrowRight, Camera, Clock3, Mic, Users } from '@lucide/vue';
+
+import { ArrowRight, Clock3, User, Users } from '@lucide/vue';
+
 import { computed, onMounted, ref } from 'vue';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +14,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+
+import { show as showCall } from '@/routes/rooms/call';
+
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import WaitingRoomModeratorPanel from '@/features/calls/components/WaitingRoomModeratorPanel.vue';
@@ -19,7 +25,6 @@ import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQu
 import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
 import type { CallPageProps } from '@/features/calls/types';
-import { show as showCall } from '@/routes/rooms/call';
 
 const props = defineProps<CallPageProps>();
 const deviceQuery = useCallDeviceQuery();
@@ -43,20 +48,6 @@ const realtime = useRoomApplicationEvents(props.room.public_id, {
     },
 });
 
-const selectedAudioLabel = computed(() =>
-    deviceLabel(
-        devices.audioInputs.value,
-        devices.selectedDevices.value.audioInputId,
-        'Без микрофона',
-    ),
-);
-const selectedVideoLabel = computed(() =>
-    deviceLabel(
-        devices.videoInputs.value,
-        devices.selectedDevices.value.videoInputId,
-        'Без камеры',
-    ),
-);
 const otherWaitingEntries = computed(() =>
     realtime.waitingRoomEntries.value.filter(
         (entry) => entry.id !== currentWaitingRoomEntry.value?.id,
@@ -65,21 +56,6 @@ const otherWaitingEntries = computed(() =>
 const rejected = computed(
     () => currentWaitingRoomEntry.value?.status === 'rejected',
 );
-
-function deviceLabel(
-    devicesList: MediaDeviceInfo[],
-    selectedDeviceId: string,
-    fallback: string,
-): string {
-    if (selectedDeviceId === '') {
-        return fallback;
-    }
-
-    return (
-        devicesList.find((device) => device.deviceId === selectedDeviceId)
-            ?.label ?? fallback
-    );
-}
 
 async function goToCall(): Promise<void> {
     await devices.stopPreview();
@@ -101,184 +77,246 @@ onMounted(() => {
 <template>
     <Head :title="`Ожидание: ${room.name}`" />
 
-    <main
-        class="relative min-h-dvh overflow-hidden bg-[#fbfaff] p-4 text-slate-950 antialiased sm:p-6"
-    >
-        <div
-            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(251,191,36,0.18),transparent_30%),radial-gradient(circle_at_84%_6%,rgba(124,92,255,0.14),transparent_24%),radial-gradient(circle_at_50%_88%,rgba(16,185,129,0.10),transparent_24%)]"
-        />
-
+    <div class="min-h-screen bg-[#fafaf9] p-4 sm:p-6">
         <div
             data-test="application-realtime-panel"
             :data-echo-state="realtime.echoConnectionStatus.value"
             class="hidden"
         />
 
-        <div
-            class="relative mx-auto grid max-w-6xl gap-5 lg:grid-cols-[minmax(0,1fr)_24rem]"
-        >
-            <section class="grid gap-5">
-                <Card
-                    class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-2xl shadow-violet-100/60 backdrop-blur"
+        <div class="mx-auto max-w-7xl space-y-4">
+            <!-- Back to rooms -->
+            <div>
+                <a
+                    href="/rooms"
+                    class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
-                    <CardHeader>
-                        <div
-                            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
-                        >
-                            <div>
-                                <Badge
-                                    variant="outline"
-                                    class="rounded-md border-amber-100 bg-amber-50 px-3 py-1.5 text-amber-700"
-                                >
-                                    <Clock3 class="size-3.5" />
-                                    Зал ожидания
-                                </Badge>
-                                <CardTitle
-                                    class="mt-4 text-3xl tracking-tight md:text-4xl"
-                                >
-                                    {{ room.name }}
-                                </CardTitle>
-                                <CardDescription
-                                    class="mt-2 max-w-2xl text-base leading-7"
-                                >
-                                    Модератор проверит заявку и откроет доступ к
-                                    комнате. Пока можно изменить устройства и
-                                    убедиться, что всё готово.
-                                </CardDescription>
-                            </div>
-
-                            <div
-                                class="flex size-14 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-amber-400 to-violet-600 text-white shadow-lg shadow-amber-100"
-                            >
-                                <Users class="size-6" />
-                            </div>
-                        </div>
-                    </CardHeader>
-
-                    <CardContent class="grid gap-3 sm:grid-cols-2">
-                        <div
-                            data-test="selected-audio-device"
-                            class="rounded-md border border-slate-200 bg-slate-50 p-4"
-                        >
-                            <Mic class="size-5 text-emerald-600" />
-                            <p class="mt-3 text-xs font-medium text-slate-500">
-                                Микрофон
-                            </p>
-                            <p
-                                class="mt-1 text-sm font-semibold text-slate-950"
-                            >
-                                {{ selectedAudioLabel }}
-                            </p>
-                        </div>
-                        <div
-                            data-test="selected-video-device"
-                            class="rounded-md border border-slate-200 bg-slate-50 p-4"
-                        >
-                            <Camera class="size-5 text-violet-600" />
-                            <p class="mt-3 text-xs font-medium text-slate-500">
-                                Камера
-                            </p>
-                            <p
-                                class="mt-1 text-sm font-semibold text-slate-950"
-                            >
-                                {{ selectedVideoLabel }}
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <WaitingRoomStatusPanel :entry="currentWaitingRoomEntry" />
-
-                <CallError
-                    v-if="rejected"
-                    message="Заявка отклонена. Обратитесь к модератору комнаты."
-                />
-
-                <DeviceSetupPanel
-                    :audio-inputs="devices.audioInputs.value"
-                    :video-inputs="devices.videoInputs.value"
-                    :selected-audio-input-id="
-                        devices.selectedDevices.value.audioInputId
-                    "
-                    :selected-video-input-id="
-                        devices.selectedDevices.value.videoInputId
-                    "
-                    :preview-has-video="devices.previewHasVideo.value"
-                    :preview-loading="devices.previewLoading.value"
-                    :error="devices.deviceErrorMessage.value"
-                    @update-audio-input="devices.setAudioInput"
-                    @update-video-input="devices.setVideoInput"
-                    @preview-host="devices.setPreviewHost"
-                />
-
-                <Button
-                    v-if="currentWaitingRoomEntry?.status === 'approved'"
-                    class="h-11 w-full rounded-md bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
-                    type="button"
-                    @click="goToCall"
-                >
-                    Войти в звонок
-                    <ArrowRight class="size-4" />
-                </Button>
-            </section>
-
-            <aside class="grid content-start gap-4">
-                <Card
-                    data-test="other-waiting-list"
-                    class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-                >
-                    <CardHeader
-                        class="flex flex-row items-start justify-between gap-3"
+                    <svg
+                        class="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                     >
-                        <div>
-                            <CardTitle class="text-base">
-                                Другие ожидающие
-                            </CardTitle>
-                            <CardDescription>
-                                Участники, которые тоже ждут решения.
-                            </CardDescription>
-                        </div>
-                        <Badge variant="secondary" class="rounded-md">
-                            {{ otherWaitingEntries.length }}
-                        </Badge>
-                    </CardHeader>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                        />
+                    </svg>
+                    Вернуться к комнатам
+                </a>
+            </div>
 
-                    <CardContent>
-                        <p
-                            v-if="otherWaitingEntries.length === 0"
-                            class="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500"
-                        >
-                            Пока больше никто не ожидает.
-                        </p>
+            <div class="grid gap-4 lg:grid-cols-[1fr_400px]">
+                <!-- Left column -->
+                <div class="space-y-4">
+                    <!-- Combined: Room info + Waiting room status -->
+                    <Card class="border-border/60 bg-white/70 shadow-sm p-0">
+                        <CardContent class="p-5 sm:p-6 space-y-4">
+                            <!-- Room info -->
+                            <div class="space-y-1.5">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <Badge
+                                        variant="outline"
+                                        class="border-amber-200/60 bg-amber-50 text-amber-700 text-xs"
+                                    >
+                                        <Clock3 class="size-3 mr-1" />
+                                        Зал ожидания
+                                    </Badge>
+                                    <Badge
+                                        v-if="room.has_password"
+                                        variant="outline"
+                                        class="border-border/60 bg-white/50 text-xs"
+                                    >
+                                        🔒 с паролем
+                                    </Badge>
+                                </div>
+                                <h1 class="text-xl font-light tracking-tight">
+                                    {{ room.name }}
+                                </h1>
+                                <p class="text-sm text-muted-foreground">
+                                    Модератор проверит заявку и откроет доступ к
+                                    комнате.
+                                </p>
+                            </div>
 
-                        <ol v-else class="grid gap-2">
-                            <li
-                                v-for="entry in otherWaitingEntries"
-                                :key="entry.id"
-                                data-test="other-waiting-entry"
-                                :data-entry-id="entry.id"
-                                class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm"
+                            <hr class="border-border/60" />
+
+                            <!-- Waiting room status -->
+                            <WaitingRoomStatusPanel
+                                :entry="currentWaitingRoomEntry"
+                                compact
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <!-- Error -->
+                    <CallError
+                        v-if="rejected"
+                        message="Заявка отклонена. Обратитесь к модератору комнаты."
+                    />
+
+                    <!-- Devices setup -->
+                    <DeviceSetupPanel
+                        :audio-inputs="devices.audioInputs.value"
+                        :video-inputs="devices.videoInputs.value"
+                        :selected-audio-input-id="
+                            devices.selectedDevices.value.audioInputId
+                        "
+                        :selected-video-input-id="
+                            devices.selectedDevices.value.videoInputId
+                        "
+                        :preview-has-video="devices.previewHasVideo.value"
+                        :preview-loading="devices.previewLoading.value"
+                        :error="devices.deviceErrorMessage.value"
+                        @update-audio-input="devices.setAudioInput"
+                        @update-video-input="devices.setVideoInput"
+                        @preview-host="devices.setPreviewHost"
+                    />
+
+                    <!-- Join button -->
+                    <Button
+                        v-if="currentWaitingRoomEntry?.status === 'approved'"
+                        class="w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 py-2.5 text-sm font-medium"
+                        type="button"
+                        @click="goToCall"
+                    >
+                        Войти в звонок
+                        <ArrowRight class="ml-2 h-4 w-4" />
+                    </Button>
+                </div>
+
+                <!-- Right column -->
+                <aside class="space-y-4">
+                    <!-- Other waiting -->
+                    <Card class="border-border/60 bg-white/70 shadow-sm">
+                        <CardHeader class="pb-2 pt-4 px-5">
+                            <div class="flex items-start justify-between gap-3">
+                                <div>
+                                    <CardTitle class="text-sm font-semibold"
+                                        >Другие ожидающие</CardTitle
+                                    >
+                                    <CardDescription
+                                        class="text-xs text-muted-foreground"
+                                    >
+                                        Участники, которые ждут решения.
+                                    </CardDescription>
+                                </div>
+                                <Badge
+                                    variant="secondary"
+                                    class="bg-white/50 border-border/60 text-xs"
+                                >
+                                    {{ otherWaitingEntries.length }}
+                                </Badge>
+                            </div>
+                        </CardHeader>
+
+                        <CardContent class="pt-0 px-5 pb-4">
+                            <div
+                                v-if="otherWaitingEntries.length === 0"
+                                class="rounded-lg border border-dashed border-border/60 bg-white/50 p-4 text-center"
                             >
-                                <p class="font-semibold text-slate-950">
-                                    {{ entry.display_name }}
+                                <Users
+                                    class="h-6 w-6 text-muted-foreground/40 mx-auto"
+                                />
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    Пока больше никто не ожидает.
                                 </p>
-                                <p class="mt-1 text-xs text-slate-500">
-                                    {{ entry.guest ? 'Гость' : 'Пользователь' }}
-                                </p>
-                            </li>
-                        </ol>
-                    </CardContent>
-                </Card>
+                            </div>
 
-                <WaitingRoomModeratorPanel
-                    v-if="
-                        can_moderate_waiting_room && room.waiting_room_enabled
-                    "
-                    :room-public-id="room.public_id"
-                    :entries="realtime.waitingRoomEntries.value"
-                    @decided="realtime.removeWaitingRoomEntry"
-                />
-            </aside>
+                            <div v-else class="space-y-1.5">
+                                <div
+                                    v-for="entry in otherWaitingEntries"
+                                    :key="entry.id"
+                                    data-test="other-waiting-entry"
+                                    :data-entry-id="entry.id"
+                                    class="flex items-center gap-2.5 rounded-lg border border-border/60 bg-white/50 p-2.5"
+                                >
+                                    <div
+                                        class="flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-100"
+                                    >
+                                        <User class="size-4 text-foreground" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p
+                                            class="text-sm font-medium text-foreground truncate"
+                                        >
+                                            {{ entry.display_name }}
+                                        </p>
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            {{
+                                                entry.guest
+                                                    ? 'Гость'
+                                                    : 'Пользователь'
+                                            }}
+                                        </p>
+                                    </div>
+                                    <Badge
+                                        variant="outline"
+                                        class="border-amber-200/60 bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5"
+                                    >
+                                        ожидает
+                                    </Badge>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <!-- Moderator panel -->
+                    <WaitingRoomModeratorPanel
+                        v-if="
+                            can_moderate_waiting_room &&
+                            room.waiting_room_enabled
+                        "
+                        :room-public-id="room.public_id"
+                        :entries="realtime.waitingRoomEntries.value"
+                        @decided="realtime.removeWaitingRoomEntry"
+                    />
+                </aside>
+            </div>
+
+            <!-- Footer -->
+            <footer class="border-t border-border/60 pt-4 mt-2">
+                <div
+                    class="flex flex-col items-start justify-between gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center"
+                >
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1.5">
+                            <span
+                                class="inline-block size-2 rounded-full bg-emerald-500"
+                            ></span>
+                            онлайн
+                        </span>
+                        <span>•</span>
+                        <span>готово для команд</span>
+                    </div>
+                    <div class="flex gap-4">
+                        <a
+                            href="#"
+                            class="transition hover:text-foreground hover:underline underline-offset-2"
+                            >Помощь</a
+                        >
+                        <a
+                            href="#"
+                            class="transition hover:text-foreground hover:underline underline-offset-2"
+                            >API</a
+                        >
+                        <a
+                            href="#"
+                            class="transition hover:text-foreground hover:underline underline-offset-2"
+                            >Блог</a
+                        >
+                    </div>
+                </div>
+                <div
+                    class="mt-3 text-center text-[10px] text-muted-foreground/60"
+                >
+                    Systemcall · групповые видеокомнаты · минимализм
+                </div>
+            </footer>
         </div>
-    </main>
+    </div>
 </template>

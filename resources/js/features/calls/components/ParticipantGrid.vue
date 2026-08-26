@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 import type {
     ParticipantTileActions,
     ParticipantTile as ParticipantTileData,
@@ -164,45 +167,46 @@ const sideTiles = computed(() =>
         </aside>
     </section>
 
-    <section
-        v-else
-        data-test="participant-grid"
-        class="mx-auto grid h-full w-full flex-1 auto-rows-fr content-center gap-3 overflow-hidden p-1 md:gap-4"
-        :class="gridClass"
-    >
-        <ParticipantTile
-            v-for="tile in orderedTiles"
-            :key="tile.identity"
-            :tile="tile"
-            :active="tile.identity === activeSpeakerIdentity"
-            :personally-pinned="tile.identity === personalPinnedIdentity"
-            :globally-pinned="tile.identity === globalPinnedIdentity"
-            :actions="tileActionsByIdentity[tile.identity]"
-            :actions-disabled="actionsDisabled"
-            :class="
-                (tile.identity === personalPinnedIdentity ||
-                    tile.identity === globalPinnedIdentity) &&
-                tiles.length > 1
-                    ? 'sm:col-span-2 sm:row-span-2'
-                    : ''
-            "
-            @media-host="
-                (identity, element) => emit('media-host', identity, element)
-            "
-            @pin-personal="(identity) => emit('pin-personal', identity)"
-            @pin-global="(identity) => emit('pin-global', identity)"
-            @promote-moderator="
-                (identity) => emit('promote-moderator', identity)
-            "
-            @kick="(identity) => emit('kick', identity)"
-            @ban="(identity) => emit('ban', identity)"
-        />
-
-        <div
-            v-if="tiles.length === 0"
-            class="flex min-h-96 items-center justify-center rounded-md border border-dashed border-slate-200 bg-white/75 text-center text-sm text-slate-500 shadow-sm"
+    <ScrollArea v-else class="[&_[data-reka-scroll-area-viewport]>div]:h-full">
+        <section
+            data-test="participant-grid"
+            class="mx-auto grid h-full w-full flex-1 auto-rows-fr content-center gap-3 p-1 md:gap-4 md:overflow-hidden"
+            :class="gridClass"
         >
-            Войдите в звонок. Камеру и микрофон можно оставить выключенными.
-        </div>
-    </section>
+            <ParticipantTile
+                v-for="tile in orderedTiles"
+                :key="tile.identity"
+                :tile="tile"
+                :active="tile.identity === activeSpeakerIdentity"
+                :personally-pinned="tile.identity === personalPinnedIdentity"
+                :globally-pinned="tile.identity === globalPinnedIdentity"
+                :actions="tileActionsByIdentity[tile.identity]"
+                :actions-disabled="actionsDisabled"
+                :class="
+                    (tile.identity === personalPinnedIdentity ||
+                        tile.identity === globalPinnedIdentity) &&
+                    tiles.length > 1
+                        ? 'sm:col-span-2 sm:row-span-2'
+                        : ''
+                "
+                @media-host="
+                    (identity, element) => emit('media-host', identity, element)
+                "
+                @pin-personal="(identity) => emit('pin-personal', identity)"
+                @pin-global="(identity) => emit('pin-global', identity)"
+                @promote-moderator="
+                    (identity) => emit('promote-moderator', identity)
+                "
+                @kick="(identity) => emit('kick', identity)"
+                @ban="(identity) => emit('ban', identity)"
+            />
+
+            <div
+                v-if="tiles.length === 0"
+                class="flex min-h-96 items-center justify-center rounded-md border border-dashed border-slate-200 bg-white/75 text-center text-sm text-slate-500 shadow-sm"
+            >
+                Войдите в звонок. Камеру и микрофон можно оставить выключенными.
+            </div>
+        </section>
+    </ScrollArea>
 </template>

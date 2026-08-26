@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Ban, Globe2, Pin, PinOff, ShieldPlus, UserMinus } from '@lucide/vue';
+
 import { computed, ref } from 'vue';
+
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -17,6 +19,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+
 import type { ParticipantTileActions } from '../types';
 
 type ConfirmAction = 'kick' | 'ban';

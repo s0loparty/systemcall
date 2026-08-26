@@ -1,6 +1,8 @@
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+
 import { Room, Track, createLocalTracks } from 'livekit-client';
 import type { LocalTrack } from 'livekit-client';
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+
 import type { SelectedDevices, TestingMediaMode } from '../types';
 
 type UseMediaDevicesOptions = {
@@ -39,47 +41,102 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             return;
         }
 
+        let permissionError: unknown = null;
+
         try {
-            const [nextAudioInputs, nextVideoInputs] = await Promise.all([
-                Room.getLocalDevices('audioinput', requestPermissions),
-                Room.getLocalDevices('videoinput', requestPermissions),
-            ]);
-
-            audioInputs.value = nextAudioInputs;
-            videoInputs.value = nextVideoInputs;
-            deviceErrorMessage.value = null;
-
-            if (
-                requestPermissions &&
-                options.autoSelectCameraAfterPermission === true &&
-                (selectedDevices.value.videoInputId === '' ||
-                    !nextVideoInputs.some(
-                        (device) =>
-                            device.deviceId ===
-                            selectedDevices.value.videoInputId,
-                    )) &&
-                nextVideoInputs.length > 0
-            ) {
-                selectedDevices.value = {
-                    ...selectedDevices.value,
-                    videoInputId: nextVideoInputs[0].deviceId,
-                };
-            }
-
-            if (
-                requestPermissions &&
-                selectedDevices.value.videoInputId !== ''
-            ) {
-                void startPreview();
+            if (requestPermissions) {
+                await requestMediaPermissions();
             }
         } catch (error) {
+            permissionError = error;
+        }
+
+        const [nextAudioInputs, nextVideoInputs] = await Promise.allSettled([
+            Room.getLocalDevices('audioinput', false),
+            Room.getLocalDevices('videoinput', false),
+        ]);
+
+        const loadedAudioInputs =
+            nextAudioInputs.status === 'fulfilled' ? nextAudioInputs.value : [];
+        const loadedVideoInputs =
+            nextVideoInputs.status === 'fulfilled' ? nextVideoInputs.value : [];
+
+        audioInputs.value = loadedAudioInputs;
+        videoInputs.value = loadedVideoInputs;
+
+        if (loadedAudioInputs.length > 0 || loadedVideoInputs.length > 0) {
+            deviceErrorMessage.value = null;
+        } else if (permissionError) {
+            deviceErrorMessage.value = formatDeviceError(permissionError);
+        } else {
+            const deviceError =
+                nextAudioInputs.status === 'rejected'
+                    ? nextAudioInputs.reason
+                    : nextVideoInputs.status === 'rejected'
+                      ? nextVideoInputs.reason
+                      : null;
+
+            deviceErrorMessage.value = deviceError
+                ? formatDeviceError(deviceError)
+                : null;
+        }
+
+        if (
+            requestPermissions &&
+            options.autoSelectCameraAfterPermission === true &&
+            (selectedDevices.value.videoInputId === '' ||
+                !loadedVideoInputs.some(
+                    (device) =>
+                        device.deviceId === selectedDevices.value.videoInputId,
+                )) &&
+            loadedVideoInputs.length > 0
+        ) {
+            selectedDevices.value = {
+                ...selectedDevices.value,
+                videoInputId: loadedVideoInputs[0].deviceId,
+            };
+        }
+
+        if (requestPermissions && selectedDevices.value.videoInputId !== '') {
+            void startPreview();
+        }
+    }
+
+    async function requestMediaPermissions(): Promise<void> {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            return;
+        }
+
+        const requestedStreams: MediaStream[] = [];
+
+        try {
+            requestedStreams.push(
+                await navigator.mediaDevices.getUserMedia({
+                    audio: true,
+                    video: true,
+                }),
+            );
+        } catch (combinedError) {
+            const fallbackResults = await Promise.allSettled([
+                navigator.mediaDevices.getUserMedia({ audio: true }),
+                navigator.mediaDevices.getUserMedia({ video: true }),
+            ]);
+
             if (
-                requestPermissions ||
-                (audioInputs.value.length === 0 &&
-                    videoInputs.value.length === 0)
+                fallbackResults.every((result) => result.status === 'rejected')
             ) {
-                deviceErrorMessage.value = formatDeviceError(error);
+                throw combinedError;
             }
+
+            fallbackResults.forEach((result) => {
+                if (result.status === 'fulfilled') {
+                    requestedStreams.push(result.value);
+                }
+            });
+        } finally {
+            requestedStreams.forEach((stream) => {
+                stream.getTracks().forEach((track) => track.stop());
+            });
         }
     }
 
@@ -285,7 +342,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     }
 
     onMounted(async () => {
-        await loadDevices();
+        await loadDevices(options.autoSelectCameraAfterPermission === true);
         navigator.mediaDevices?.addEventListener(
             'devicechange',
             handleDeviceChange,

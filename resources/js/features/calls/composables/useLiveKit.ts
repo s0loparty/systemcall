@@ -1,3 +1,5 @@
+import { markRaw, nextTick, ref, shallowRef } from 'vue';
+
 import { Room, RoomEvent, Track } from 'livekit-client';
 import type {
     ConnectionState,
@@ -7,7 +9,7 @@ import type {
     RemoteTrack,
     RemoteTrackPublication,
 } from 'livekit-client';
-import { markRaw, nextTick, ref, shallowRef } from 'vue';
+
 import type {
     AttachableTrack,
     CallConnectionState,

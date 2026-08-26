@@ -5,13 +5,22 @@
     "htmlWhitespaceSensitivity": "css",
     "printWidth": 80,
     "plugins": [
-        "prettier-plugin-tailwindcss"
+        "prettier-plugin-tailwindcss",
+        "@trivago/prettier-plugin-sort-imports"
     ],
-    "tailwindFunctions": [
-        "clsx",
-        "cn",
-        "cva"
+    "importOrder": [
+        "^@inertiajs/(.*)$",
+        "^@lucide/(.*)$",
+        "^vue$",
+        "^@/components/ui/(.*)$",
+        "^@/routes$",
+        "^@/routes/(.*)$",
+        "<THIRD_PARTY_MODULES>",
+        "^[./]"
     ],
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true,
+    "tailwindFunctions": ["clsx", "cn", "cva"],
     "tailwindStylesheet": "resources/css/app.css",
     "tabWidth": 4,
     "overrides": [

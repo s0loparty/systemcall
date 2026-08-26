@@ -2,6 +2,7 @@
 
 use App\Models\Room;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -21,6 +22,21 @@ it('lets guests open shared room preparation links before entering a nickname', 
         ->assertSee('E1 Shared Guest Room')
         ->assertSee('Никнейм')
         ->assertPresent('@continue-to-room')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows password input for guest shared links to password protected rooms', function () {
+    $room = Room::factory()->public()->create([
+        'name' => 'E1 Password Guest Room',
+        'password_hash' => Hash::make('correct-password'),
+    ]);
+
+    visit(route('rooms.call.show', $room, absolute: false))
+        ->assertPathEndsWith('/prepare')
+        ->assertSee('E1 Password Guest Room')
+        ->assertSee('Никнейм')
+        ->assertSee('Пароль комнаты')
+        ->assertPresent('#room-password')
         ->assertNoJavaScriptErrors();
 });
 

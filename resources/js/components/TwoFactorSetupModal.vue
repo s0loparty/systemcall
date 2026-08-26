@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
+
 import { Check, Copy, ScanLine } from '@lucide/vue';
-import { useClipboard } from '@vueuse/core';
+
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
+
+import { useClipboard } from '@vueuse/core';
+
 import AlertError from '@/components/AlertError.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -19,10 +23,12 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+
 import { useAppearance } from '@/composables/useAppearance';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
-import { confirm } from '@/routes/two-factor';
 import type { TwoFactorConfigContent } from '@/types';
+
+import { confirm } from '@/routes/two-factor';
 
 type Props = {
     requiresConfirmation: boolean;

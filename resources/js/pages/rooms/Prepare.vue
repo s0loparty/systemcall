@@ -1,11 +1,22 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
+
 import { ArrowLeft, ArrowRight } from '@lucide/vue';
+
 import { computed, ref } from 'vue';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+
+import { home } from '@/routes';
+
+import { show as showCall, waiting as showWaiting } from '@/routes/rooms/call';
+import { index as showRooms } from '@/routes/rooms/index';
+
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
@@ -13,9 +24,6 @@ import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQu
 import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomJoin } from '@/features/calls/composables/useRoomJoin';
 import type { CallPageProps } from '@/features/calls/types';
-import { home } from '@/routes';
-import { show as showCall, waiting as showWaiting } from '@/routes/rooms/call';
-import { index as showRooms } from '@/routes/rooms/index';
 
 const props = defineProps<CallPageProps>();
 const page = usePage();
@@ -87,7 +95,7 @@ async function continueToRoom(): Promise<void> {
         return null;
     });
 
-    if (response === null) {
+    if (!response) {
         return;
     }
 
@@ -104,55 +112,100 @@ async function continueToRoom(): Promise<void> {
 <template>
     <Head :title="`Подготовка: ${room.name}`" />
 
-    <main
-        class="relative min-h-dvh overflow-hidden bg-[#fbfaff] text-slate-950 antialiased"
+    <div
+        class="min-h-screen bg-[#fafaf9] flex items-center justify-center p-4 sm:p-6"
     >
-        <div
-            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_10%,rgba(124,92,255,0.17),transparent_28%),radial-gradient(circle_at_82%_8%,rgba(59,130,246,0.12),transparent_24%),radial-gradient(circle_at_50%_88%,rgba(16,185,129,0.09),transparent_24%)]"
-        />
+        <div class="w-full max-w-4xl space-y-6">
+            <!-- Back to rooms -->
+            <div>
+                <Link
+                    :href="backHref"
+                    class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    <ArrowLeft class="h-4 w-4" />
+                    Вернуться назад
+                </Link>
+            </div>
 
-        <div
-            class="relative mx-auto grid min-h-dvh max-w-6xl gap-6 px-5 py-6 sm:px-8"
-        >
-            <section class="mx-auto grid w-full max-w-5xl gap-5">
-                <div class="py-4 text-center sm:pt-8 sm:pb-2">
-                    <h1
-                        class="text-4xl font-semibold tracking-tight text-balance text-slate-950"
-                    >
-                        {{ room.name }}
+            <!-- Main card -->
+            <Card class="border-border/60 bg-white/70 shadow-sm p-0">
+                <CardContent class="p-6 sm:p-8 space-y-6">
+                    <h1 class="text-2xl text-center font-light tracking-tight">
+                        Готовы войти?
                     </h1>
-                    <p class="mt-4 text-base leading-7 text-slate-600">
-                        {{
-                            room.description ??
-                            'Проверьте устройства перед входом в комнату.'
-                        }}
-                    </p>
-                </div>
+                    <div class="grid sm:grid-cols-2 gap-6">
+                        <div>
+                            <!-- Room info -->
+                            <div class="space-y-2">
+                                <p class="text-sm text-muted-foreground">
+                                    Вы подключаетесь как
+                                    <span class="font-medium text-foreground">
+                                        {{
+                                            defaultDisplayName || 'Гость'
+                                        }} </span
+                                    >.
+                                </p>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-sm text-muted-foreground"
+                                        >Комната</span
+                                    >
+                                    <span
+                                        class="text-sm font-medium text-foreground"
+                                        >{{ room.name }}</span
+                                    >
+                                    <Badge
+                                        v-if="room.has_password"
+                                        variant="outline"
+                                        class="border-border/60 bg-white/50 text-xs"
+                                    >
+                                        🔒 с паролем
+                                    </Badge>
+                                </div>
+                            </div>
 
-                <div class="grid gap-5">
-                    <Card
-                        class="w-full flex-row gap-0 rounded-md border-slate-200/80 bg-white/90 p-0 shadow-sm"
-                    >
-                        <CardContent
-                            class="grid w-full gap-5 p-4 lg:grid-cols-[1fr_20rem]"
-                        >
-                            <div v-if="isGuest" class="grid gap-2">
-                                <Label for="guest-display-name">Никнейм</Label>
-                                <Input
-                                    id="guest-display-name"
-                                    v-model="roomJoin.joinRequest.display_name"
-                                    data-test="guest-display-name"
-                                    maxlength="120"
-                                    placeholder="Как вас показать участникам?"
-                                    type="text"
-                                />
+                            <Separator class="my-5" />
+
+                            <div>
+                                <div
+                                    class="grid md:grid-cols-2 w-full gap-4 items-center"
+                                >
+                                    <!-- Guest name input -->
+                                    <div v-if="isGuest" class="space-y-1.5">
+                                        <Label
+                                            for="guest-display-name"
+                                            class="text-sm"
+                                        >
+                                            Ваше имя
+                                        </Label>
+                                        <Input
+                                            id="guest-display-name"
+                                            v-model="
+                                                roomJoin.joinRequest
+                                                    .display_name
+                                            "
+                                            data-test="guest-display-name"
+                                            maxlength="120"
+                                            placeholder="Будет видно участникам"
+                                            type="text"
+                                            class="rounded-lg border-border/60 bg-white/80"
+                                        />
+                                    </div>
+
+                                    <!-- Password panel -->
+                                    <RoomPasswordPanel
+                                        v-if="needsPassword"
+                                        v-model:password="
+                                            roomJoin.joinRequest.password
+                                        "
+                                    />
+                                </div>
                                 <p
                                     v-if="
                                         roomJoin.joinRequest.errors
                                             .display_name ||
                                         guestDisplayNameMissing
                                     "
-                                    class="text-sm text-red-600"
+                                    class="text-sm text-red-600 mt-1"
                                 >
                                     {{
                                         roomJoin.joinRequest.errors
@@ -161,76 +214,67 @@ async function continueToRoom(): Promise<void> {
                                     }}
                                 </p>
                             </div>
-                            <div v-else>
-                                <CardTitle>Готовы войти?</CardTitle>
-                                <p class="mt-2 text-sm text-slate-600">
-                                    Вы подключаетесь как
-                                    {{ defaultDisplayName }}.
-                                </p>
+
+                            <!-- Join button -->
+                            <Button
+                                data-test="continue-to-room"
+                                class="w-full rounded-full mt-4 bg-neutral-900 text-white hover:bg-neutral-700 py-3 text-sm font-medium"
+                                type="button"
+                                :disabled="continueDisabled"
+                                @click="continueToRoom"
+                            >
+                                {{ continueButtonLabel }}
+                                <ArrowRight
+                                    v-if="!continueDisabled"
+                                    class="ml-2 h-4 w-4"
+                                />
+                            </Button>
+
+                            <!-- Errors -->
+                            <div class="mt-2 space-y-1">
+                                <CallError
+                                    v-if="roomJoin.joinRequest.errors.password"
+                                    :message="
+                                        roomJoin.joinRequest.errors.password
+                                    "
+                                />
+                                <CallError
+                                    v-if="hasJoinErrors"
+                                    message="Проверьте пароль или параметры входа."
+                                />
+                                <CallError
+                                    v-if="joinErrorMessage"
+                                    :message="joinErrorMessage"
+                                />
                             </div>
+                        </div>
 
-                            <div class="space-y-2">
-                                <Button
-                                    data-test="continue-to-room"
-                                    class="h-12 w-full rounded-md bg-linear-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500 disabled:opacity-60"
-                                    type="button"
-                                    :disabled="continueDisabled"
-                                    @click="continueToRoom"
-                                >
-                                    {{ continueButtonLabel }}
-                                    <ArrowRight
-                                        v-if="!continueDisabled"
-                                        class="size-4"
-                                    />
-                                </Button>
-                                <Button
-                                    as-child
-                                    variant="outline"
-                                    class="h-12 w-full rounded-md"
-                                    type="button"
-                                >
-                                    <Link :href="backHref">
-                                        <ArrowLeft class="size-4" />
-                                        Вернуться назад
-                                    </Link>
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <DeviceSetupPanel
+                            :audio-inputs="devices.audioInputs.value"
+                            :video-inputs="devices.videoInputs.value"
+                            :selected-audio-input-id="
+                                devices.selectedDevices.value.audioInputId
+                            "
+                            :selected-video-input-id="
+                                devices.selectedDevices.value.videoInputId
+                            "
+                            :preview-has-video="devices.previewHasVideo.value"
+                            :preview-loading="devices.previewLoading.value"
+                            :error="devices.deviceErrorMessage.value"
+                            @update-audio-input="devices.setAudioInput"
+                            @update-video-input="devices.setVideoInput"
+                            @preview-host="devices.setPreviewHost"
+                        />
+                    </div>
 
-                    <RoomPasswordPanel
-                        v-if="needsPassword"
-                        v-model:password="roomJoin.joinRequest.password"
-                        :error="roomJoin.joinRequest.errors.password"
-                    />
+                    <!-- <Separator class="border-border/60" /> -->
+                </CardContent>
+            </Card>
 
-                    <CallError
-                        v-if="hasJoinErrors"
-                        message="Проверьте пароль или параметры входа."
-                    />
-                    <CallError
-                        v-if="joinErrorMessage"
-                        :message="joinErrorMessage"
-                    />
-
-                    <DeviceSetupPanel
-                        :audio-inputs="devices.audioInputs.value"
-                        :video-inputs="devices.videoInputs.value"
-                        :selected-audio-input-id="
-                            devices.selectedDevices.value.audioInputId
-                        "
-                        :selected-video-input-id="
-                            devices.selectedDevices.value.videoInputId
-                        "
-                        :preview-has-video="devices.previewHasVideo.value"
-                        :preview-loading="devices.previewLoading.value"
-                        :error="devices.deviceErrorMessage.value"
-                        @update-audio-input="devices.setAudioInput"
-                        @update-video-input="devices.setVideoInput"
-                        @preview-host="devices.setPreviewHost"
-                    />
-                </div>
-            </section>
+            <!-- Footer -->
+            <div class="text-center text-xs text-muted-foreground/60">
+                Systemcall · групповые видеокомнаты
+            </div>
         </div>
-    </main>
+    </div>
 </template>

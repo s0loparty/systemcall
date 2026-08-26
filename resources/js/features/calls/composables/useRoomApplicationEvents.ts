@@ -1,5 +1,7 @@
-import { useConnectionStatus, useEcho } from '@laravel/echo-vue';
 import { ref } from 'vue';
+
+import { useConnectionStatus, useEcho } from '@laravel/echo-vue';
+
 import type {
     RoomApplicationActivity,
     RoomGlobalPinUpdatedEvent,

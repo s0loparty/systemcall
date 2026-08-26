@@ -1,7 +1,9 @@
 import { useHttp } from '@inertiajs/vue3';
+
 import { store as issueLiveKitToken } from '@/routes/rooms/livekit_token';
 import { store as joinRoom } from '@/routes/rooms/memberships';
 import { store as issueSubroomTokenRequest } from '@/routes/rooms/subroom_token';
+
 import type {
     JoinForm,
     JoinRoomResponse,

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
+
+import { Lock, Mail, User } from '@lucide/vue';
+
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
@@ -7,8 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+
 import { login } from '@/routes';
+
 import { store } from '@/routes/register';
+
 
 defineProps<{
     passwordRules: string;
@@ -17,7 +23,7 @@ defineProps<{
 defineOptions({
     layout: {
         title: 'Создание аккаунта',
-        description: 'Создайте рабочее пространство для комнат и приглашений.',
+        description: 'Создайте рабочее пространство.',
     },
 });
 </script>
@@ -29,11 +35,15 @@ defineOptions({
         v-bind="store.form()"
         :reset-on-success="['password', 'password_confirmation']"
         v-slot="{ errors, processing }"
-        class="flex flex-col gap-6"
+        class="flex flex-col gap-4"
     >
-        <div class="grid gap-6">
-            <div class="grid gap-2">
-                <Label for="name">Имя</Label>
+        <!-- Name -->
+        <div class="space-y-1.5">
+            <Label for="name">Имя</Label>
+            <div class="relative">
+                <User
+                    class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <Input
                     id="name"
                     type="text"
@@ -43,12 +53,19 @@ defineOptions({
                     autocomplete="name"
                     name="name"
                     placeholder="Полное имя"
+                    class="pl-9"
                 />
-                <InputError :message="errors.name" />
             </div>
+            <InputError :message="errors.name" />
+        </div>
 
-            <div class="grid gap-2">
-                <Label for="email">Email</Label>
+        <!-- Email -->
+        <div class="space-y-1.5">
+            <Label for="email">Email</Label>
+            <div class="relative">
+                <Mail
+                    class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <Input
                     id="email"
                     type="email"
@@ -57,12 +74,19 @@ defineOptions({
                     autocomplete="email"
                     name="email"
                     placeholder="email@example.com"
+                    class="pl-9"
                 />
-                <InputError :message="errors.email" />
             </div>
+            <InputError :message="errors.email" />
+        </div>
 
-            <div class="grid gap-2">
-                <Label for="password">Пароль</Label>
+        <!-- Password -->
+        <div class="space-y-1.5">
+            <Label for="password">Пароль</Label>
+            <div class="relative">
+                <Lock
+                    class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <PasswordInput
                     id="password"
                     required
@@ -71,12 +95,19 @@ defineOptions({
                     name="password"
                     placeholder="Пароль"
                     :passwordrules="passwordRules"
+                    class="pl-9"
                 />
-                <InputError :message="errors.password" />
             </div>
+            <InputError :message="errors.password" />
+        </div>
 
-            <div class="grid gap-2">
-                <Label for="password_confirmation">Подтвердите пароль</Label>
+        <!-- Password confirmation -->
+        <div class="space-y-1.5">
+            <Label for="password_confirmation">Подтвердите пароль</Label>
+            <div class="relative">
+                <Lock
+                    class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <PasswordInput
                     id="password_confirmation"
                     required
@@ -85,30 +116,34 @@ defineOptions({
                     name="password_confirmation"
                     placeholder="Подтвердите пароль"
                     :passwordrules="passwordRules"
+                    class="pl-9"
                 />
-                <InputError :message="errors.password_confirmation" />
             </div>
-
-            <Button
-                type="submit"
-                class="mt-2 w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
-                tabindex="5"
-                :disabled="processing"
-                data-test="register-user-button"
-            >
-                <Spinner v-if="processing" />
-                Создать аккаунт
-            </Button>
+            <InputError :message="errors.password_confirmation" />
         </div>
 
+        <!-- Submit -->
+        <Button
+            type="submit"
+            class="mt-2 w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 transition-all"
+            tabindex="5"
+            :disabled="processing"
+            data-test="register-user-button"
+        >
+            <Spinner v-if="processing" class="mr-2 h-4 w-4" />
+            {{ processing ? 'Создание...' : 'Создать аккаунт' }}
+        </Button>
+
+        <!-- Login link -->
         <div class="text-center text-sm text-muted-foreground">
             Уже есть аккаунт?
             <TextLink
                 :href="login()"
-                class="underline underline-offset-4"
+                class="font-medium text-foreground hover:underline"
                 :tabindex="6"
-                >Войти</TextLink
             >
+                Войти
+            </TextLink>
         </div>
     </Form>
 </template>

@@ -7,6 +7,7 @@ import {
     MicOffIcon,
     PinIcon,
 } from '@lucide/vue';
+
 import type { ParticipantTile, ParticipantTileActions } from '../types';
 import ParticipantTileActionsMenu from './ParticipantTileActionsMenu.vue';
 
@@ -57,7 +58,7 @@ const emit = defineEmits<{
                 ? 'h-full min-h-96 rounded-md'
                 : size === 'compact'
                   ? 'min-h-36 rounded-md'
-                  : 'min-h-64 rounded-md',
+                  : 'min-h-48 rounded-md md:min-h-64',
             personallyPinned || globallyPinned
                 ? 'border-violet-300 ring-2 ring-violet-400/55'
                 : tile.speaking
@@ -84,12 +85,11 @@ const emit = defineEmits<{
         />
         <ParticipantTileActionsMenu
             v-if="
-                !tile.local &&
-                (actions.canPersonalPin ||
-                    actions.canGlobalPin ||
-                    actions.canPromoteModerator ||
-                    actions.canKick ||
-                    actions.canBan)
+                actions.canPersonalPin ||
+                actions.canGlobalPin ||
+                actions.canPromoteModerator ||
+                actions.canKick ||
+                actions.canBan
             "
             :actions="actions"
             :disabled="actionsDisabled"

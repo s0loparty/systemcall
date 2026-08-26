@@ -1,4 +1,5 @@
 import { computed, onBeforeUnmount, ref } from 'vue';
+
 import type {
     RoomMemberSummary,
     SelectedDevices,
@@ -7,6 +8,7 @@ import type {
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
 } from '../types';
+
 import { useLiveKit } from './useLiveKit';
 import { useMediaDevices } from './useMediaDevices';
 import { useRoomJoin } from './useRoomJoin';

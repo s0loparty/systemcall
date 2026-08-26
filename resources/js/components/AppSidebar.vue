@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+
 import { LayoutGrid, Video } from '@lucide/vue';
+
 import AppLogo from '@/components/AppLogo.vue';
 import NavMain from '@/components/NavMain.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -13,9 +15,12 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import { index as roomsIndex } from '@/routes/rooms';
+
 import type { NavItem } from '@/types';
+
+import { dashboard } from '@/routes';
+
+import { index as roomsIndex } from '@/routes/rooms';
 
 const mainNavItems: NavItem[] = [
     {

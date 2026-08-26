@@ -78,7 +78,7 @@ export type RoomMemberSummary = {
     can_publish_video: boolean;
     can_publish_screen: boolean;
     hand_raised_at?: string | null;
-    left_at?: string | null;
+    left_at: string | null;
 };
 
 export type RoomMessageSummary = {

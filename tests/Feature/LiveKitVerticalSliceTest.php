@@ -7,6 +7,7 @@ use App\Models\RoomMember;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -66,6 +67,44 @@ test('guests without server issued identity are redirected from call pages to pr
     'call page' => 'rooms.call.show',
 ]);
 
+test('guest shared links to password protected rooms require password on preparation page', function () {
+    $room = Room::factory()
+        ->public()
+        ->create([
+            'name' => 'Password guest room',
+            'password_hash' => Hash::make('correct-password'),
+        ]);
+
+    $this->get(route('rooms.call.show', $room))
+        ->assertRedirect(route('rooms.call.prepare', $room));
+
+    $this->get(route('rooms.call.prepare', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Prepare')
+            ->where('room.public_id', $room->public_id)
+            ->where('room.has_password', true)
+            ->where('can_join_without_password', false));
+});
+
+test('room owners can open password protected rooms without re-entering password', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create([
+            'password_hash' => Hash::make('correct-password'),
+        ]);
+
+    $this->actingAs($owner)
+        ->get(route('rooms.call.prepare', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Prepare')
+            ->where('room.has_password', true)
+            ->where('can_join_without_password', true));
+});
+
 test('guest room joins require a display name before membership creation', function () {
     $room = Room::factory()
         ->public()
@@ -113,6 +152,7 @@ test('room owners keep moderation rights after leaving and joining again', funct
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('current_room_member_id', $member->id)
+            ->where('room_members.0.left_at', null)
             ->where('can_moderate_members', true));
 });
 
@@ -136,6 +176,36 @@ test('room owner active memberships are normalized after stale participant role 
         ->assertJsonPath('member.role', RoomRole::Owner->value);
 
     expect($member->fresh()->role)->toBe(RoomRole::Owner);
+});
+
+test('call page active member payload keeps explicit left_at null values', function () {
+    $owner = User::factory()->create();
+    $participant = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create();
+
+    RoomMember::factory()
+        ->owner()
+        ->for($room)
+        ->for($owner)
+        ->create();
+
+    $participantMember = RoomMember::factory()
+        ->for($room)
+        ->for($participant)
+        ->create();
+
+    $response = $this->actingAs($owner)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk();
+
+    $members = collect($response->inertiaProps('room_members'));
+    $payload = $members->firstWhere('id', $participantMember->id);
+
+    expect($payload)->not->toBeNull()
+        ->and($payload['left_at'])->toBeNull();
 });
 
 test('guests with server issued identity can open the call page', function () {

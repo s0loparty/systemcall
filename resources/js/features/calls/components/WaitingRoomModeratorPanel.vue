@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useHttp } from '@inertiajs/vue3';
+
 import { Check, ShieldCheck, X } from '@lucide/vue';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,7 +12,10 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { approve, reject } from '@/routes/rooms/waiting_room';
+
 import type { WaitingRoomEntry } from '../types';
 
 type Props = {
@@ -52,26 +57,18 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
         data-test="waiting-room-moderator-panel"
         class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
     >
-        <CardHeader class="flex flex-row items-start justify-between gap-3">
+        <CardHeader class="flex flex-row items-center gap-3">
+            <div
+                class="flex size-10 items-center justify-center rounded-md bg-violet-50 text-violet-600 grow-0"
+            >
+                <ShieldCheck class="size-5" />
+            </div>
             <div>
-                <div
-                    class="flex size-10 items-center justify-center rounded-md bg-violet-50 text-violet-600"
-                >
-                    <ShieldCheck class="size-5" />
-                </div>
-                <CardTitle class="mt-4 text-base"> Очередь входа </CardTitle>
-                <CardDescription class="leading-6">
+                <CardTitle class="text-base"> Очередь входа </CardTitle>
+                <CardDescription class="leading-4">
                     Одобряйте участников, которых готовы пустить в комнату.
                 </CardDescription>
             </div>
-            <Badge
-                data-test="waiting-room-pending-count"
-                :data-count="entries.length"
-                variant="secondary"
-                class="rounded-md"
-            >
-                Ожидают: {{ entries.length }}
-            </Badge>
         </CardHeader>
 
         <CardContent>
@@ -82,59 +79,61 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                 Сейчас никто не ожидает.
             </p>
 
-            <ol v-else class="flex flex-col gap-2">
-                <li
-                    v-for="entry in entries"
-                    :key="entry.id"
-                    data-test="waiting-room-entry"
-                    :data-entry-id="entry.id"
-                    class="rounded-md border border-slate-200 bg-slate-50 p-3"
-                >
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <p
-                                class="truncate text-sm font-semibold text-slate-950"
-                            >
-                                {{ entry.display_name }}
-                            </p>
-                            <p class="mt-1 text-xs text-slate-500">
-                                {{ entry.guest ? 'Гость' : 'Пользователь' }}
-                            </p>
+            <ScrollArea v-else>
+                <ol class="flex flex-col gap-2">
+                    <li
+                        v-for="entry in entries"
+                        :key="entry.id"
+                        data-test="waiting-room-entry"
+                        :data-entry-id="entry.id"
+                        class="rounded-md border border-slate-200 bg-slate-50 p-3 flex items-center justify-between"
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p
+                                    class="truncate text-sm font-semibold text-slate-950"
+                                >
+                                    {{ entry.display_name }}
+                                </p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ entry.guest ? 'Гость' : 'Пользователь' }}
+                                </p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="mt-3 grid grid-cols-2 gap-2">
-                        <Button
-                            class="rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
-                            type="button"
-                            data-test="approve-waiting-entry"
-                            :data-entry-id="entry.id"
-                            :disabled="
-                                approveRequest.processing ||
-                                rejectRequest.processing
-                            "
-                            @click="approveEntry(entry)"
-                        >
-                            <Check class="size-4" />
-                            Одобрить
-                        </Button>
-                        <Button
-                            class="rounded-md bg-red-600 text-white hover:bg-red-500"
-                            type="button"
-                            data-test="reject-waiting-entry"
-                            :data-entry-id="entry.id"
-                            :disabled="
-                                approveRequest.processing ||
-                                rejectRequest.processing
-                            "
-                            @click="rejectEntry(entry)"
-                        >
-                            <X class="size-4" />
-                            Отклонить
-                        </Button>
-                    </div>
-                </li>
-            </ol>
+                        <div class="grid grid-cols-2 gap-2">
+                            <Button
+                                class="text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
+                                type="button"
+                                data-test="approve-waiting-entry"
+                                :data-entry-id="entry.id"
+                                :disabled="
+                                    approveRequest.processing ||
+                                    rejectRequest.processing
+                                "
+                                @click="approveEntry(entry)"
+                            >
+                                <Check class="size-4" />
+                                Одобрить
+                            </Button>
+                            <Button
+                                class="text-xs rounded-md bg-red-600 text-white hover:bg-red-500"
+                                type="button"
+                                data-test="reject-waiting-entry"
+                                :data-entry-id="entry.id"
+                                :disabled="
+                                    approveRequest.processing ||
+                                    rejectRequest.processing
+                                "
+                                @click="rejectEntry(entry)"
+                            >
+                                <X class="size-4" />
+                                Отклонить
+                            </Button>
+                        </div>
+                    </li>
+                </ol>
+            </ScrollArea>
         </CardContent>
     </Card>
 </template>

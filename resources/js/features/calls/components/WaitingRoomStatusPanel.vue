@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { CheckCircle2, Clock3, XCircle } from '@lucide/vue';
+
 import { computed } from 'vue';
+
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -9,6 +11,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+
 import type { WaitingRoomEntry } from '../types';
 
 type Props = {
@@ -54,9 +57,9 @@ const statusContent = computed(() => {
         v-if="entry"
         data-test="waiting-room-status"
         :data-status="entry.status"
-        class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
+        class="border-none shadow-none p-0"
     >
-        <CardHeader class="flex flex-row items-start gap-4">
+        <CardHeader class="flex flex-row items-start gap-4 p-0">
             <div
                 :class="[
                     'flex size-11 shrink-0 items-center justify-center rounded-md border',
@@ -77,7 +80,7 @@ const statusContent = computed(() => {
                 </CardDescription>
             </div>
         </CardHeader>
-        <CardContent>
+        <CardContent class="p-0">
             <p class="rounded-md bg-slate-50 p-3 text-sm text-slate-500">
                 Страница обновится автоматически после решения модератора.
             </p>

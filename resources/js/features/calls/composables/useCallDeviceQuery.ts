@@ -1,4 +1,5 @@
 import { computed } from 'vue';
+
 import type { SelectedDevices } from '../types';
 
 export function useCallDeviceQuery() {

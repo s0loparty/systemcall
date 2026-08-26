@@ -10,7 +10,9 @@ import {
     Video,
     VideoOff,
 } from '@lucide/vue';
+
 import { ref } from 'vue';
+
 import { Badge } from '@/components/ui/badge';
 import {
     Dialog,
@@ -25,7 +27,9 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+
 import type { WaitingRoomEntry } from '../types';
+
 import WaitingRoomModeratorPanel from './WaitingRoomModeratorPanel.vue';
 
 type Props = {

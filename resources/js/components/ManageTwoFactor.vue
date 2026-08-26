@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Form } from '@inertiajs/vue3';
+
 import { ShieldCheck } from '@lucide/vue';
+
 import { onUnmounted, ref } from 'vue';
+
 import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
@@ -12,7 +15,9 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
+
 import { disable, enable } from '@/routes/two-factor';
 
 export type Props = {
