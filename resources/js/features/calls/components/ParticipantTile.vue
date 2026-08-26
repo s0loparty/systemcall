@@ -8,7 +8,11 @@ import {
     PinIcon,
 } from '@lucide/vue';
 
-import type { ParticipantTile, ParticipantTileActions } from '../types';
+import type {
+    ParticipantTile,
+    ParticipantTileActions,
+    RoomSubroomSummary,
+} from '../types';
 import ParticipantTileActionsMenu from './ParticipantTileActionsMenu.vue';
 
 type Props = {
@@ -17,6 +21,7 @@ type Props = {
     personallyPinned: boolean;
     globallyPinned: boolean;
     actions?: ParticipantTileActions;
+    subrooms?: RoomSubroomSummary[];
     actionsDisabled?: boolean;
     size?: 'default' | 'compact' | 'share';
 };
@@ -26,9 +31,11 @@ withDefaults(defineProps<Props>(), {
         canPersonalPin: false,
         canGlobalPin: false,
         canPromoteModerator: false,
+        canMoveSubroom: false,
         canKick: false,
         canBan: false,
     }),
+    subrooms: () => [],
     actionsDisabled: false,
     size: 'default',
 });
@@ -38,6 +45,7 @@ const emit = defineEmits<{
     'pin-personal': [identity: string];
     'pin-global': [identity: string];
     'promote-moderator': [identity: string];
+    'move-subroom': [identity: string, subroomPublicId: string | null];
     kick: [identity: string];
     ban: [identity: string];
 }>();
@@ -88,16 +96,22 @@ const emit = defineEmits<{
                 actions.canPersonalPin ||
                 actions.canGlobalPin ||
                 actions.canPromoteModerator ||
+                actions.canMoveSubroom ||
                 actions.canKick ||
                 actions.canBan
             "
             :actions="actions"
+            :subrooms="subrooms"
             :disabled="actionsDisabled"
             :personally-pinned="personallyPinned"
             :globally-pinned="globallyPinned"
             @pin-personal="emit('pin-personal', tile.identity)"
             @pin-global="emit('pin-global', tile.identity)"
             @promote-moderator="emit('promote-moderator', tile.identity)"
+            @move-subroom="
+                (subroomPublicId) =>
+                    emit('move-subroom', tile.identity, subroomPublicId)
+            "
             @kick="emit('kick', tile.identity)"
             @ban="emit('ban', tile.identity)"
         />

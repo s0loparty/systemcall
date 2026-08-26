@@ -153,6 +153,67 @@ test('subroom token can switch member back to the main LiveKit room', function (
         ->and($metadata['room_subroom_public_id'])->toBeNull();
 });
 
+test('moderators can move active members into subrooms', function () {
+    [$room, $owner, , , $participant] = subroomWorkflowRoom();
+    $subroom = RoomSubroom::factory()
+        ->for($room)
+        ->create([
+            'name' => 'Team A',
+            'position' => 1,
+        ]);
+
+    Event::fake([RoomMemberSubroomChanged::class]);
+
+    $this->actingAs($owner)
+        ->patchJson(route('rooms.members.subroom.update', [$room, $participant]), [
+            'room_subroom_public_id' => $subroom->public_id,
+        ])
+        ->assertOk()
+        ->assertJsonPath('member.id', $participant->id)
+        ->assertJsonPath('member.room_subroom_id', $subroom->id)
+        ->assertJsonPath('subroom.public_id', $subroom->public_id);
+
+    expect($participant->fresh()->room_subroom_id)->toBe($subroom->id);
+
+    Event::assertDispatched(RoomMemberSubroomChanged::class, function (RoomMemberSubroomChanged $event) use ($room, $participant, $subroom): bool {
+        $payload = $event->broadcastWith();
+
+        expect($event->broadcastAs())->toBe('room.member.subroom-changed')
+            ->and($event->broadcastOn()[0]->name)->toBe('private-room.'.$room->public_id)
+            ->and($payload['member']['id'])->toBe($participant->id)
+            ->and($payload['subroom']['id'])->toBe($subroom->id);
+
+        return true;
+    });
+
+    $this->actingAs($owner)
+        ->patchJson(route('rooms.members.subroom.update', [$room, $participant]), [
+            'room_subroom_public_id' => null,
+        ])
+        ->assertOk()
+        ->assertJsonPath('member.room_subroom_id', null)
+        ->assertJsonPath('subroom', null);
+
+    expect($participant->fresh()->room_subroom_id)->toBeNull();
+});
+
+test('participants cannot move members and foreign subrooms are rejected', function () {
+    [$room, $owner, , $participantUser, $participant] = subroomWorkflowRoom();
+    $foreignSubroom = RoomSubroom::factory()->create();
+
+    $this->actingAs($participantUser)
+        ->patchJson(route('rooms.members.subroom.update', [$room, $participant]), [
+            'room_subroom_public_id' => null,
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($owner)
+        ->patchJson(route('rooms.members.subroom.update', [$room, $participant]), [
+            'room_subroom_public_id' => $foreignSubroom->public_id,
+        ])
+        ->assertForbidden();
+});
+
 test('subroom switching rejects foreign targets and non members', function () {
     [$room, , , $participantUser] = subroomWorkflowRoom();
     $foreignSubroom = RoomSubroom::factory()->create();

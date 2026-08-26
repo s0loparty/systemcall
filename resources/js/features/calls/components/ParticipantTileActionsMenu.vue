@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { Ban, Globe2, Pin, PinOff, ShieldPlus, UserMinus } from '@lucide/vue';
+import {
+    Ban,
+    DoorOpen,
+    Globe2,
+    Pin,
+    PinOff,
+    ShieldPlus,
+    UserMinus,
+} from '@lucide/vue';
 
 import { computed, ref } from 'vue';
 
@@ -14,18 +22,25 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-import type { ParticipantTileActions } from '../types';
+import type { ParticipantTileActions, RoomSubroomSummary } from '../types';
 
 type ConfirmAction = 'kick' | 'ban';
 
 type Props = {
     actions: ParticipantTileActions;
+    subrooms: RoomSubroomSummary[];
     disabled: boolean;
     personallyPinned: boolean;
     globallyPinned: boolean;
@@ -38,6 +53,7 @@ const emit = defineEmits<{
     'pin-personal': [];
     'pin-global': [];
     'promote-moderator': [];
+    'move-subroom': [subroomPublicId: string | null];
     kick: [];
     ban: [];
 }>();
@@ -47,6 +63,7 @@ const hasActions = computed(
         props.actions.canPersonalPin ||
         props.actions.canGlobalPin ||
         props.actions.canPromoteModerator ||
+        props.actions.canMoveSubroom ||
         props.actions.canKick ||
         props.actions.canBan,
 );
@@ -160,6 +177,49 @@ function confirm(): void {
                     <p>Назначить модератором</p>
                 </TooltipContent>
             </Tooltip>
+
+            <DropdownMenu v-if="actions.canMoveSubroom">
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <DropdownMenuTrigger as-child>
+                            <button
+                                class="flex size-9 items-center justify-center rounded-md text-violet-100 transition hover:bg-violet-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                                type="button"
+                                data-test="move-subroom-participant"
+                                :disabled="disabled"
+                                aria-label="Переместить в подкомнату"
+                                @click.stop
+                            >
+                                <DoorOpen class="size-4" />
+                            </button>
+                        </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                        <p>Переместить в подкомнату</p>
+                    </TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent
+                    align="end"
+                    class="z-60 w-56 rounded-md"
+                    @click.stop
+                >
+                    <DropdownMenuItem
+                        data-test="move-subroom-option-main"
+                        @select="emit('move-subroom', null)"
+                    >
+                        Основная комната
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        v-for="subroom in subrooms"
+                        :key="subroom.id"
+                        data-test="move-subroom-option"
+                        :data-subroom-id="subroom.public_id"
+                        @select="emit('move-subroom', subroom.public_id)"
+                    >
+                        {{ subroom.name }}
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
             <Tooltip v-if="actions.canKick">
                 <TooltipTrigger as-child>

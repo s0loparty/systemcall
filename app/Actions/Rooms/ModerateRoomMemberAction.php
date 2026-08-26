@@ -7,9 +7,11 @@ use App\Events\Rooms\RoomMemberBanned;
 use App\Events\Rooms\RoomMemberMuted;
 use App\Events\Rooms\RoomMemberRemoved;
 use App\Events\Rooms\RoomMemberRoleChanged;
+use App\Events\Rooms\RoomMemberSubroomChanged;
 use App\Models\Room;
 use App\Models\RoomBan;
 use App\Models\RoomMember;
+use App\Models\RoomSubroom;
 use App\Models\User;
 use App\Services\LiveKit\LiveKitRoomService;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -96,6 +98,31 @@ class ModerateRoomMemberAction
     }
 
     /**
+     * @param  array{room_subroom_public_id:string|null}  $data
+     * @return array{member:RoomMember,subroom:RoomSubroom|null}
+     */
+    public function moveToSubroom(Room $room, RoomMember $target, User $actor, array $data): array
+    {
+        $this->authorizeCanManageSubrooms($room, $target, $actor);
+
+        $subroom = $this->targetSubroom($room, $data['room_subroom_public_id']);
+
+        $target->forceFill([
+            'room_subroom_id' => $subroom?->id,
+        ])->save();
+        $target->refresh();
+        $target->setRelation('room', $room);
+        $target->setRelation('subroom', $subroom);
+
+        RoomMemberSubroomChanged::dispatch($target, $subroom);
+
+        return [
+            'member' => $target,
+            'subroom' => $subroom,
+        ];
+    }
+
+    /**
      * @param  array{reason?:string|null,expires_at?:string|null}  $data
      */
     public function ban(Room $room, RoomMember $target, User $actor, array $data): RoomBan
@@ -137,6 +164,34 @@ class ModerateRoomMemberAction
         if ($actorMember->role === RoomRole::Participant || ($actorMember->role === RoomRole::Moderator && $target->isModerator())) {
             throw new AuthorizationException('You cannot moderate this member.');
         }
+    }
+
+    private function authorizeCanManageSubrooms(Room $room, RoomMember $target, User $actor): void
+    {
+        $this->actorMember($room, $actor);
+
+        if ($target->room_id !== $room->id || $target->left_at !== null) {
+            throw new AuthorizationException('This member is not active in the room.');
+        }
+    }
+
+    private function targetSubroom(Room $room, ?string $publicId): ?RoomSubroom
+    {
+        if ($publicId === null) {
+            return null;
+        }
+
+        $subroom = $room->subrooms()
+            ->where('public_id', $publicId)
+            ->first();
+
+        if (! $subroom instanceof RoomSubroom) {
+            throw new AuthorizationException('The target subroom does not belong to this room.');
+        }
+
+        $subroom->setRelation('room', $room);
+
+        return $subroom;
     }
 
     private function actorMember(Room $room, User $actor): RoomMember

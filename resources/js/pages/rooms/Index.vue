@@ -15,6 +15,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { dashboard } from '@/routes';
 
@@ -76,7 +77,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
             </p>
         </div>
 
-        <div class="grid gap-6 lg:grid-cols-[380px_1fr]">
+        <div class="grid gap-6 grid-cols-1 lg:grid-cols-[380px_1fr]">
             <!-- Left column: Create room form -->
             <div class="order-2 lg:order-1">
                 <Card class="border-border/60 bg-white/70 shadow-sm">
@@ -299,137 +300,103 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                         </div>
 
                         <!-- Rooms list -->
-                        <div v-else class="space-y-3">
-                            <article
-                                v-for="room in rooms"
-                                :key="room.public_id"
-                                class="group rounded-xl border border-border/60 bg-white/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:shadow-md"
-                            >
-                                <div
-                                    class="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-center"
+                        <ScrollArea style="height: 480px" v-else>
+                            <div class="space-y-3">
+                                <article
+                                    v-for="room in rooms"
+                                    :key="room.public_id"
+                                    class="group rounded-xl border border-border/60 bg-white/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:shadow-xs"
                                 >
-                                    <div class="min-w-0">
-                                        <div
-                                            class="flex flex-wrap items-center gap-2"
-                                        >
+                                    <div
+                                        class="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-center"
+                                    >
+                                        <div class="min-w-0">
                                             <div
-                                                class="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-white sm:size-10"
+                                                class="flex flex-wrap items-center gap-2"
                                             >
-                                                <Video
-                                                    class="size-4 text-foreground sm:size-5"
-                                                />
+                                                <div
+                                                    class="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-white sm:size-10"
+                                                >
+                                                    <Video
+                                                        class="size-4 text-foreground sm:size-5"
+                                                    />
+                                                </div>
+                                                <h3
+                                                    class="font-semibold text-foreground truncate text-sm sm:text-base"
+                                                >
+                                                    {{ room.name }}
+                                                </h3>
                                             </div>
-                                            <h3
-                                                class="font-semibold text-foreground truncate text-sm sm:text-base"
-                                            >
-                                                {{ room.name }}
-                                            </h3>
-                                        </div>
 
-                                        <div
-                                            class="mt-2 flex flex-wrap gap-1.5"
-                                        >
-                                            <Badge
-                                                variant="secondary"
-                                                class="bg-white/50 border-border/60 text-[10px] sm:text-xs"
+                                            <div
+                                                class="mt-2 flex flex-wrap gap-1.5"
+                                            >
+                                                <Badge
+                                                    variant="secondary"
+                                                    class="bg-white/50 border-border/60 text-[10px] sm:text-xs"
+                                                >
+                                                    {{
+                                                        visibilityLabel(
+                                                            room.visibility,
+                                                        )
+                                                    }}
+                                                </Badge>
+                                                <Badge
+                                                    v-if="
+                                                        room.waiting_room_enabled
+                                                    "
+                                                    class="bg-amber-50 text-amber-700 border-amber-200/60 text-[10px] sm:text-xs"
+                                                >
+                                                    <DoorOpen
+                                                        class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
+                                                    />
+                                                    зал ожидания
+                                                </Badge>
+                                                <Badge
+                                                    v-if="room.has_password"
+                                                    class="bg-blue-50 text-blue-700 border-blue-200/60 text-[10px] sm:text-xs"
+                                                >
+                                                    <ShieldCheck
+                                                        class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
+                                                    />
+                                                    пароль
+                                                </Badge>
+                                            </div>
+
+                                            <p
+                                                class="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6"
                                             >
                                                 {{
-                                                    visibilityLabel(
-                                                        room.visibility,
-                                                    )
+                                                    room.description ??
+                                                    'Описание пока не добавлено.'
                                                 }}
-                                            </Badge>
-                                            <Badge
-                                                v-if="room.waiting_room_enabled"
-                                                class="bg-amber-50 text-amber-700 border-amber-200/60 text-[10px] sm:text-xs"
-                                            >
-                                                <DoorOpen
-                                                    class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
-                                                />
-                                                зал ожидания
-                                            </Badge>
-                                            <Badge
-                                                v-if="room.has_password"
-                                                class="bg-blue-50 text-blue-700 border-blue-200/60 text-[10px] sm:text-xs"
-                                            >
-                                                <ShieldCheck
-                                                    class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
-                                                />
-                                                пароль
-                                            </Badge>
+                                            </p>
                                         </div>
 
-                                        <p
-                                            class="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground sm:text-sm sm:leading-6"
+                                        <Button
+                                            as-child
+                                            class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 sm:w-auto sm:px-5"
+                                            size="sm"
                                         >
-                                            {{
-                                                room.description ??
-                                                'Описание пока не добавлено.'
-                                            }}
-                                        </p>
+                                            <Link
+                                                :href="
+                                                    prepareCall(room.public_id)
+                                                "
+                                                class="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                                            >
+                                                Подготовиться
+                                                <ArrowRight
+                                                    class="size-3.5 sm:size-4"
+                                                />
+                                            </Link>
+                                        </Button>
                                     </div>
-
-                                    <Button
-                                        as-child
-                                        class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 sm:w-auto sm:px-5"
-                                        size="sm"
-                                    >
-                                        <Link
-                                            :href="prepareCall(room.public_id)"
-                                            class="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
-                                        >
-                                            Подготовиться
-                                            <ArrowRight
-                                                class="size-3.5 sm:size-4"
-                                            />
-                                        </Link>
-                                    </Button>
-                                </div>
-                            </article>
-                        </div>
+                                </article>
+                            </div>
+                        </ScrollArea>
                     </CardContent>
                 </Card>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="mt-8 border-t border-border/60 pt-6">
-            <div
-                class="flex flex-col items-start justify-between gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center"
-            >
-                <div class="flex items-center gap-3">
-                    <span class="flex items-center gap-1.5">
-                        <span
-                            class="inline-block size-2 rounded-full bg-emerald-500"
-                        ></span>
-                        онлайн
-                    </span>
-                    <span class="hidden sm:inline">•</span>
-                    <span>готово для команд</span>
-                </div>
-                <div class="flex flex-wrap gap-3 sm:gap-4">
-                    <a
-                        href="#"
-                        class="transition hover:text-foreground hover:underline underline-offset-2"
-                        >Помощь</a
-                    >
-                    <a
-                        href="#"
-                        class="transition hover:text-foreground hover:underline underline-offset-2"
-                        >API</a
-                    >
-                    <a
-                        href="#"
-                        class="transition hover:text-foreground hover:underline underline-offset-2"
-                        >Блог</a
-                    >
-                </div>
-            </div>
-            <div
-                class="mt-4 text-center text-[10px] text-muted-foreground/60 sm:text-[11px]"
-            >
-                Systemcall · групповые видеокомнаты · минимализм
-            </div>
-        </footer>
     </div>
 </template>

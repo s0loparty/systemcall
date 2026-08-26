@@ -3,20 +3,7 @@ import { Head, router, useHttp, usePage } from '@inertiajs/vue3';
 
 import { computed, onMounted, ref } from 'vue';
 
-import CallControlsBar from '@/features/calls/components/CallControlsBar.vue';
-import CallError from '@/features/calls/components/CallError.vue';
-import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
-import RoomChatSidebar from '@/features/calls/components/RoomChatSidebar.vue';
-import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
-import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
-import { useCallSession } from '@/features/calls/composables/useCallSession';
-import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
-import type {
-    CallPageProps,
-    ParticipantTile,
-    ParticipantTileActions,
-    RoomMemberSummary,
-} from '@/features/calls/types';
+import { Toaster } from '@/components/ui/sonner';
 
 import {
     prepare as showPrepare,
@@ -26,6 +13,24 @@ import { update as updateGlobalPin } from '@/routes/rooms/global_pin';
 import { update as updateHand } from '@/routes/rooms/hand';
 import { ban, kick } from '@/routes/rooms/members';
 import { update as updateRole } from '@/routes/rooms/members/role';
+
+import CallControlsBar from '@/features/calls/components/CallControlsBar.vue';
+import CallError from '@/features/calls/components/CallError.vue';
+import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
+import RoomChatSidebar from '@/features/calls/components/RoomChatSidebar.vue';
+import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
+import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
+import { useCallSession } from '@/features/calls/composables/useCallSession';
+import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
+import { useSubroomManagement } from '@/features/calls/composables/useSubroomManagement';
+import type {
+    CallPageProps,
+    ParticipantTile,
+    ParticipantTileActions,
+    RoomMemberSubroomChangedEvent,
+    RoomMemberSummary,
+} from '@/features/calls/types';
+import { toast } from 'vue-sonner';
 
 type MemberResponse = {
     member: RoomMemberSummary;
@@ -77,7 +82,11 @@ const realtime = useRoomApplicationEvents(props.room.public_id, {
     onWaitingRoomDecision: (event) => {
         void call.handleWaitingRoomDecision(event);
     },
+    onMemberSubroomChanged: (event) => {
+        void handleMemberSubroomChanged(event);
+    },
 });
+const subroomManagement = useSubroomManagement(props.room.public_id);
 
 const {
     joinRequest,
@@ -106,6 +115,8 @@ const {
     upsertRoomMember,
     roomMessages,
     appendRoomMessage,
+    roomSubrooms,
+    upsertRoomSubroom,
     globalPinnedRoomMemberId,
     echoConnectionStatus,
     waitingRoomEntries,
@@ -137,6 +148,7 @@ const canShareScreen = computed(
         joinedMember.value?.can_publish_screen ??
         false,
 );
+const canManageSubrooms = computed(() => props.can_moderate_members);
 const raisedHandsCount = computed(
     () => roomMembers.value.filter((member) => member.hand_raised_at).length,
 );
@@ -193,6 +205,7 @@ const tileActionsByIdentity = computed(() =>
                 canTarget &&
                 currentRoomMember.value?.role === 'owner' &&
                 member?.role === 'participant',
+            canMoveSubroom: canTarget && canManageSubrooms.value,
             canKick: canModerateTarget,
             canBan: canModerateTarget,
         };
@@ -205,7 +218,14 @@ const tileActionsBusy = computed(
         globalPinRequest.processing ||
         roleRequest.processing ||
         kickRequest.processing ||
-        banRequest.processing,
+        banRequest.processing ||
+        subroomManagement.moveRequest.processing,
+);
+
+const subroomsBusy = computed(
+    () =>
+        subroomManagement.createRequest.processing ||
+        subroomManagement.moveRequest.processing,
 );
 
 function canModerateRoomMember(member: RoomMemberSummary): boolean {
@@ -345,6 +365,83 @@ async function promoteModerator(identity: string): Promise<void> {
     }
 }
 
+async function createSubroom(name: string): Promise<void> {
+    if (
+        !canManageSubrooms.value ||
+        subroomManagement.createRequest.processing
+    ) {
+        return;
+    }
+
+    const response = await subroomManagement.create(name);
+
+    if (response?.subroom) {
+        upsertRoomSubroom(response.subroom);
+    }
+}
+
+async function moveMemberToSubroom(
+    memberId: number,
+    subroomPublicId: string | null,
+): Promise<void> {
+    if (!canManageSubrooms.value || subroomManagement.moveRequest.processing) {
+        return;
+    }
+
+    const response = await subroomManagement.moveMember(
+        memberId,
+        subroomPublicId,
+    );
+
+    if (response?.member) {
+        upsertRoomMember(response.member);
+    }
+
+    if (response?.member.id === currentRoomMemberId.value) {
+        await switchCurrentParticipantSubroom(subroomPublicId);
+    }
+}
+
+async function moveTileToSubroom(
+    identity: string,
+    subroomPublicId: string | null,
+): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (!member) {
+        return;
+    }
+
+    await moveMemberToSubroom(member.id, subroomPublicId);
+}
+
+async function handleMemberSubroomChanged(
+    event: RoomMemberSubroomChangedEvent,
+): Promise<void> {
+    if (
+        event.member.id !== currentRoomMemberId.value ||
+        call.switchingSubroom.value ||
+        joinedMember.value?.room_subroom_id === event.member.room_subroom_id
+    ) {
+        return;
+    }
+
+    const targetName = event.subroom?.name ?? 'Основная комната';
+
+    toast.info(`Вас переместили: ${targetName}`);
+    await switchCurrentParticipantSubroom(event.subroom?.public_id ?? null);
+}
+
+async function switchCurrentParticipantSubroom(
+    subroomPublicId: string | null,
+): Promise<void> {
+    const response = await call.switchSubroom(subroomPublicId);
+
+    if (response?.member) {
+        upsertRoomMember(response.member);
+    }
+}
+
 async function banParticipant(identity: string): Promise<void> {
     const member = memberByIdentity(identity);
 
@@ -431,11 +528,13 @@ onMounted(() => {
                 :personal-pinned-identity="personalPinnedIdentity"
                 :global-pinned-identity="globalPinnedIdentity"
                 :tile-actions-by-identity="tileActionsByIdentity"
+                :subrooms="roomSubrooms"
                 :actions-disabled="tileActionsBusy"
                 @media-host="setMediaHost"
                 @pin-personal="togglePersonalPin"
                 @pin-global="toggleGlobalPin"
                 @promote-moderator="promoteModerator"
+                @move-subroom="moveTileToSubroom"
                 @kick="kickParticipant"
                 @ban="banParticipant"
             />
@@ -508,17 +607,25 @@ onMounted(() => {
             :can-share-screen="canShareScreen"
             :waiting-room-enabled="room.waiting_room_enabled"
             :can-moderate-waiting-room="can_moderate_waiting_room"
+            :can-manage-subrooms="canManageSubrooms"
             :waiting-room-entries="pendingWaitingRoomEntries"
+            :room-members="roomMembers"
+            :room-subrooms="roomSubrooms"
             :hand-raised="handRaised"
             :chat-open="chatOpen"
-            :busy="busy || handRequest.processing"
+            :busy="busy || handRequest.processing || subroomsBusy"
+            :subrooms-busy="subroomsBusy"
             @toggle-microphone="toggleMicrophone"
             @toggle-camera="toggleCamera"
             @toggle-screen-share="toggleScreenShare"
             @toggle-hand="toggleHand"
             @toggle-chat="chatOpen = !chatOpen"
             @waiting-room-entry-decided="removeWaitingRoomEntry"
+            @create-subroom="createSubroom"
+            @move-member-subroom="moveMemberToSubroom"
             @leave="leaveCall"
         />
+
+        <Toaster />
     </main>
 </template>

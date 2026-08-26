@@ -66,6 +66,8 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
         ->name('rooms.members.kick');
     Route::post('rooms/{room}/members/{roomMember}/ban', [RoomModerationController::class, 'ban'])
         ->name('rooms.members.ban');
+    Route::patch('rooms/{room}/members/{roomMember}/subroom', [RoomModerationController::class, 'moveToSubroom'])
+        ->name('rooms.members.subroom.update');
     Route::post('rooms/{room}/subrooms', [RoomSubroomController::class, 'store'])
         ->name('rooms.subrooms.store');
 });

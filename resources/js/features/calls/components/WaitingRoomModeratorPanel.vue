@@ -3,7 +3,6 @@ import { useHttp } from '@inertiajs/vue3';
 
 import { Check, ShieldCheck, X } from '@lucide/vue';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Card,

@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Actions\Rooms\ModerateRoomMemberAction;
 use App\Enums\RoomRole;
 use App\Http\Requests\Rooms\BanRoomMemberRequest;
+use App\Http\Requests\Rooms\MoveRoomMemberSubroomRequest;
 use App\Models\Room;
 use App\Models\RoomBan;
 use App\Models\RoomMember;
+use App\Models\RoomSubroom;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -72,6 +74,22 @@ class RoomModerationController extends Controller
         return response()->json(['ban' => $this->banPayload($ban)], 201);
     }
 
+    public function moveToSubroom(
+        MoveRoomMemberSubroomRequest $request,
+        Room $room,
+        RoomMember $roomMember,
+        ModerateRoomMemberAction $moderate,
+    ): JsonResponse {
+        $move = $moderate->moveToSubroom($room, $roomMember, $this->actor($request), $request->moveData());
+
+        return response()->json([
+            'member' => $this->memberPayload($move['member']),
+            'subroom' => $move['subroom'] instanceof RoomSubroom
+                ? $this->subroomPayload($move['subroom'])
+                : null,
+        ]);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -114,6 +132,21 @@ class RoomModerationController extends Controller
             'guest_id' => $ban->guest_id,
             'reason' => $ban->reason,
             'expires_at' => $ban->expires_at?->toISOString(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function subroomPayload(RoomSubroom $subroom): array
+    {
+        return [
+            'id' => $subroom->id,
+            'room_public_id' => $subroom->room->public_id,
+            'public_id' => $subroom->public_id,
+            'name' => $subroom->name,
+            'position' => $subroom->position,
+            'is_default' => $subroom->is_default,
         ];
     }
 }

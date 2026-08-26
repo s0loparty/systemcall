@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+    DoorOpen,
     Hand,
     MessageSquare,
     Mic,
@@ -28,8 +29,12 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-import type { WaitingRoomEntry } from '../types';
-
+import type {
+    RoomMemberSummary,
+    RoomSubroomSummary,
+    WaitingRoomEntry,
+} from '../types';
+import SubroomManagementSheet from './SubroomManagementSheet.vue';
 import WaitingRoomModeratorPanel from './WaitingRoomModeratorPanel.vue';
 
 type Props = {
@@ -40,10 +45,14 @@ type Props = {
     canShareScreen: boolean;
     waitingRoomEnabled: boolean;
     canModerateWaitingRoom: boolean;
+    canManageSubrooms: boolean;
     waitingRoomEntries: WaitingRoomEntry[];
+    roomMembers: RoomMemberSummary[];
+    roomSubrooms: RoomSubroomSummary[];
     handRaised: boolean;
     chatOpen: boolean;
     busy: boolean;
+    subroomsBusy: boolean;
 };
 
 const props = defineProps<Props>();
@@ -56,6 +65,8 @@ const emit = defineEmits<{
     toggleHand: [];
     toggleChat: [];
     waitingRoomEntryDecided: [entryId: number];
+    createSubroom: [name: string];
+    moveMemberSubroom: [memberId: number, subroomPublicId: string | null];
     leave: [];
 }>();
 </script>
@@ -139,6 +150,38 @@ const emit = defineEmits<{
                     </p>
                 </TooltipContent>
             </Tooltip>
+
+            <SubroomManagementSheet
+                v-if="canManageSubrooms"
+                :members="roomMembers"
+                :subrooms="roomSubrooms"
+                :disabled="subroomsBusy"
+                @create="emit('createSubroom', $event)"
+                @move="
+                    (memberId, subroomPublicId) =>
+                        emit('moveMemberSubroom', memberId, subroomPublicId)
+                "
+            >
+                <button
+                    class="relative flex size-11 cursor-pointer items-center justify-center rounded-md bg-slate-100 text-slate-950 transition-[background-color,scale] duration-150 ease-out hover:bg-slate-200 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60"
+                    type="button"
+                    data-test="toggle-subrooms-sheet"
+                    :data-count="roomSubrooms.length"
+                    :disabled="subroomsBusy"
+                    aria-label="Открыть подкомнаты"
+                    title="Подкомнаты"
+                >
+                    <DoorOpen class="size-5" />
+                    <Badge
+                        v-if="roomSubrooms.length > 0"
+                        data-test="call-subrooms-count"
+                        :data-count="roomSubrooms.length"
+                        class="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[11px] leading-none text-white"
+                    >
+                        {{ roomSubrooms.length }}
+                    </Badge>
+                </button>
+            </SubroomManagementSheet>
 
             <Tooltip v-if="waitingRoomEnabled && canModerateWaitingRoom">
                 <TooltipTrigger as-child>

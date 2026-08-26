@@ -250,6 +250,8 @@ async function continueToRoom(): Promise<void> {
                         </div>
 
                         <DeviceSetupPanel
+                            class="shadow-none bg-neutral-50"
+                            class-content="p-4 sm:p-4"
                             :audio-inputs="devices.audioInputs.value"
                             :video-inputs="devices.videoInputs.value"
                             :selected-audio-input-id="
@@ -266,15 +268,8 @@ async function continueToRoom(): Promise<void> {
                             @preview-host="devices.setPreviewHost"
                         />
                     </div>
-
-                    <!-- <Separator class="border-border/60" /> -->
                 </CardContent>
             </Card>
-
-            <!-- Footer -->
-            <div class="text-center text-xs text-muted-foreground/60">
-                Systemcall · групповые видеокомнаты
-            </div>
         </div>
     </div>
 </template>

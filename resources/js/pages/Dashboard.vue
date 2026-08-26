@@ -229,46 +229,6 @@ const featureCards = [
                     </Link>
                 </div>
             </div>
-
-            <!-- Footer -->
-            <footer class="mt-8 border-t border-border/60 pt-6">
-                <div
-                    class="flex flex-col items-start justify-between gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center"
-                >
-                    <div class="flex items-center gap-3">
-                        <span class="flex items-center gap-1.5">
-                            <span
-                                class="inline-block size-2 rounded-full bg-emerald-500"
-                            ></span>
-                            онлайн
-                        </span>
-                        <span>•</span>
-                        <span>готово для команд</span>
-                    </div>
-                    <div class="flex gap-4">
-                        <a
-                            href="#"
-                            class="transition hover:text-foreground hover:underline underline-offset-2"
-                            >Помощь</a
-                        >
-                        <a
-                            href="#"
-                            class="transition hover:text-foreground hover:underline underline-offset-2"
-                            >API</a
-                        >
-                        <a
-                            href="#"
-                            class="transition hover:text-foreground hover:underline underline-offset-2"
-                            >Блог</a
-                        >
-                    </div>
-                </div>
-                <div
-                    class="mt-4 text-center text-[11px] text-muted-foreground/60"
-                >
-                    Systemcall · групповые видеокомнаты · минимализм
-                </div>
-            </footer>
         </div>
     </div>
 </template>

@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type {
     ParticipantTileActions,
     ParticipantTile as ParticipantTileData,
+    RoomSubroomSummary,
 } from '../types';
 import ParticipantTile from './ParticipantTile.vue';
 
@@ -15,11 +16,13 @@ type Props = {
     personalPinnedIdentity: string | null;
     globalPinnedIdentity: string | null;
     tileActionsByIdentity?: Record<string, ParticipantTileActions | undefined>;
+    subrooms?: RoomSubroomSummary[];
     actionsDisabled?: boolean;
 };
 
 const props = withDefaults(defineProps<Props>(), {
     tileActionsByIdentity: () => ({}),
+    subrooms: () => [],
     actionsDisabled: false,
 });
 
@@ -28,6 +31,7 @@ const emit = defineEmits<{
     'pin-personal': [identity: string];
     'pin-global': [identity: string];
     'promote-moderator': [identity: string];
+    'move-subroom': [identity: string, subroomPublicId: string | null];
     kick: [identity: string];
     ban: [identity: string];
 }>();
@@ -117,6 +121,7 @@ const sideTiles = computed(() =>
             :personally-pinned="focusedTile.identity === personalPinnedIdentity"
             :globally-pinned="focusedTile.identity === globalPinnedIdentity"
             :actions="tileActionsByIdentity[focusedTile.identity]"
+            :subrooms="subrooms"
             :actions-disabled="actionsDisabled"
             size="share"
             @media-host="
@@ -126,6 +131,10 @@ const sideTiles = computed(() =>
             @pin-global="(identity) => emit('pin-global', identity)"
             @promote-moderator="
                 (identity) => emit('promote-moderator', identity)
+            "
+            @move-subroom="
+                (identity, subroomPublicId) =>
+                    emit('move-subroom', identity, subroomPublicId)
             "
             @kick="(identity) => emit('kick', identity)"
             @ban="(identity) => emit('ban', identity)"
@@ -144,6 +153,7 @@ const sideTiles = computed(() =>
                 :personally-pinned="tile.identity === personalPinnedIdentity"
                 :globally-pinned="tile.identity === globalPinnedIdentity"
                 :actions="tileActionsByIdentity[tile.identity]"
+                :subrooms="subrooms"
                 :actions-disabled="actionsDisabled"
                 size="compact"
                 @media-host="
@@ -153,6 +163,10 @@ const sideTiles = computed(() =>
                 @pin-global="(identity) => emit('pin-global', identity)"
                 @promote-moderator="
                     (identity) => emit('promote-moderator', identity)
+                "
+                @move-subroom="
+                    (identity, subroomPublicId) =>
+                        emit('move-subroom', identity, subroomPublicId)
                 "
                 @kick="(identity) => emit('kick', identity)"
                 @ban="(identity) => emit('ban', identity)"
@@ -181,6 +195,7 @@ const sideTiles = computed(() =>
                 :personally-pinned="tile.identity === personalPinnedIdentity"
                 :globally-pinned="tile.identity === globalPinnedIdentity"
                 :actions="tileActionsByIdentity[tile.identity]"
+                :subrooms="subrooms"
                 :actions-disabled="actionsDisabled"
                 :class="
                     (tile.identity === personalPinnedIdentity ||
@@ -196,6 +211,10 @@ const sideTiles = computed(() =>
                 @pin-global="(identity) => emit('pin-global', identity)"
                 @promote-moderator="
                     (identity) => emit('promote-moderator', identity)
+                "
+                @move-subroom="
+                    (identity, subroomPublicId) =>
+                        emit('move-subroom', identity, subroomPublicId)
                 "
                 @kick="(identity) => emit('kick', identity)"
                 @ban="(identity) => emit('ban', identity)"

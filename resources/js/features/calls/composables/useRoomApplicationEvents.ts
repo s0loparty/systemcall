@@ -29,6 +29,7 @@ type UseRoomApplicationEventsOptions = {
     globalPinnedRoomMemberId?: number | null;
     waitingRoomEntries?: WaitingRoomEntry[];
     onWaitingRoomDecision?: (event: WaitingRoomEntryDecidedEvent) => void;
+    onMemberSubroomChanged?: (event: RoomMemberSubroomChangedEvent) => void;
 };
 
 export function useRoomApplicationEvents(
@@ -175,6 +176,7 @@ export function useRoomApplicationEvents(
                     : `${event.member.display_name} вернулся в основную комнату`,
                 event.occurred_at,
             );
+            options.onMemberSubroomChanged?.(event);
         },
     );
 

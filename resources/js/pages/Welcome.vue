@@ -8,11 +8,12 @@ import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 
 import { dashboard, login, register } from '@/routes';
 
 import { index as roomsIndex } from '@/routes/rooms';
+
+import AppFooter from '@/layouts/AppFooter.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -178,51 +179,10 @@ const user = computed(() => page.props.auth.user);
                         </CardContent>
                     </Card>
                 </div>
-
-                <!-- Footer -->
-                <Separator />
-                <div
-                    class="flex flex-col items-start justify-between gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center"
-                >
-                    <div class="flex items-center gap-3">
-                        <span class="flex items-center gap-1.5">
-                            <span class="relative flex h-2 w-2">
-                                <span
-                                    class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
-                                ></span>
-                                <span
-                                    class="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"
-                                ></span>
-                            </span>
-                            онлайн
-                        </span>
-                        <span>•</span>
-                        <span>готово для команд</span>
-                    </div>
-                    <div class="flex gap-4">
-                        <Link
-                            href="#"
-                            class="underline-offset-2 transition-colors hover:text-foreground hover:underline"
-                        >
-                            API
-                        </Link>
-                        <a
-                            href="https://suetovlabs.ru"
-                            class="underline decoration-dotted underline-offset-2 transition-colors hover:text-foreground"
-                            target="_blank"
-                        >
-                            Создано suetovlabs.ru
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Micro footer -->
-                <p
-                    class="text-center text-[11px] tracking-wide text-muted-foreground/60"
-                >
-                    Systemcall · групповые видеокомнаты
-                </p>
             </div>
+
+            <!-- Footer -->
+            <AppFooter class="max-w-4xl p-0 sm:p-0 lg:p-0" />
         </div>
     </main>
 </template>

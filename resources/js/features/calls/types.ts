@@ -114,6 +114,7 @@ export type ParticipantTileActions = {
     canPersonalPin: boolean;
     canGlobalPin: boolean;
     canPromoteModerator: boolean;
+    canMoveSubroom: boolean;
     canKick: boolean;
     canBan: boolean;
 };

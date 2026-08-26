@@ -2,6 +2,7 @@
 import { Camera, Mic, VideoOff } from '@lucide/vue';
 
 import { computed } from 'vue';
+import type { HTMLAttributes } from 'vue';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 
+import { cn } from '@/lib/utils';
 import type { AcceptableValue } from 'reka-ui';
 
 type Props = {
@@ -23,6 +25,7 @@ type Props = {
     previewHasVideo: boolean;
     previewLoading: boolean;
     error: string | null;
+    classContent?: HTMLAttributes['class'];
 };
 
 const props = defineProps<Props>();
@@ -72,8 +75,14 @@ function updateVideoInput(value: AcceptableValue): void {
         :data-selected-audio-input-id="selectedAudioInputId"
         :data-selected-video-input-id="selectedVideoInputId"
     >
-        <Card class="border-border/60 bg-white/70 shadow-sm p-0">
-            <CardContent class="p-6 sm:p-8 space-y-6">
+        <Card
+            :class="
+                cn('border-border/60 bg-white/70 shadow-sm p-0', $attrs.class)
+            "
+        >
+            <CardContent
+                :class="cn('p-6 sm:p-8 space-y-6', props.classContent)"
+            >
                 <!-- Header -->
                 <div>
                     <CardTitle class="text-lg font-semibold"
