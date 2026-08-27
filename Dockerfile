@@ -17,6 +17,12 @@ RUN apt-get update \
         libicu-dev \
         libzip-dev \
         $PHPIZE_DEPS \
+    \
+    && apt-mark manual \
+        libpq5 \
+        libicu76 \
+        libzip5 \
+    \
     && docker-php-ext-install -j"$(nproc)" \
         pcntl \
         pdo_pgsql \
@@ -24,25 +30,30 @@ RUN apt-get update \
         zip \
         intl \
         bcmath \
+    \
     && git clone \
         --depth 1 \
         --branch 6.2.0 \
         https://github.com/phpredis/phpredis.git \
         /tmp/phpredis \
+    \
     && cd /tmp/phpredis \
     && phpize \
     && ./configure --enable-redis \
     && make -j"$(nproc)" \
     && make install \
     && docker-php-ext-enable redis \
+    \
     && cd /app \
     && rm -rf /tmp/phpredis \
+    \
     && apt-get purge -y --auto-remove \
         git \
         libpq-dev \
         libicu-dev \
         libzip-dev \
         $PHPIZE_DEPS \
+    \
     && rm -rf /var/lib/apt/lists/*
 
 ENV APP_ENV=production \
