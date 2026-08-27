@@ -21,8 +21,28 @@ RUN install-php-extensions \
     zip \
     opcache \
     intl \
-    bcmath \
-    phpredis/phpredis@6.2.0
+    bcmath
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        git \
+        $PHPIZE_DEPS \
+    && git clone \
+        --depth 1 \
+        --branch 6.2.0 \
+        https://github.com/phpredis/phpredis.git \
+        /tmp/phpredis \
+    && cd /tmp/phpredis \
+    && phpize \
+    && ./configure --enable-redis \
+    && make -j"$(nproc)" \
+    && make install \
+    && docker-php-ext-enable redis \
+    && rm -rf /tmp/phpredis \
+    && apt-get purge -y --auto-remove \
+        git \
+        $PHPIZE_DEPS \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
