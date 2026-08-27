@@ -4,6 +4,7 @@ namespace App\Actions\Rooms;
 
 use App\Events\Rooms\RoomMemberLeft;
 use App\Models\RoomMember;
+use App\Models\RoomSubroom;
 use Illuminate\Support\Facades\DB;
 
 class LeaveRoomMemberAction
@@ -14,12 +15,7 @@ class LeaveRoomMemberAction
         ?string $expectedLiveKitRoomName = null,
         ?string $expectedLiveKitIdentity = null,
     ): bool {
-        return DB::transaction(function () use (
-            $member,
-            $expectedMediaSessionId,
-            $expectedLiveKitRoomName,
-            $expectedLiveKitIdentity,
-        ): bool {
+        return DB::transaction(function () use ($member, $expectedMediaSessionId, $expectedLiveKitRoomName, $expectedLiveKitIdentity): bool {
             /** @var RoomMember|null $lockedMember */
             $lockedMember = RoomMember::query()
                 ->with(['room', 'subroom'])
@@ -69,6 +65,14 @@ class LeaveRoomMemberAction
 
     private function liveKitRoomName(RoomMember $member): string
     {
-        return $member->subroom?->livekit_room_name ?? 'room-'.$member->room->public_id;
+        if ($member->relationLoaded('subroom')) {
+            $subroom = $member->getRelation('subroom');
+
+            if ($subroom instanceof RoomSubroom) {
+                return $subroom->livekit_room_name;
+            }
+        }
+
+        return 'room-'.$member->room->public_id;
     }
 }
