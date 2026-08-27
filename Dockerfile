@@ -22,7 +22,7 @@ RUN install-php-extensions \
     opcache \
     intl \
     bcmath \
-    redis-6.2.0
+    phpredis/phpredis@6.2.0
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
