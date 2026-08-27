@@ -7,10 +7,10 @@ use App\Models\RoomMember;
 use App\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
-use Illuminate\Support\Collection;
 
 beforeEach(function () {
     config()->set('services.livekit.url', 'https://livekit.test');
@@ -37,10 +37,10 @@ test('room call flow pages render the LiveKit vertical slice props', function (s
             ->where('room.livekit_room_name', 'room-'.$room->public_id)
             ->where('can_join_without_password', true));
 })->with([
-            'prepare page' => ['rooms.call.prepare', 'rooms/Prepare'],
-            'waiting page' => ['rooms.call.waiting', 'rooms/Waiting'],
-            'call page' => ['rooms.call.show', 'rooms/Call'],
-        ]);
+    'prepare page' => ['rooms.call.prepare', 'rooms/Prepare'],
+    'waiting page' => ['rooms.call.waiting', 'rooms/Waiting'],
+    'call page' => ['rooms.call.show', 'rooms/Call'],
+]);
 
 test('guests can open room preparation pages from shared links', function () {
     $room = Room::factory()
@@ -65,9 +65,9 @@ test('guests without server issued identity are redirected from call pages to pr
     $this->get(route($routeName, $room))
         ->assertRedirect(route('rooms.call.prepare', $room));
 })->with([
-            'waiting page' => 'rooms.call.waiting',
-            'call page' => 'rooms.call.show',
-        ]);
+    'waiting page' => 'rooms.call.waiting',
+    'call page' => 'rooms.call.show',
+]);
 
 test('guest shared links to password protected rooms require password on preparation page', function () {
     $room = Room::factory()
@@ -91,7 +91,7 @@ test('guest shared links to password protected rooms require password on prepara
 
 test('room owners can open password protected rooms without re-entering password', function () {
     $owner = User::factory()->create();
-    $room  = Room::factory()
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create([
@@ -121,7 +121,7 @@ test('guest room joins require a display name before membership creation', funct
 
 test('room owners keep moderation rights after leaving and joining again', function () {
     $owner = User::factory()->create();
-    $room  = Room::factory()
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create();
@@ -159,8 +159,8 @@ test('room owners keep moderation rights after leaving and joining again', funct
 });
 
 test('room owner active memberships are normalized after stale participant role regression', function () {
-    $owner  = User::factory()->create();
-    $room   = Room::factory()
+    $owner = User::factory()->create();
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create();
@@ -181,9 +181,9 @@ test('room owner active memberships are normalized after stale participant role 
 });
 
 test('call page active member payload keeps explicit left_at null values', function () {
-    $owner       = User::factory()->create();
+    $owner = User::factory()->create();
     $participant = User::factory()->create();
-    $room        = Room::factory()
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create();
@@ -236,7 +236,7 @@ test('guests with server issued identity can open the call page', function () {
 
 test('active room members can obtain scoped LiveKit tokens', function () {
     $owner = User::factory()->create();
-    $room  = Room::factory()
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create();
@@ -281,9 +281,9 @@ test('active room members can obtain scoped LiveKit tokens', function () {
 });
 
 test('unauthorized participants cannot obtain LiveKit tokens', function () {
-    $owner    = User::factory()->create();
+    $owner = User::factory()->create();
     $stranger = User::factory()->create();
-    $room     = Room::factory()
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create();
@@ -354,9 +354,9 @@ test('banned or waiting-room participants cannot obtain LiveKit tokens', functio
 });
 
 test('active room members can leave the call and are removed from active membership state', function () {
-    $owner       = User::factory()->create();
+    $owner = User::factory()->create();
     $participant = User::factory()->create();
-    $room        = Room::factory()
+    $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
         ->create();
