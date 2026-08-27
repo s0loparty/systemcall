@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router, useHttp, usePage } from '@inertiajs/vue3';
+import { Share2 } from '@lucide/vue';
 
 import { computed, onMounted, ref } from 'vue';
 
@@ -104,7 +105,7 @@ const {
     deviceErrorMessage,
     selectedDevices,
     connect,
-    disconnect,
+    leave,
     toggleMicrophone,
     toggleCamera,
     toggleScreenShare,
@@ -128,6 +129,7 @@ const {
 const needsPassword = computed(
     () => props.room.has_password && !props.can_join_without_password,
 );
+const canShareRoomLink = computed(() => props.room.visibility === 'public');
 const currentRoomMemberId = computed(
     () => joinedMember.value?.id ?? props.current_room_member_id,
 );
@@ -459,13 +461,49 @@ async function banParticipant(identity: string): Promise<void> {
     removeRoomMember(member.id);
 }
 
+async function shareRoomLink(): Promise<void> {
+    if (!canShareRoomLink.value) {
+        return;
+    }
+
+    const roomUrl = new URL(
+        showPrepare.url(props.room.public_id),
+        window.location.origin,
+    ).toString();
+
+    try {
+        if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(roomUrl);
+        } else {
+            const input = document.createElement('textarea');
+            input.value = roomUrl;
+            input.style.position = 'fixed';
+            input.style.opacity = '0';
+            document.body.appendChild(input);
+            input.focus();
+            input.select();
+            document.execCommand('copy');
+            input.remove();
+        }
+
+        toast.success('Ссылка на комнату скопирована');
+    } catch {
+        toast.error('Не удалось скопировать ссылку');
+    }
+}
+
 async function leaveCall(): Promise<void> {
-    await disconnect();
-    router.visit(
-        showPrepare.url(props.room.public_id, {
-            query: deviceQuery.toQuery(selectedDevices.value),
-        }),
-    );
+    try {
+        await leave();
+    } catch {
+        toast.error('Не удалось обновить статус участника');
+    } finally {
+        router.visit(
+            showPrepare.url(props.room.public_id, {
+                query: deviceQuery.toQuery(selectedDevices.value),
+            }),
+        );
+    }
 }
 
 onMounted(() => {
@@ -496,8 +534,18 @@ onMounted(() => {
                     </h1>
                 </div>
                 <div
-                    class="flex items-center gap-2 text-xs text-slate-600 tabular-nums"
+                    class="pointer-events-auto flex items-center gap-2 text-xs text-slate-600 tabular-nums"
                 >
+                    <button
+                        v-if="canShareRoomLink"
+                        data-test="share-room-link"
+                        type="button"
+                        class="inline-flex h-8 items-center gap-2 rounded-md border border-slate-200 bg-white/90 px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                        @click="shareRoomLink"
+                    >
+                        <Share2 class="size-3.5" />
+                        Поделиться ссылкой
+                    </button>
                     <span
                         data-test="raised-hands-count"
                         :data-count="raisedHandsCount"

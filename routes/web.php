@@ -30,6 +30,9 @@ Route::get('rooms/{room}/call', [RoomCallController::class, 'show'])
 Route::post('rooms/{room}/memberships', [RoomMembershipController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('rooms.memberships.store');
+Route::delete('rooms/{room}/memberships/current', [RoomMembershipController::class, 'destroy'])
+    ->middleware('throttle:20,1')
+    ->name('rooms.memberships.destroy');
 Route::post('rooms/{room}/livekit-token', [LiveKitTokenController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('rooms.livekit_token.store');

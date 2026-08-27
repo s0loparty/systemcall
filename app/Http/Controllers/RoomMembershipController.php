@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Rooms\JoinRoomAction;
 use App\Actions\Rooms\RequestWaitingRoomEntryAction;
+use App\Events\Rooms\RoomMemberLeft;
 use App\Http\Requests\Rooms\JoinRoomRequest;
 use App\Models\Room;
 use App\Models\RoomMember;
@@ -11,6 +12,8 @@ use App\Models\User;
 use App\Models\WaitingRoomMember;
 use App\Support\GuestIdentity;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class RoomMembershipController extends Controller
 {
@@ -39,6 +42,34 @@ class RoomMembershipController extends Controller
         $member = $joinRoom->handle($room, $user, $guestId, $request->joinData());
 
         return response()->json(['member' => $this->memberPayload($member)], 201);
+    }
+
+    public function destroy(
+        Request $request,
+        Room $room,
+        GuestIdentity $guestIdentity,
+    ): Response {
+        $user = $request->user();
+        $guestId = $user === null ? $guestIdentity->current($request) : null;
+        $member = $this->activeMember($room, $user, $guestId);
+
+        if (! $member instanceof RoomMember) {
+            return response()->noContent();
+        }
+
+        $member->forceFill([
+            'hand_raised_at' => null,
+            'left_at' => now(),
+        ])->save();
+        $member->refresh();
+
+        if ($room->global_pinned_room_member_id === $member->id) {
+            $room->forceFill(['global_pinned_room_member_id' => null])->save();
+        }
+
+        RoomMemberLeft::dispatch($member);
+
+        return response()->noContent();
     }
 
     /**

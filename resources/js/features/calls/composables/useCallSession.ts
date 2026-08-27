@@ -46,6 +46,7 @@ export function useCallSession(options: UseCallSessionOptions) {
             roomJoin.joinRequest.processing ||
             roomJoin.tokenRequest.processing ||
             roomJoin.subroomTokenRequest.processing ||
+            roomJoin.leaveRequest.processing ||
             switchingSubroom.value,
     );
 
@@ -170,6 +171,19 @@ export function useCallSession(options: UseCallSessionOptions) {
         }
     }
 
+    async function leave(): Promise<void> {
+        if (roomJoin.leaveRequest.processing) {
+            return;
+        }
+
+        try {
+            await roomJoin.leave();
+            joinedMember.value = null;
+        } finally {
+            await liveKit.disconnect();
+        }
+    }
+
     onBeforeUnmount(() => {
         void liveKit.disconnect();
     });
@@ -204,6 +218,7 @@ export function useCallSession(options: UseCallSessionOptions) {
         setVideoInput: mediaDevices.setVideoInput,
         connect,
         switchSubroom,
+        leave,
         handleWaitingRoomDecision,
         disconnect: liveKit.disconnect,
         toggleMicrophone: liveKit.toggleMicrophone,

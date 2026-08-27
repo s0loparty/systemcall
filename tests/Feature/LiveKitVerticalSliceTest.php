@@ -345,3 +345,68 @@ test('banned or waiting-room participants cannot obtain LiveKit tokens', functio
         ->postJson(route('rooms.livekit_token.store', $room))
         ->assertForbidden();
 });
+
+test('active room members can leave the call and are removed from active membership state', function () {
+    $owner = User::factory()->create();
+    $participant = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create();
+
+    RoomMember::factory()
+        ->owner()
+        ->for($room)
+        ->for($owner)
+        ->create();
+
+    $participantMember = RoomMember::factory()
+        ->for($room)
+        ->for($participant)
+        ->create([
+            'hand_raised_at' => now(),
+        ]);
+
+    $room->forceFill([
+        'global_pinned_room_member_id' => $participantMember->id,
+    ])->save();
+
+    $this->actingAs($participant)
+        ->deleteJson(route('rooms.memberships.destroy', $room))
+        ->assertNoContent();
+
+    $participantMember->refresh();
+
+    expect($participantMember->left_at)->not->toBeNull()
+        ->and($participantMember->hand_raised_at)->toBeNull()
+        ->and($room->fresh()->global_pinned_room_member_id)->toBeNull();
+
+    $this->actingAs($owner)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('room_members', fn (array $members): bool => collect($members)
+                ->doesntContain(fn (array $member): bool => $member['id'] === $participantMember->id)));
+});
+
+test('guest room members can leave using their server issued guest identity', function () {
+    $room = Room::factory()
+        ->public()
+        ->create();
+
+    $joinResponse = $this->postJson(route('rooms.memberships.store', $room), [
+        'display_name' => 'Leaving Guest',
+    ]);
+
+    $joinResponse->assertCreated();
+
+    $member = RoomMember::whereBelongsTo($room)->firstOrFail();
+
+    $this
+        ->withCredentials()
+        ->withCookie('video_call_guest_id', $member->guest_id)
+        ->deleteJson(route('rooms.memberships.destroy', $room))
+        ->assertNoContent();
+
+    expect($member->fresh()->left_at)->not->toBeNull();
+});

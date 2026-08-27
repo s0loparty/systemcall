@@ -186,6 +186,13 @@ export type RoomMemberMutedEvent = {
     occurred_at: string;
 };
 
+export type RoomMemberLeftEvent = {
+    type: 'member_left';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    occurred_at: string;
+};
+
 export type RoomMemberRemovedEvent = {
     type: 'member_removed';
     room_public_id: string;

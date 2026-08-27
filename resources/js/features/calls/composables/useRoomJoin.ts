@@ -1,7 +1,7 @@
 import { useHttp } from '@inertiajs/vue3';
 
 import { store as issueLiveKitToken } from '@/routes/rooms/livekit_token';
-import { store as joinRoom } from '@/routes/rooms/memberships';
+import { destroy as leaveRoom, store as joinRoom } from '@/routes/rooms/memberships';
 import { store as issueSubroomTokenRequest } from '@/routes/rooms/subroom_token';
 
 import type {
@@ -25,6 +25,7 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
     const tokenRequest = useHttp<Record<string, never>, LiveKitTokenResponse>(
         {},
     );
+    const leaveRequest = useHttp<Record<string, never>, unknown>({});
     const subroomTokenRequest = useHttp<
         { room_subroom_public_id: string | null },
         SubroomTokenResponse
@@ -71,6 +72,10 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
         };
     }
 
+    async function leave(): Promise<void> {
+        await leaveRequest.delete(leaveRoom.url(roomPublicId));
+    }
+
     async function issueSubroomToken(
         subroomPublicId: string | null,
     ): Promise<SubroomTokenResponse> {
@@ -84,10 +89,12 @@ export function useRoomJoin(roomPublicId: string, displayName: string) {
     return {
         joinRequest,
         tokenRequest,
+        leaveRequest,
         subroomTokenRequest,
         joinOnly,
         joinAndIssueToken,
         issueToken,
+        leave,
         issueSubroomToken,
     };
 }

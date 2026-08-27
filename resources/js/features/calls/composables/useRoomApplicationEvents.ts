@@ -8,6 +8,7 @@ import type {
     RoomMemberBannedEvent,
     RoomMemberHandUpdatedEvent,
     RoomMemberJoinedEvent,
+    RoomMemberLeftEvent,
     RoomMemberMutedEvent,
     RoomMemberRemovedEvent,
     RoomMemberRoleChangedEvent,
@@ -56,6 +57,19 @@ export function useRoomApplicationEvents(
             addActivity(
                 `${event.type}:${event.member.id}:${event.occurred_at}`,
                 `${event.member.display_name} вошел в комнату`,
+                event.occurred_at,
+            );
+        },
+    );
+
+    useEcho<RoomMemberLeftEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.left',
+        (event) => {
+            removeRoomMember(event.member.id);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.occurred_at}`,
+                `${event.member.display_name} вышел из комнаты`,
                 event.occurred_at,
             );
         },
