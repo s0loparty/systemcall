@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\LiveKitTokenController;
+use App\Http\Controllers\LiveKitWebhookController;
 use App\Http\Controllers\RoomApplicationStateController;
 use App\Http\Controllers\RoomBroadcastAuthController;
 use App\Http\Controllers\RoomCallController;
@@ -19,6 +20,10 @@ Route::inertia('/', 'Welcome')->name('home');
 
 Route::match(['get', 'post'], 'broadcasting/room-auth', RoomBroadcastAuthController::class)
     ->withoutMiddleware(PreventRequestForgery::class);
+
+Route::post('webhooks/livekit', LiveKitWebhookController::class)
+    ->withoutMiddleware(PreventRequestForgery::class)
+    ->name('webhooks.livekit');
 
 Route::get('rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
 Route::get('rooms/{room}/prepare', [RoomCallController::class, 'prepare'])

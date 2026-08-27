@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Rooms\JoinRoomAction;
+use App\Actions\Rooms\LeaveRoomMemberAction;
 use App\Actions\Rooms\RequestWaitingRoomEntryAction;
-use App\Events\Rooms\RoomMemberLeft;
 use App\Http\Requests\Rooms\JoinRoomRequest;
 use App\Models\Room;
 use App\Models\RoomMember;
@@ -48,6 +48,7 @@ class RoomMembershipController extends Controller
         Request $request,
         Room $room,
         GuestIdentity $guestIdentity,
+        LeaveRoomMemberAction $leaveMember,
     ): Response {
         $user = $request->user();
         $guestId = $user === null ? $guestIdentity->current($request) : null;
@@ -57,17 +58,7 @@ class RoomMembershipController extends Controller
             return response()->noContent();
         }
 
-        $member->forceFill([
-            'hand_raised_at' => null,
-            'left_at' => now(),
-        ])->save();
-        $member->refresh();
-
-        if ($room->global_pinned_room_member_id === $member->id) {
-            $room->forceFill(['global_pinned_room_member_id' => null])->save();
-        }
-
-        RoomMemberLeft::dispatch($member);
+        $leaveMember->handle($member);
 
         return response()->noContent();
     }

@@ -189,3 +189,32 @@ Back up PostgreSQL regularly with retention, off-server copy and documented rest
 
 ## Rollback
 Retain previous deployable revision/image. Prefer backward-compatible migrations. Never blindly `migrate:rollback` in production.
+
+## LiveKit webhook deployment requirement
+Abnormal disconnect cleanup requires the self-hosted LiveKit server to send signed webhooks to Laravel:
+
+```text
+https://call.example.com/webhooks/livekit
+```
+
+Add the following to the generated LiveKit server configuration (using the actual production app domain):
+
+```yaml
+webhook:
+  api_key: "${LIVEKIT_API_KEY}"
+  urls:
+    - "https://call.example.com/webhooks/livekit"
+```
+
+The configured `api_key` must match a key in LiveKit's `keys` configuration and Laravel must have the corresponding `LIVEKIT_API_KEY` / `LIVEKIT_API_SECRET`, because Laravel verifies the webhook JWT and request-body SHA-256 signature.
+
+No extra firewall port is required: webhook delivery goes from the LiveKit container/server to the public Laravel HTTPS domain on `443/TCP` through Dokploy-managed Traefik.
+
+After deploying the migration that adds `room_members.media_session_id`, verify with two browsers:
+
+1. join from browser B;
+2. close browser B without pressing Leave;
+3. wait until LiveKit emits `participant_left` after its reconnect/disconnect handling;
+4. confirm browser A removes B from participants/subroom management without a page reload;
+5. repeat with temporary network loss and verify a successful LiveKit reconnect does not remove B;
+6. switch B between main room/subrooms and verify delayed leave events from the old LiveKit room do not mark B as left.

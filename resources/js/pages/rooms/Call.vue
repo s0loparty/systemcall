@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, router, useHttp, usePage } from '@inertiajs/vue3';
+
 import { Share2 } from '@lucide/vue';
 
 import { computed, onMounted, ref } from 'vue';
 
+import { Button } from '@/components/ui/button';
 import { Toaster } from '@/components/ui/sonner';
 
 import {
@@ -151,9 +153,6 @@ const canShareScreen = computed(
         false,
 );
 const canManageSubrooms = computed(() => props.can_moderate_members);
-const raisedHandsCount = computed(
-    () => roomMembers.value.filter((member) => member.hand_raised_at).length,
-);
 const pendingWaitingRoomEntries = computed(() =>
     waitingRoomEntries.value.filter((entry) => entry.status === 'pending'),
 );
@@ -536,23 +535,16 @@ onMounted(() => {
                 <div
                     class="pointer-events-auto flex items-center gap-2 text-xs text-slate-600 tabular-nums"
                 >
-                    <button
+                    <Button
                         v-if="canShareRoomLink"
                         data-test="share-room-link"
                         type="button"
-                        class="inline-flex h-8 items-center gap-2 rounded-md border border-slate-200 bg-white/90 px-3 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                        size="icon-sm"
+                        variant="outline"
                         @click="shareRoomLink"
                     >
                         <Share2 class="size-3.5" />
-                        Поделиться ссылкой
-                    </button>
-                    <span
-                        data-test="raised-hands-count"
-                        :data-count="raisedHandsCount"
-                        class="rounded-md border border-slate-200 bg-white/85 px-3 py-1 shadow-sm"
-                    >
-                        Руки: {{ raisedHandsCount }}
-                    </span>
+                    </Button>
                 </div>
             </div>
             <div class="hidden">

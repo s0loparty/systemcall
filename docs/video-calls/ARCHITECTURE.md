@@ -169,3 +169,22 @@ Switching disconnects the current media room, requests a separately authorized t
 
 ## Scaling path
 Start with all services on one Dokploy VPS. Later move PostgreSQL/Redis and especially LiveKit/TURN independently. A dedicated LiveKit VPS allows TURN/TLS to use public 443 without conflicting with Dokploy.
+
+## Abnormal Disconnects And Presence Cleanup
+The normal Leave action calls Laravel first and marks the active `RoomMember.left_at` before the client disconnects from LiveKit.
+
+For cases where the client disappears without making that HTTP request, LiveKit sends a signed `participant_left` webhook to Laravel. Laravel then marks the corresponding membership as left and broadcasts `RoomMemberLeft` through Reverb, so participant-management UI such as `SubroomManagementSheet` removes the participant from application state.
+
+The webhook is deliberately guarded by a per-token `media_session_id`. A new token rotates this UUID. Cleanup succeeds only when webhook identity, room name and media session all still match the current member. This prevents delayed events from an old connection or old subroom from removing a participant who already reconnected or switched rooms.
+
+Presence responsibilities therefore are:
+
+```text
+LiveKit current media presence
+        ↓ final participant_left
+Laravel durable active membership (left_at)
+        ↓ RoomMemberLeft
+Reverb application-state synchronization
+        ↓
+Vue participant/subroom management lists
+```

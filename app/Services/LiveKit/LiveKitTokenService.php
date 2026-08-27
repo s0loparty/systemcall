@@ -10,6 +10,7 @@ use App\Models\RoomMember;
 use App\Models\RoomSubroom;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Str;
 
 class LiveKitTokenService
 {
@@ -23,6 +24,7 @@ class LiveKitTokenService
         $apiSecret = $this->configString('api_secret');
         $ttl = max(60, (int) Config::get('services.livekit.token_ttl', 3600));
         $roomName = $this->roomName($room, $subroom);
+        $mediaSessionId = (string) Str::uuid();
 
         $tokenOptions = (new AccessTokenOptions)
             ->setIdentity($member->livekit_identity)
@@ -30,6 +32,7 @@ class LiveKitTokenService
             ->setTtl($ttl)
             ->setMetadata(json_encode([
                 'room_member_id' => $member->id,
+                'media_session_id' => $mediaSessionId,
                 'room_public_id' => $room->public_id,
                 'room_subroom_id' => $subroom?->id,
                 'room_subroom_public_id' => $subroom?->public_id,
@@ -48,6 +51,9 @@ class LiveKitTokenService
             ->init($tokenOptions)
             ->setGrant($videoGrant)
             ->toJwt();
+
+        $member->forceFill(['media_session_id' => $mediaSessionId])->save();
+        $member->refresh();
 
         return new LiveKitToken($url, $token, $roomName, $member->livekit_identity, $ttl);
     }

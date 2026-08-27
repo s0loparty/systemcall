@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $display_name
  * @property RoomRole $role
  * @property string $livekit_identity
+ * @property string|null $media_session_id
  * @property bool $can_publish_audio
  * @property bool $can_publish_video
  * @property bool $can_publish_screen
@@ -37,6 +38,7 @@ use Illuminate\Support\Carbon;
     'display_name',
     'role',
     'livekit_identity',
+    'media_session_id',
     'can_publish_audio',
     'can_publish_video',
     'can_publish_screen',

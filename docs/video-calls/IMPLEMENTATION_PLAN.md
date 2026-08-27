@@ -440,6 +440,8 @@ Notes:
 ### Milestone 10 — Production hardening `[ ]`
 Rate limits, LiveKit webhook verification/idempotency, scheduler cleanup, health checks, reconnect edge cases, security audit, Dokploy deployment verification, firewall, backup/rollback and TURN testing.
 
+Implemented ahead of the full milestone: signed LiveKit `participant_left` webhook processing, idempotent abnormal-disconnect membership cleanup, and per-token `media_session_id` guards against stale disconnect events during reconnect/subroom switching.
+
 ## Accepted deployment decisions
 - Dokploy is production deployment platform.
 - Initial production is one VPS.

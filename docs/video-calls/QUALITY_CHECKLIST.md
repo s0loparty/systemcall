@@ -41,7 +41,9 @@
 - [ ] API secret never frontend
 - [ ] token checks room/password/ban/waiting/target
 - [ ] LiveKit identity maps to RoomMember
-- [ ] webhook signature/idempotency
+- [x] webhook signature/idempotency
+- [x] abnormal disconnect cleanup uses LiveKit `participant_left`
+- [x] stale webhook events are guarded by per-token media session UUID
 - [x] safe/rate-limited chat
 
 ## Media/UI

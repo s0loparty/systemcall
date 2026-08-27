@@ -80,7 +80,7 @@ function subroomName(member: RoomMemberSummary): string {
                 </SheetDescription>
             </SheetHeader>
 
-            <div class="grid gap-5 px-5 py-5 h-full min-h-0">
+            <div class="grid gap-5 px-5 py-5 min-h-0">
                 <form class="grid gap-2" @submit.prevent="createSubroom">
                     <label
                         class="text-sm font-medium text-slate-900"

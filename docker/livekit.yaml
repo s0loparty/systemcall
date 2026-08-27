@@ -13,3 +13,11 @@ redis:
 turn:
   enabled: true
   udp_port: 3478
+
+# This file is not consumed by compose.yaml in the current setup; compose.yaml
+# generates /tmp/livekit.yaml at runtime. If you run LiveKit with this file
+# directly, replace YOUR_LIVEKIT_API_KEY with the configured signing key.
+webhook:
+  api_key: YOUR_LIVEKIT_API_KEY
+  urls:
+    - http://app:8000/webhooks/livekit

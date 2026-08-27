@@ -183,6 +183,10 @@ services:
                   printf 'turn:\n'
                   printf '  enabled: %s\n' "$$LIVEKIT_TURN_ENABLED"
                   printf '  udp_port: %s\n' "$$LIVEKIT_TURN_UDP_PORT"
+                  printf 'webhook:\n'
+                  printf '  api_key: "%s"\n' "$$LIVEKIT_API_KEY"
+                  printf '  urls:\n'
+                  printf '    - "%s"\n' "$$LIVEKIT_WEBHOOK_URL"
                 } > /tmp/livekit.yaml
                 exec /livekit-server --config /tmp/livekit.yaml
         environment:
@@ -193,9 +197,12 @@ services:
             LIVEKIT_TURN_ENABLED: '${LIVEKIT_TURN_ENABLED:-true}'
             LIVEKIT_TURN_UDP_PORT: '${LIVEKIT_TURN_UDP_PORT:-3478}'
             LIVEKIT_USE_EXTERNAL_IP: '${LIVEKIT_USE_EXTERNAL_IP:-true}'
+            LIVEKIT_WEBHOOK_URL: '${LIVEKIT_WEBHOOK_URL:-http://app:8000/webhooks/livekit}'
         networks:
             - backend
         depends_on:
+            app:
+                condition: service_healthy
             redis:
                 condition: service_healthy
         expose:
