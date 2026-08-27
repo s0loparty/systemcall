@@ -10,23 +10,20 @@ WORKDIR /app
 
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 
-COPY --from=ghcr.io/mlocati/php-extension-installer:2 \
-    /usr/bin/install-php-extensions \
-    /usr/local/bin/
-
-RUN install-php-extensions \
-    pcntl \
-    pdo_pgsql \
-    pgsql \
-    zip \
-    opcache \
-    intl \
-    bcmath
-
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
+        libpq-dev \
+        libicu-dev \
+        libzip-dev \
         $PHPIZE_DEPS \
+    && docker-php-ext-install -j"$(nproc)" \
+        pcntl \
+        pdo_pgsql \
+        pgsql \
+        zip \
+        intl \
+        bcmath \
     && git clone \
         --depth 1 \
         --branch 6.2.0 \
@@ -38,9 +35,13 @@ RUN apt-get update \
     && make -j"$(nproc)" \
     && make install \
     && docker-php-ext-enable redis \
+    && cd /app \
     && rm -rf /tmp/phpredis \
     && apt-get purge -y --auto-remove \
         git \
+        libpq-dev \
+        libicu-dev \
+        libzip-dev \
         $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
@@ -96,6 +97,7 @@ RUN --mount=type=cache,id=systemcall-npm,target=/root/.npm \
 # Laravel files required by Wayfinder.
 COPY composer.json composer.lock ./
 COPY artisan ./
+
 COPY app ./app
 COPY bootstrap ./bootstrap
 COPY config ./config
@@ -168,4 +170,4 @@ USER www-data
 
 EXPOSE 8000
 
-CMD ["php", "artisan", "octane:start", "--server=frankenphp", "--host=0.0.0.0", "--port=8000", "--max-requests=500"]
+CMD ["php","artisan","octane:start","--server=frankenphp","--host=0.0.0.0","--port=8000","--max-requests=500"]
