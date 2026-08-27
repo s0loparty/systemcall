@@ -5,8 +5,6 @@ import { ShieldCheck } from '@lucide/vue';
 
 import { onUnmounted, ref } from 'vue';
 
-import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
-import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -16,9 +14,11 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 
-import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
-
 import { disable, enable } from '@/routes/two-factor';
+
+import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
+import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
+import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 
 export type Props = {
     canManageTwoFactor?: boolean;

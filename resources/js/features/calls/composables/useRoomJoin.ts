@@ -1,7 +1,10 @@
 import { useHttp } from '@inertiajs/vue3';
 
 import { store as issueLiveKitToken } from '@/routes/rooms/livekit_token';
-import { destroy as leaveRoom, store as joinRoom } from '@/routes/rooms/memberships';
+import {
+    store as joinRoom,
+    destroy as leaveRoom,
+} from '@/routes/rooms/memberships';
 import { store as issueSubroomTokenRequest } from '@/routes/rooms/subroom_token';
 
 import type {

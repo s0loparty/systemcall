@@ -5,8 +5,6 @@ import { AlertTriangle } from '@lucide/vue';
 
 import { useTemplateRef } from 'vue';
 
-import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -28,6 +26,8 @@ import {
 import { Label } from '@/components/ui/label';
 
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import InputError from '@/components/InputError.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 
 const passwordInput = useTemplateRef('passwordInput');
 </script>

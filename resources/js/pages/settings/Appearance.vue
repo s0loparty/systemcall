@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 
-import AppearanceTabs from '@/components/AppearanceTabs.vue';
-import Heading from '@/components/Heading.vue';
 import {
     Card,
     CardContent,
@@ -12,6 +10,9 @@ import {
 } from '@/components/ui/card';
 
 import { edit } from '@/routes/appearance';
+
+import AppearanceTabs from '@/components/AppearanceTabs.vue';
+import Heading from '@/components/Heading.vue';
 
 defineOptions({
     layout: {

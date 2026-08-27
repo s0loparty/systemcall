@@ -5,10 +5,6 @@ import { Check, Copy, ScanLine } from '@lucide/vue';
 
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 
-import { useClipboard } from '@vueuse/core';
-
-import AlertError from '@/components/AlertError.vue';
-import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -24,11 +20,14 @@ import {
 } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
 
+import { confirm } from '@/routes/two-factor';
+
+import AlertError from '@/components/AlertError.vue';
+import InputError from '@/components/InputError.vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import type { TwoFactorConfigContent } from '@/types';
-
-import { confirm } from '@/routes/two-factor';
+import { useClipboard } from '@vueuse/core';
 
 type Props = {
     requiresConfirmation: boolean;

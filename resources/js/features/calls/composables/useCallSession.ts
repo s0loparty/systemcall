@@ -8,7 +8,6 @@ import type {
     WaitingRoomEntry,
     WaitingRoomEntryDecidedEvent,
 } from '../types';
-
 import { useLiveKit } from './useLiveKit';
 import { useMediaDevices } from './useMediaDevices';
 import { useRoomJoin } from './useRoomJoin';

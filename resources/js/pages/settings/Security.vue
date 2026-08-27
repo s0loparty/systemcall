@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { Form, Head } from '@inertiajs/vue3';
 
-import Heading from '@/components/Heading.vue';
-import InputError from '@/components/InputError.vue';
-import type { Props as ManageTwoFactorProps } from '@/components/ManageTwoFactor.vue';
-import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -16,9 +11,14 @@ import {
 } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
-import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
-
 import { edit } from '@/routes/security';
+
+import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
+import Heading from '@/components/Heading.vue';
+import InputError from '@/components/InputError.vue';
+import type { Props as ManageTwoFactorProps } from '@/components/ManageTwoFactor.vue';
+import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
 
 type Props = {
     passwordRules: string;

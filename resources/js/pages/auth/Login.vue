@@ -3,9 +3,6 @@ import { Form, Head } from '@inertiajs/vue3';
 
 import { Lock, Mail } from '@lucide/vue';
 
-import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
-import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -16,6 +13,10 @@ import { register } from '@/routes';
 
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
+
+import InputError from '@/components/InputError.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
+import TextLink from '@/components/TextLink.vue';
 
 defineOptions({
     layout: {

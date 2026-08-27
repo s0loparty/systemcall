@@ -5,7 +5,6 @@ import { Eye, EyeOff, LockKeyhole, RefreshCw } from '@lucide/vue';
 
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
 
-import AlertError from '@/components/AlertError.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -15,9 +14,10 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 
-import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
-
 import { regenerateRecoveryCodes } from '@/routes/two-factor';
+
+import AlertError from '@/components/AlertError.vue';
+import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 
 const { recoveryCodesList, fetchRecoveryCodes, errors } = useTwoFactorAuth();
 const isRecoveryCodesVisible = ref<boolean>(false);

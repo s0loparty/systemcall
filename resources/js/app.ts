@@ -7,7 +7,6 @@ import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeEcho } from '@/lib/echo';
 import { initializeFlashToast } from '@/lib/flashToast';
 
-
 import './assets/css/app.css';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';

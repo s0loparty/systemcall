@@ -3,9 +3,9 @@ import { Link, usePage } from '@inertiajs/vue3';
 
 import { CheckCircle2, RadioTower, ShieldCheck, Video } from '@lucide/vue';
 
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
-
 import { home } from '@/routes';
+
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 
 const page = usePage();
 const name = page.props.name;
