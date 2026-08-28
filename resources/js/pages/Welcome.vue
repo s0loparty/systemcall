@@ -22,7 +22,7 @@ const user = computed(() => page.props.auth.user);
 <template>
     <Head title="Systemcall" />
 
-    <main class="min-h-screen bg-gray-100">
+    <main class="min-h-screen bg-gray-100 dark:bg-neutral-950">
         <div
             class="relative container mx-auto flex flex-col items-center justify-center gap-8 px-4 py-8 md:py-12"
         >
@@ -35,7 +35,7 @@ const user = computed(() => page.props.auth.user);
                     class="flex items-center gap-3 transition-opacity hover:opacity-80"
                 >
                     <div
-                        class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background"
+                        class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background dark:border-neutral-800 dark:bg-neutral-900"
                     >
                         <RadioTower class="h-5 w-5 text-foreground" />
                     </div>
@@ -113,10 +113,12 @@ const user = computed(() => page.props.auth.user);
 
                 <!-- Features grid -->
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <Card>
+                    <Card
+                        class="border-border/60 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/70"
+                    >
                         <CardHeader>
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted dark:border-neutral-700 dark:bg-neutral-950"
                             >
                                 <span class="text-lg">🤝</span>
                             </div>
@@ -130,26 +132,36 @@ const user = computed(() => page.props.auth.user);
                                 участников и показывайте экран.
                             </p>
                             <div class="mt-3 flex flex-wrap gap-2">
-                                <Badge variant="secondary" class="bg-muted"
+                                <Badge
+                                    variant="secondary"
+                                    class="bg-muted dark:bg-neutral-800"
                                     >чат</Badge
                                 >
-                                <Badge variant="secondary" class="bg-muted"
+                                <Badge
+                                    variant="secondary"
+                                    class="bg-muted dark:bg-neutral-800"
                                     >поднять руку</Badge
                                 >
-                                <Badge variant="secondary" class="bg-muted"
+                                <Badge
+                                    variant="secondary"
+                                    class="bg-muted dark:bg-neutral-800"
                                     >закрепить</Badge
                                 >
-                                <Badge variant="secondary" class="bg-muted"
+                                <Badge
+                                    variant="secondary"
+                                    class="bg-muted dark:bg-neutral-800"
                                     >демонстрация</Badge
                                 >
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card
+                        class="border-border/60 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/70"
+                    >
                         <CardHeader>
                             <div
-                                class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted"
+                                class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-muted dark:border-neutral-700 dark:bg-neutral-950"
                             >
                                 <span class="text-lg">🔗</span>
                             </div>
@@ -164,7 +176,7 @@ const user = computed(() => page.props.auth.user);
                             </p>
                             <div class="mt-3 flex items-center gap-2">
                                 <code
-                                    class="relative rounded bg-muted px-[0.6rem] py-[0.2rem] font-mono text-xs font-semibold"
+                                    class="relative rounded bg-muted px-[0.6rem] py-[0.2rem] font-mono text-xs font-semibold dark:bg-neutral-800"
                                 >
                                     systemcall.ru/room/abc
                                 </code>

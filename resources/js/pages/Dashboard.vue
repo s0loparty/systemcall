@@ -63,14 +63,16 @@ const featureCards = [
     <div class="p-3 sm:p-5">
         <div class="pt-5">
             <!-- Hero -->
-            <Card class="border-border/60 bg-white/70 shadow-sm">
+            <Card
+                class="border-border/60 bg-white/70 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
+            >
                 <CardContent
                     class="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
                 >
                     <div>
                         <Badge
                             variant="outline"
-                            class="gap-1.5 border-border/60 bg-white px-3 py-1.5"
+                            class="gap-1.5 border-border/60 bg-white px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800"
                         >
                             <span class="size-2 rounded-full bg-emerald-500" />
                             Готово к встречам
@@ -93,7 +95,7 @@ const featureCards = [
                         <div class="mt-7 flex flex-wrap gap-3">
                             <Button
                                 as-child
-                                class="h-11 rounded-full bg-neutral-900 px-6 text-white hover:bg-neutral-700"
+                                class="h-11 rounded-full bg-neutral-900 px-6 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                             >
                                 <Link
                                     :href="roomsIndex()"
@@ -108,7 +110,7 @@ const featureCards = [
 
                     <!-- Командная комната -->
                     <div
-                        class="rounded-xl border border-border/60 bg-white p-4 shadow-sm"
+                        class="rounded-xl border border-border/60 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950/70"
                     >
                         <div class="flex items-start justify-between">
                             <div>
@@ -118,7 +120,7 @@ const featureCards = [
                                 </p>
                             </div>
                             <Badge
-                                class="rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                                class="rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-500/15 dark:text-emerald-300"
                             >
                                 активна
                             </Badge>
@@ -126,7 +128,7 @@ const featureCards = [
 
                         <div class="mt-4 grid gap-3 sm:grid-cols-2">
                             <div
-                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3"
+                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 dark:border-neutral-800 dark:bg-neutral-900"
                             >
                                 <Users class="size-4 text-muted-foreground" />
                                 <span class="text-sm font-medium"
@@ -134,7 +136,7 @@ const featureCards = [
                                 >
                             </div>
                             <div
-                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3"
+                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 dark:border-neutral-800 dark:bg-neutral-900"
                             >
                                 <CheckCircle2 class="size-4 text-emerald-500" />
                                 <span class="text-sm font-medium"
@@ -146,22 +148,22 @@ const featureCards = [
                         <div class="mt-4 flex items-center gap-3">
                             <div class="flex -space-x-2">
                                 <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
                                 >
                                     А
                                 </div>
                                 <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
                                 >
                                     М
                                 </div>
                                 <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
                                 >
                                     К
                                 </div>
                                 <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white"
+                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
                                 >
                                     +3
                                 </div>
@@ -181,11 +183,11 @@ const featureCards = [
                 <Card
                     v-for="feature in featureCards"
                     :key="feature.title"
-                    class="border-border/60 bg-white/70 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                    class="border-border/60 bg-white/70 shadow-sm transition hover:-translate-y-1 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-900/70"
                 >
                     <CardHeader>
                         <div
-                            class="flex size-11 items-center justify-center rounded-full border border-border/60 bg-white"
+                            class="flex size-11 items-center justify-center rounded-full border border-border/60 bg-white dark:border-neutral-800 dark:bg-neutral-950"
                         >
                             <component
                                 :is="feature.icon"
@@ -206,7 +208,7 @@ const featureCards = [
 
             <!-- Call to action -->
             <div
-                class="mt-6 rounded-xl border border-border/60 bg-neutral-900 p-6 text-white"
+                class="mt-6 rounded-xl border border-border/60 bg-neutral-900 p-6 text-white dark:border-neutral-800 dark:bg-white dark:text-neutral-950"
             >
                 <div
                     class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
@@ -214,7 +216,7 @@ const featureCards = [
                     <div>
                         <h3 class="text-lg font-light">Готовы начать?</h3>
                         <p
-                            class="mt-1 text-sm text-neutral-300 leading-relaxed"
+                            class="mt-1 text-sm leading-relaxed text-neutral-300 dark:text-neutral-600"
                         >
                             Создайте комнату, настройте доступ и отправьте
                             ссылку участникам.
@@ -222,7 +224,7 @@ const featureCards = [
                     </div>
                     <Link
                         :href="roomsIndex()"
-                        class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
+                        class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100 dark:bg-neutral-950 dark:text-white dark:hover:bg-neutral-800"
                     >
                         Создать комнату
                         <ArrowRight class="size-4" />

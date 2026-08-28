@@ -58,7 +58,7 @@ const auth = computed(() => page.props.auth);
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 
 const activeItemStyles =
-    'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
+    'text-neutral-900 bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-100';
 
 const mainNavItems: NavItem[] = [
     {
@@ -88,8 +88,10 @@ const rightNavItems: NavItem[] = [
 </script>
 
 <template>
-    <div class="sticky top-0 bg-[#fafaf9] z-1">
-        <div class="border-b border-sidebar-border/80">
+    <div
+        class="sticky top-0 z-1 bg-[#fafaf9]/95 backdrop-blur dark:bg-neutral-950/95"
+    >
+        <div class="border-b border-sidebar-border/80 dark:border-neutral-800">
             <div class="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <!-- Mobile Menu -->
                 <div class="lg:hidden">
@@ -120,7 +122,7 @@ const rightNavItems: NavItem[] = [
                                         v-for="item in mainNavItems"
                                         :key="item.title"
                                         :href="item.href"
-                                        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent"
+                                        class="flex items-center gap-x-3 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-accent dark:hover:bg-neutral-800"
                                         :class="
                                             whenCurrentUrl(
                                                 item.href,
@@ -143,7 +145,7 @@ const rightNavItems: NavItem[] = [
                                         :href="toUrl(item.href)"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        class="flex items-center space-x-2 text-sm font-medium"
+                                        class="flex items-center space-x-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
                                     >
                                         <component
                                             v-if="item.icon"
@@ -283,10 +285,10 @@ const rightNavItems: NavItem[] = [
 
         <div
             v-if="props.breadcrumbs.length > 1"
-            class="flex w-full border-b border-sidebar-border/70"
+            class="flex w-full border-b border-sidebar-border/70 dark:border-neutral-800"
         >
             <div
-                class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl"
+                class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 dark:text-neutral-400 md:max-w-7xl"
             >
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </div>

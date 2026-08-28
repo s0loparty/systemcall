@@ -98,7 +98,9 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
         <div class="grid gap-6 grid-cols-1 lg:grid-cols-[380px_1fr]">
             <!-- Left column: Create room form -->
             <div class="order-2 lg:order-1">
-                <Card class="border-border/60 bg-white/70 shadow-sm">
+                <Card
+                    class="border-border/60 bg-white/70 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
+                >
                     <CardHeader class="pb-3 sm:pb-4">
                         <div class="flex items-start justify-between gap-4">
                             <div>
@@ -131,7 +133,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                     required
                                     maxlength="120"
                                     placeholder="Ежедневный созвон"
-                                    class="rounded-lg border-border/60 bg-white/80 text-sm"
+                                    class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                                 />
                                 <InputError :message="errors.name" />
                             </div>
@@ -145,7 +147,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                     id="description"
                                     name="description"
                                     maxlength="2000"
-                                    class="min-h-20 w-full rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+                                    class="min-h-20 w-full rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950"
                                     placeholder="Коротко о встрече"
                                 />
                                 <InputError :message="errors.description" />
@@ -160,7 +162,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                     <select
                                         id="visibility"
                                         name="visibility"
-                                        class="h-9 rounded-lg border border-border/60 bg-white/80 px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                        class="h-9 rounded-lg border border-border/60 bg-white/80 px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-neutral-700 dark:bg-neutral-950"
                                         required
                                     >
                                         <option value="public">
@@ -186,7 +188,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                         min="2"
                                         max="500"
                                         placeholder="Без лимита"
-                                        class="rounded-lg border-border/60 bg-white/80 text-sm"
+                                        class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                                     />
                                     <InputError
                                         :message="errors.max_participants"
@@ -207,14 +209,14 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                     maxlength="255"
                                     autocomplete="new-password"
                                     placeholder="Необязательно"
-                                    class="rounded-lg border-border/60 bg-white/80 text-sm"
+                                    class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                                 />
                                 <InputError :message="errors.password" />
                             </div>
 
                             <!-- Waiting room -->
                             <label
-                                class="flex items-start gap-3 rounded-lg border border-border/60 bg-white/80 p-3 text-sm"
+                                class="flex items-start gap-3 rounded-lg border border-border/60 bg-white/80 p-3 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                             >
                                 <Checkbox
                                     name="waiting_room_enabled"
@@ -235,7 +237,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                             </label>
 
                             <Button
-                                class="h-10 w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 text-sm"
+                                class="h-10 w-full rounded-full bg-neutral-900 text-sm text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                                 type="submit"
                                 :disabled="processing"
                             >
@@ -256,7 +258,9 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
 
             <!-- Right column: Rooms list -->
             <div class="order-1 lg:order-2">
-                <Card class="border-border/60 bg-white/70 shadow-sm">
+                <Card
+                    class="border-border/60 bg-white/70 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
+                >
                     <CardHeader class="pb-3 sm:pb-4">
                         <div
                             class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between"
@@ -273,7 +277,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                             <div class="flex flex-wrap gap-1.5 sm:gap-2">
                                 <Badge
                                     variant="outline"
-                                    class="border-border/60 bg-white/50 text-xs"
+                                    class="border-border/60 bg-white/50 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                 >
                                     <Video class="size-3 mr-1" />
                                     {{ rooms.length }}
@@ -285,7 +289,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                         ).length > 0
                                     "
                                     variant="outline"
-                                    class="border-border/60 bg-white/50 text-xs"
+                                    class="border-border/60 bg-white/50 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                 >
                                     <Lock class="size-3 mr-1" />
                                     {{
@@ -302,10 +306,10 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                         <!-- Empty state -->
                         <div
                             v-if="rooms.length === 0"
-                            class="rounded-xl border border-dashed border-border/60 bg-white/50 p-6 sm:p-8 text-center"
+                            class="rounded-xl border border-dashed border-border/60 bg-white/50 p-6 text-center dark:border-neutral-700 dark:bg-neutral-950/50 sm:p-8"
                         >
                             <div
-                                class="mx-auto flex size-12 items-center justify-center rounded-full border border-border/60 bg-white"
+                                class="mx-auto flex size-12 items-center justify-center rounded-full border border-border/60 bg-white dark:border-neutral-700 dark:bg-neutral-900"
                             >
                                 <Video class="size-6 text-muted-foreground" />
                             </div>
@@ -323,7 +327,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                 <article
                                     v-for="room in rooms"
                                     :key="room.public_id"
-                                    class="group rounded-xl border border-border/60 bg-white/80 p-3 sm:p-4 transition hover:-translate-y-0.5 hover:shadow-xs"
+                                    class="group rounded-xl border border-border/60 bg-white/80 p-3 transition hover:-translate-y-0.5 hover:shadow-xs dark:border-neutral-800 dark:bg-neutral-950/70 dark:hover:bg-neutral-950 sm:p-4"
                                 >
                                     <div
                                         class="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-center"
@@ -333,7 +337,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                                 class="flex flex-wrap items-center gap-2"
                                             >
                                                 <div
-                                                    class="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-white sm:size-10"
+                                                    class="flex size-9 shrink-0 items-center justify-center rounded-full border border-border/60 bg-white dark:border-neutral-700 dark:bg-neutral-900 sm:size-10"
                                                 >
                                                     <Video
                                                         class="size-4 text-foreground sm:size-5"
@@ -351,7 +355,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                             >
                                                 <Badge
                                                     variant="secondary"
-                                                    class="bg-white/50 border-border/60 text-[10px] sm:text-xs"
+                                                    class="border-border/60 bg-white/50 text-[10px] dark:border-neutral-700 dark:bg-neutral-800 sm:text-xs"
                                                 >
                                                     {{
                                                         visibilityLabel(
@@ -363,7 +367,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                                     v-if="
                                                         room.waiting_room_enabled
                                                     "
-                                                    class="bg-amber-50 text-amber-700 border-amber-200/60 text-[10px] sm:text-xs"
+                                                    class="border-amber-200/60 bg-amber-50 text-[10px] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300 sm:text-xs"
                                                 >
                                                     <DoorOpen
                                                         class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
@@ -372,7 +376,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                                 </Badge>
                                                 <Badge
                                                     v-if="room.has_password"
-                                                    class="bg-blue-50 text-blue-700 border-blue-200/60 text-[10px] sm:text-xs"
+                                                    class="border-blue-200/60 bg-blue-50 text-[10px] text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/15 dark:text-blue-300 sm:text-xs"
                                                 >
                                                     <ShieldCheck
                                                         class="size-2.5 mr-0.5 sm:size-3 sm:mr-1"
@@ -396,7 +400,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                         >
                                             <Button
                                                 as-child
-                                                class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 sm:w-auto sm:px-5"
+                                                class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200 sm:w-auto sm:px-5"
                                                 size="sm"
                                             >
                                                 <Link
@@ -420,7 +424,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                                         type="button"
                                                         variant="outline"
                                                         size="icon"
-                                                        class="h-9 w-full rounded-md border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-9"
+                                                        class="h-9 w-full rounded-md border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/15 dark:hover:text-red-200 sm:w-9"
                                                         :aria-label="`Удалить комнату ${room.name}`"
                                                         :data-test="`delete-room-${room.public_id}`"
                                                     >
@@ -431,7 +435,7 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                                 </DialogTrigger>
 
                                                 <DialogContent
-                                                    class="rounded-md sm:max-w-md"
+                                                    class="rounded-md border-border bg-white dark:border-neutral-800 dark:bg-neutral-950 sm:max-w-md"
                                                 >
                                                     <Form
                                                         v-bind="

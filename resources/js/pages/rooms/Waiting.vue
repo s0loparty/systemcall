@@ -91,7 +91,7 @@ async function goToCall(): Promise<void> {
 <template>
     <Head :title="`Ожидание: ${room.name}`" />
 
-    <div class="min-h-screen bg-[#fafaf9] p-4 sm:p-6">
+    <div class="p-4 sm:p-6">
         <div
             data-test="application-realtime-panel"
             :data-echo-state="realtime.echoConnectionStatus.value"
@@ -115,7 +115,9 @@ async function goToCall(): Promise<void> {
                 <!-- Left column -->
                 <div class="space-y-4">
                     <!-- Combined: Room info + Waiting room status -->
-                    <Card class="border-border/60 bg-white/70 shadow-sm p-0">
+                    <Card
+                        class="border-border/60 bg-white/70 p-0 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
+                    >
                         <CardContent class="p-5 sm:p-6 space-y-4">
                             <!-- Room info -->
                             <div class="space-y-1.5">
@@ -132,7 +134,7 @@ async function goToCall(): Promise<void> {
                                 compact
                             />
                             <p
-                                class="rounded-md bg-slate-100 p-3 text-sm text-slate-500"
+                                class="rounded-md bg-slate-100 p-3 text-sm text-slate-500 dark:bg-neutral-950 dark:text-neutral-400"
                             >
                                 Страница обновится автоматически после решения
                                 модератора.
@@ -169,7 +171,7 @@ async function goToCall(): Promise<void> {
                     <!-- Join button -->
                     <Button
                         v-if="currentWaitingRoomEntry?.status === 'approved'"
-                        class="w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 py-2.5 text-sm font-medium"
+                        class="w-full rounded-full bg-neutral-900 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                         type="button"
                         @click="goToCall"
                     >
@@ -181,7 +183,9 @@ async function goToCall(): Promise<void> {
                 <!-- Right column -->
                 <aside class="space-y-4">
                     <!-- Other waiting -->
-                    <Card class="border-border/60 bg-white/70 shadow-sm">
+                    <Card
+                        class="border-border/60 bg-white/70 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
+                    >
                         <CardHeader class="pb-2 pt-4 px-5">
                             <div class="flex items-start justify-between gap-3">
                                 <div>
@@ -196,7 +200,7 @@ async function goToCall(): Promise<void> {
                                 </div>
                                 <Badge
                                     variant="secondary"
-                                    class="bg-white/50 border-border/60 text-xs"
+                                    class="border-border/60 bg-white/50 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                 >
                                     {{ otherWaitingEntries.length }}
                                 </Badge>
@@ -206,7 +210,7 @@ async function goToCall(): Promise<void> {
                         <CardContent class="pt-0 px-5 pb-4">
                             <div
                                 v-if="otherWaitingEntries.length === 0"
-                                class="rounded-lg border border-dashed border-border/60 bg-white/50 p-4 text-center"
+                                class="rounded-lg border border-dashed border-border/60 bg-white/50 p-4 text-center dark:border-neutral-700 dark:bg-neutral-950/50"
                             >
                                 <Users
                                     class="h-6 w-6 text-muted-foreground/40 mx-auto"
@@ -222,10 +226,10 @@ async function goToCall(): Promise<void> {
                                     :key="entry.id"
                                     data-test="other-waiting-entry"
                                     :data-entry-id="entry.id"
-                                    class="flex items-center gap-2.5 rounded-lg border border-border/60 bg-white/50 p-2.5"
+                                    class="flex items-center gap-2.5 rounded-lg border border-border/60 bg-white/50 p-2.5 dark:border-neutral-700 dark:bg-neutral-950/50"
                                 >
                                     <div
-                                        class="flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-100"
+                                        class="flex size-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800"
                                     >
                                         <User class="size-4 text-foreground" />
                                     </div>
@@ -247,7 +251,7 @@ async function goToCall(): Promise<void> {
                                     </div>
                                     <Badge
                                         variant="outline"
-                                        class="border-amber-200/60 bg-amber-50 text-amber-700 text-[10px] px-2 py-0.5"
+                                        class="border-amber-200/60 bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300"
                                     >
                                         ожидает
                                     </Badge>

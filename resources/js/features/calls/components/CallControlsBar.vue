@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
         data-test="call-controls-bar"
         :data-hidden="controlsAreHidden ? 'true' : 'false'"
         :data-mobile="isMobileViewport ? 'true' : 'false'"
-        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 p-2 text-slate-950 transition-[opacity,transform] duration-300 ease-out max-[460px]:grid max-[460px]:grid-cols-4"
+        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 dark:bg-black/92 dark:border-black/82 p-2 text-slate-950 transition-[opacity,transform] duration-300 ease-out max-[460px]:grid max-[460px]:grid-cols-4"
         :class="
             controlsAreHidden
                 ? 'translate-y-8 opacity-0 pointer-events-none md:translate-y-12'

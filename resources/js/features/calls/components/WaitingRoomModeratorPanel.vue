@@ -52,10 +52,13 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
 </script>
 
 <template>
-    <Card data-test="waiting-room-moderator-panel" class="max-h-[70dvh]">
+    <Card
+        data-test="waiting-room-moderator-panel"
+        class="max-h-[70dvh] border-border/60 bg-white/70 dark:border-neutral-800 dark:bg-neutral-900/70"
+    >
         <CardHeader class="flex flex-row items-center gap-3">
             <div
-                class="flex size-10 items-center justify-center rounded-md bg-violet-50 text-violet-600 grow-0"
+                class="flex size-10 grow-0 items-center justify-center rounded-md bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300"
             >
                 <ShieldCheck class="size-5" />
             </div>
@@ -70,7 +73,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
         <CardContent class="min-h-0">
             <p
                 v-if="entries.length === 0"
-                class="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500"
+                class="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500 dark:border-neutral-700 dark:bg-neutral-950/50 dark:text-neutral-400"
             >
                 Сейчас никто не ожидает.
             </p>
@@ -82,16 +85,18 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                         :key="entry.id"
                         data-test="waiting-room-entry"
                         :data-entry-id="entry.id"
-                        class="rounded-md border border-slate-200 bg-slate-50 p-3 flex items-center justify-between hover:border-slate-300 hover:bg-slate-100"
+                        class="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 p-3 hover:border-slate-300 hover:bg-slate-100 dark:border-neutral-700 dark:bg-neutral-950/50 dark:hover:border-neutral-600 dark:hover:bg-neutral-900"
                     >
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p
-                                    class="truncate text-sm font-semibold text-slate-950"
+                                    class="truncate text-sm font-semibold text-slate-950 dark:text-neutral-50"
                                 >
                                     {{ entry.display_name }}
                                 </p>
-                                <p class="mt-1 text-xs text-slate-500">
+                                <p
+                                    class="mt-1 text-xs text-slate-500 dark:text-neutral-400"
+                                >
                                     {{ entry.guest ? 'Гость' : 'Пользователь' }}
                                 </p>
                             </div>

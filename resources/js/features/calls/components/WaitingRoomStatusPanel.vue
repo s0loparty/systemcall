@@ -26,7 +26,8 @@ const statusContent = computed(() => {
             badge: 'Одобрено',
             title: 'Заявка одобрена',
             description: 'Доступ открыт. Сейчас можно войти в звонок.',
-            classes: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            classes:
+                'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/15 dark:text-emerald-300',
         };
     }
 
@@ -37,7 +38,8 @@ const statusContent = computed(() => {
             title: 'Заявка отклонена',
             description:
                 'Вход закрыт. Свяжитесь с модератором комнаты, если это ошибка.',
-            classes: 'border-red-200 bg-red-50 text-red-800',
+            classes:
+                'border-red-200 bg-red-50 text-red-800 dark:border-red-500/20 dark:bg-red-500/15 dark:text-red-300',
         };
     }
 
@@ -46,7 +48,8 @@ const statusContent = computed(() => {
         badge: 'Ожидание',
         title: 'Заявка в зал ожидания отправлена',
         description: 'Модератор увидит заявку и примет решение.',
-        classes: 'border-amber-200 bg-amber-50 text-amber-800',
+        classes:
+            'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300',
     };
 });
 </script>

@@ -89,7 +89,10 @@ function updateVideoInput(value: AcceptableValue): void {
     >
         <Card
             :class="
-                cn('border-border/60 bg-white/70 shadow-sm p-0', $attrs.class)
+                cn(
+                    'border-border/60 bg-white/70 shadow-sm p-0 dark:border-neutral-800 dark:bg-neutral-900/70',
+                    $attrs.class,
+                )
             "
         >
             <CardContent
@@ -126,7 +129,7 @@ function updateVideoInput(value: AcceptableValue): void {
                         >
                             <SelectTrigger
                                 data-test="audio-input-select"
-                                class="rounded-lg border-border/60 bg-white/80 w-full"
+                                class="w-full rounded-lg border-border/60 bg-white/80 dark:border-neutral-700 dark:bg-neutral-950"
                             >
                                 <SelectValue placeholder="Выберите микрофон" />
                             </SelectTrigger>
@@ -152,7 +155,7 @@ function updateVideoInput(value: AcceptableValue): void {
                         <Button
                             type="button"
                             variant="outline"
-                            class="w-full rounded-lg bg-white"
+                            class="w-full rounded-lg bg-white dark:bg-neutral-950"
                             data-test="request-audio-permission"
                             :disabled="audioPermissionLoading"
                             @click="emit('request-audio-permission', $event)"
@@ -190,7 +193,7 @@ function updateVideoInput(value: AcceptableValue): void {
                         >
                             <SelectTrigger
                                 data-test="video-input-select"
-                                class="rounded-lg border-border/60 bg-white/80 w-full"
+                                class="w-full rounded-lg border-border/60 bg-white/80 dark:border-neutral-700 dark:bg-neutral-950"
                             >
                                 <SelectValue placeholder="Выберите камеру" />
                             </SelectTrigger>
@@ -216,7 +219,7 @@ function updateVideoInput(value: AcceptableValue): void {
                         <Button
                             type="button"
                             variant="outline"
-                            class="w-full rounded-lg bg-white"
+                            class="w-full rounded-lg bg-white dark:bg-neutral-950"
                             data-test="request-video-permission"
                             :disabled="videoPermissionLoading"
                             @click="emit('request-video-permission', $event)"
@@ -240,15 +243,17 @@ function updateVideoInput(value: AcceptableValue): void {
                 <!-- Error message -->
                 <div
                     v-if="error"
-                    class="rounded-xl border border-red-200/60 bg-red-50/50 p-3"
+                    class="rounded-xl border border-red-200/60 bg-red-50/50 p-3 dark:border-red-500/30 dark:bg-red-500/10"
                 >
-                    <p class="text-sm text-red-700">{{ error }}</p>
+                    <p class="text-sm text-red-700 dark:text-red-300">
+                        {{ error }}
+                    </p>
                 </div>
 
                 <!-- Camera preview -->
                 <div>
                     <div
-                        class="relative aspect-video overflow-hidden rounded-xl border border-border/60 bg-slate-950"
+                        class="relative aspect-video overflow-hidden rounded-xl border border-border/60 bg-slate-950 dark:border-neutral-800"
                     >
                         <div
                             :ref="

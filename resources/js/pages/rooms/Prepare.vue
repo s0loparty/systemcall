@@ -154,7 +154,7 @@ async function continueToRoom(): Promise<void> {
 <template>
     <Head :title="`Подготовка: ${room.name}`" />
 
-    <div class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+    <div class="flex items-center justify-center p-4 sm:p-6">
         <div class="w-full max-w-xl">
             <!-- Back to rooms -->
             <Button
@@ -169,7 +169,9 @@ async function continueToRoom(): Promise<void> {
             </Button>
 
             <!-- Main card -->
-            <Card class="border-border/60 bg-white/70 shadow-sm p-0">
+            <Card
+                class="border-border/60 bg-white/70 p-0 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
+            >
                 <CardContent class="p-6 sm:p-8 space-y-6">
                     <h1 class="text-2xl text-center font-bold tracking-tight">
                         Готовы войти?
@@ -196,7 +198,7 @@ async function continueToRoom(): Promise<void> {
                                     <Badge
                                         v-if="room.has_password"
                                         variant="outline"
-                                        class="border-border/60 bg-white/50 text-xs"
+                                        class="border-border/60 bg-white/50 text-xs dark:border-neutral-700 dark:bg-neutral-800"
                                     >
                                         🔒 с паролем
                                     </Badge>
@@ -222,7 +224,7 @@ async function continueToRoom(): Promise<void> {
                                             maxlength="120"
                                             placeholder="Будет видно участникам"
                                             type="text"
-                                            class="rounded-md border-neutral-200 bg-neutral-100 h-12 text-2xl"
+                                            class="h-12 rounded-md border-neutral-200 bg-neutral-100 text-2xl dark:border-neutral-700 dark:bg-neutral-950"
                                         />
                                     </div>
                                 </div>
@@ -246,7 +248,7 @@ async function continueToRoom(): Promise<void> {
                                             data-test="room-password"
                                             type="password"
                                             autocomplete="current-password"
-                                            class="rounded-md border-neutral-200 bg-neutral-100 h-12 text-2xl"
+                                            class="h-12 rounded-md border-neutral-200 bg-neutral-100 text-2xl dark:border-neutral-700 dark:bg-neutral-950"
                                             placeholder="Введите пароль комнаты"
                                         />
                                     </div>
@@ -273,7 +275,7 @@ async function continueToRoom(): Promise<void> {
                             <!-- Join button -->
                             <Button
                                 data-test="continue-to-room"
-                                class="w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 py-6 text-sm font-medium"
+                                class="w-full rounded-full bg-neutral-900 py-6 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
                                 type="button"
                                 :disabled="continueDisabled"
                                 @click="continueToRoom"
@@ -307,7 +309,7 @@ async function continueToRoom(): Promise<void> {
                         <Separator class="my-4" />
 
                         <DeviceSetupPanel
-                            class="shadow-none bg-none border-none"
+                            class="border-none bg-transparent shadow-none"
                             class-content="p-0 sm:p-0"
                             :audio-inputs="audioInputs"
                             :video-inputs="videoInputs"
