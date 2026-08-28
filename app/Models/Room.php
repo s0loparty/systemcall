@@ -43,6 +43,8 @@ use Illuminate\Support\Carbon;
 ])]
 class Room extends Model
 {
+    public const int MAX_OWNED_PER_USER = 3;
+
     /** @use HasFactory<RoomFactory> */
     use HasFactory;
 

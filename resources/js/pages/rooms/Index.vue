@@ -10,6 +10,8 @@ import {
     Video,
 } from '@lucide/vue';
 
+import { computed } from 'vue';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,8 +56,16 @@ type RoomSummary = {
     can_delete: boolean;
 };
 
-defineProps<{
+type RoomLimits = {
+    max: number;
+    owned_count: number;
+    remaining: number;
+    can_create: boolean;
+};
+
+const props = defineProps<{
     rooms: RoomSummary[];
+    room_limits: RoomLimits;
 }>();
 
 defineOptions({
@@ -76,6 +86,10 @@ defineOptions({
 function visibilityLabel(visibility: RoomSummary['visibility']): string {
     return visibility === 'public' ? 'публичная' : 'приватная';
 }
+
+const ownedRoomLimitText = computed(
+    () => `${props.room_limits.owned_count}/${props.room_limits.max}`,
+);
 </script>
 
 <template>
@@ -112,145 +126,166 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                     Быстрый старт звонка с настройками доступа.
                                 </CardDescription>
                             </div>
+                            <Badge
+                                variant="outline"
+                                class="shrink-0 border-border/60 bg-white/50 text-xs dark:border-neutral-700 dark:bg-neutral-800"
+                            >
+                                {{ ownedRoomLimitText }}
+                            </Badge>
                         </div>
                     </CardHeader>
 
                     <CardContent>
+                        <p
+                            v-if="!room_limits.can_create"
+                            class="mb-4 rounded-md border border-amber-200/60 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/15 dark:text-amber-300"
+                        >
+                            Достигнут лимит: максимум 3 собственные комнаты.
+                            Удалите одну комнату, чтобы создать новую.
+                        </p>
+
                         <Form
                             v-bind="storeRoom.form()"
                             :reset-on-success="true"
                             class="grid gap-4"
                             v-slot="{ errors, processing }"
                         >
-                            <!-- Room name -->
-                            <div class="grid gap-1.5">
-                                <Label for="name" class="text-sm"
-                                    >Название комнаты</Label
-                                >
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    required
-                                    maxlength="120"
-                                    placeholder="Ежедневный созвон"
-                                    class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                                />
-                                <InputError :message="errors.name" />
-                            </div>
-
-                            <!-- Description -->
-                            <div class="grid gap-1.5">
-                                <Label for="description" class="text-sm"
-                                    >Описание</Label
-                                >
-                                <textarea
-                                    id="description"
-                                    name="description"
-                                    maxlength="2000"
-                                    class="min-h-20 w-full rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950"
-                                    placeholder="Коротко о встрече"
-                                />
-                                <InputError :message="errors.description" />
-                            </div>
-
-                            <!-- Visibility & Participants -->
-                            <div class="grid gap-3 sm:grid-cols-2">
+                            <fieldset
+                                :disabled="!room_limits.can_create"
+                                class="grid gap-4 disabled:opacity-60"
+                            >
+                                <!-- Room name -->
                                 <div class="grid gap-1.5">
-                                    <Label for="visibility" class="text-sm"
-                                        >Доступность</Label
-                                    >
-                                    <select
-                                        id="visibility"
-                                        name="visibility"
-                                        class="h-9 rounded-lg border border-border/60 bg-white/80 px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-neutral-700 dark:bg-neutral-950"
-                                        required
-                                    >
-                                        <option value="public">
-                                            Публичная
-                                        </option>
-                                        <option value="private">
-                                            Приватная
-                                        </option>
-                                    </select>
-                                    <InputError :message="errors.visibility" />
-                                </div>
-
-                                <div class="grid gap-1.5">
-                                    <Label
-                                        for="max_participants"
-                                        class="text-sm"
-                                        >Участники</Label
+                                    <Label for="name" class="text-sm"
+                                        >Название комнаты</Label
                                     >
                                     <Input
-                                        id="max_participants"
-                                        name="max_participants"
-                                        type="number"
-                                        min="2"
-                                        max="500"
-                                        placeholder="Без лимита"
+                                        id="name"
+                                        name="name"
+                                        required
+                                        maxlength="120"
+                                        placeholder="Ежедневный созвон"
                                         class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                                     />
-                                    <InputError
-                                        :message="errors.max_participants"
-                                    />
+                                    <InputError :message="errors.name" />
                                 </div>
-                            </div>
 
-                            <!-- Password -->
-                            <div class="grid gap-1.5">
-                                <Label for="password" class="text-sm"
-                                    >Пароль</Label
+                                <!-- Description -->
+                                <div class="grid gap-1.5">
+                                    <Label for="description" class="text-sm"
+                                        >Описание</Label
+                                    >
+                                    <textarea
+                                        id="description"
+                                        name="description"
+                                        maxlength="2000"
+                                        class="min-h-20 w-full rounded-lg border border-border/60 bg-white/80 px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-950"
+                                        placeholder="Коротко о встрече"
+                                    />
+                                    <InputError :message="errors.description" />
+                                </div>
+
+                                <!-- Visibility & Participants -->
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <div class="grid gap-1.5">
+                                        <Label for="visibility" class="text-sm"
+                                            >Доступность</Label
+                                        >
+                                        <select
+                                            id="visibility"
+                                            name="visibility"
+                                            class="h-9 rounded-lg border border-border/60 bg-white/80 px-3 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:border-neutral-700 dark:bg-neutral-950"
+                                            required
+                                        >
+                                            <option value="public">
+                                                Публичная
+                                            </option>
+                                            <option value="private">
+                                                Приватная
+                                            </option>
+                                        </select>
+                                        <InputError
+                                            :message="errors.visibility"
+                                        />
+                                    </div>
+
+                                    <div class="grid gap-1.5">
+                                        <Label
+                                            for="max_participants"
+                                            class="text-sm"
+                                            >Участники</Label
+                                        >
+                                        <Input
+                                            id="max_participants"
+                                            name="max_participants"
+                                            type="number"
+                                            min="2"
+                                            max="500"
+                                            placeholder="Без лимита"
+                                            class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+                                        />
+                                        <InputError
+                                            :message="errors.max_participants"
+                                        />
+                                    </div>
+                                </div>
+
+                                <!-- Password -->
+                                <div class="grid gap-1.5">
+                                    <Label for="password" class="text-sm"
+                                        >Пароль</Label
+                                    >
+                                    <Input
+                                        id="password"
+                                        name="password"
+                                        type="password"
+                                        minlength="8"
+                                        maxlength="255"
+                                        autocomplete="new-password"
+                                        placeholder="Необязательно"
+                                        class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
+                                    />
+                                    <InputError :message="errors.password" />
+                                </div>
+
+                                <!-- Waiting room -->
+                                <label
+                                    class="flex items-start gap-3 rounded-lg border border-border/60 bg-white/80 p-3 text-sm dark:border-neutral-700 dark:bg-neutral-950"
                                 >
-                                <Input
-                                    id="password"
-                                    name="password"
-                                    type="password"
-                                    minlength="8"
-                                    maxlength="255"
-                                    autocomplete="new-password"
-                                    placeholder="Необязательно"
-                                    class="rounded-lg border-border/60 bg-white/80 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                                />
-                                <InputError :message="errors.password" />
-                            </div>
-
-                            <!-- Waiting room -->
-                            <label
-                                class="flex items-start gap-3 rounded-lg border border-border/60 bg-white/80 p-3 text-sm dark:border-neutral-700 dark:bg-neutral-950"
-                            >
-                                <Checkbox
-                                    name="waiting_room_enabled"
-                                    value="1"
-                                    class="mt-0.5 shrink-0"
-                                />
-                                <span>
-                                    <span
-                                        class="block font-medium text-foreground"
-                                        >Зал ожидания</span
-                                    >
-                                    <span
-                                        class="block text-xs leading-5 text-muted-foreground"
-                                    >
-                                        Участники войдут после одобрения.
+                                    <Checkbox
+                                        name="waiting_room_enabled"
+                                        value="1"
+                                        class="mt-0.5 shrink-0"
+                                    />
+                                    <span>
+                                        <span
+                                            class="block font-medium text-foreground"
+                                            >Зал ожидания</span
+                                        >
+                                        <span
+                                            class="block text-xs leading-5 text-muted-foreground"
+                                        >
+                                            Участники войдут после одобрения.
+                                        </span>
                                     </span>
-                                </span>
-                            </label>
+                                </label>
 
-                            <Button
-                                class="h-10 w-full rounded-full bg-neutral-900 text-sm text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
-                                type="submit"
-                                :disabled="processing"
-                            >
-                                {{
-                                    processing
-                                        ? 'Создаем...'
-                                        : 'Создать и войти'
-                                }}
-                                <ArrowRight
-                                    v-if="!processing"
-                                    class="ml-2 size-4"
-                                />
-                            </Button>
+                                <Button
+                                    class="h-10 w-full rounded-full bg-neutral-900 text-sm text-white hover:bg-neutral-700 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-200"
+                                    type="submit"
+                                    :disabled="processing"
+                                >
+                                    {{
+                                        processing
+                                            ? 'Создаем...'
+                                            : 'Создать и войти'
+                                    }}
+                                    <ArrowRight
+                                        v-if="!processing"
+                                        class="ml-2 size-4"
+                                    />
+                                </Button>
+                            </fieldset>
                         </Form>
                     </CardContent>
                 </Card>

@@ -4,9 +4,11 @@ namespace App\Http\Requests\Rooms;
 
 use App\Enums\RoomVisibility;
 use App\Models\Room;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreRoomRequest extends FormRequest
 {
@@ -29,6 +31,37 @@ class StoreRoomRequest extends FormRequest
             'password' => ['nullable', 'string', 'min:8', 'max:255'],
             'waiting_room_enabled' => ['sometimes', 'boolean'],
             'max_participants' => ['nullable', 'integer', 'min:2', 'max:500'],
+        ];
+    }
+
+    /**
+     * Get the "after" validation callables for the request.
+     *
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator): void {
+                $user = $this->user();
+
+                if (! $user instanceof User) {
+                    return;
+                }
+
+                $ownedRoomsCount = Room::query()
+                    ->whereBelongsTo($user, 'owner')
+                    ->count();
+
+                if ($ownedRoomsCount < Room::MAX_OWNED_PER_USER) {
+                    return;
+                }
+
+                $validator->errors()->add(
+                    'name',
+                    'Можно создать не больше 3 комнат. Удалите одну из существующих комнат.',
+                );
+            },
         ];
     }
 

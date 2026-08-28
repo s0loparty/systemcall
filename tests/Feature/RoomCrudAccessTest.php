@@ -102,7 +102,11 @@ test('authenticated users can manage rooms through Inertia pages', function () {
             ->where('rooms.0.name', 'Existing call')
             ->where('rooms.0.can_delete', true)
             ->where('rooms.1.public_id', $joinedRoom->public_id)
-            ->where('rooms.1.can_delete', false));
+            ->where('rooms.1.can_delete', false)
+            ->where('room_limits.max', Room::MAX_OWNED_PER_USER)
+            ->where('room_limits.owned_count', 1)
+            ->where('room_limits.remaining', 2)
+            ->where('room_limits.can_create', true));
 
     $response = $this->actingAs($owner)
         ->post(route('rooms.store'), [
@@ -126,6 +130,66 @@ test('authenticated users can manage rooms through Inertia pages', function () {
         ->assertRedirect(route('rooms.index'));
 
     $this->assertModelMissing($room);
+});
+
+test('users can create at most three owned rooms', function () {
+    $owner = User::factory()->create();
+
+    Room::factory()
+        ->count(Room::MAX_OWNED_PER_USER)
+        ->for($owner, 'owner')
+        ->public()
+        ->create();
+
+    $this->actingAs($owner)
+        ->postJson(route('rooms.store'), [
+            'name' => 'Overflow room',
+            'visibility' => RoomVisibility::Public->value,
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('name');
+
+    expect(Room::whereBelongsTo($owner, 'owner')->count())->toBe(Room::MAX_OWNED_PER_USER);
+
+    $this->actingAs($owner)
+        ->get(route('rooms.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('room_limits.max', Room::MAX_OWNED_PER_USER)
+            ->where('room_limits.owned_count', Room::MAX_OWNED_PER_USER)
+            ->where('room_limits.remaining', 0)
+            ->where('room_limits.can_create', false));
+});
+
+test('rooms joined as participant do not count toward the owned room limit', function () {
+    $owner = User::factory()->create();
+    $otherOwner = User::factory()->create();
+
+    Room::factory()
+        ->count(Room::MAX_OWNED_PER_USER - 1)
+        ->for($owner, 'owner')
+        ->public()
+        ->create();
+
+    $joinedRoom = Room::factory()
+        ->for($otherOwner, 'owner')
+        ->public()
+        ->create();
+
+    RoomMember::factory()
+        ->for($joinedRoom)
+        ->for($owner)
+        ->create();
+
+    $this->actingAs($owner)
+        ->postJson(route('rooms.store'), [
+            'name' => 'Third owned room',
+            'visibility' => RoomVisibility::Public->value,
+        ])
+        ->assertCreated()
+        ->assertJsonPath('room.name', 'Third owned room');
+
+    expect(Room::whereBelongsTo($owner, 'owner')->count())->toBe(Room::MAX_OWNED_PER_USER);
 });
 
 test('public and private room access rules are enforced', function () {

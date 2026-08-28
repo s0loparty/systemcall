@@ -38,10 +38,14 @@ class RoomController extends Controller
         if (! $request->expectsJson()) {
             return Inertia::render('rooms/Index', [
                 'rooms' => $rooms,
+                'room_limits' => $this->roomLimits($user),
             ]);
         }
 
-        return response()->json(['rooms' => $rooms]);
+        return response()->json([
+            'rooms' => $rooms,
+            'room_limits' => $this->roomLimits($user),
+        ]);
     }
 
     public function store(StoreRoomRequest $request, CreateRoomAction $createRoom): JsonResponse|RedirectResponse
@@ -116,6 +120,24 @@ class RoomController extends Controller
             'max_participants' => $room->max_participants,
             'ended_at' => $room->ended_at?->toISOString(),
             'can_delete' => $user instanceof User && Gate::forUser($user)->allows('delete', $room),
+        ];
+    }
+
+    /**
+     * @return array{max:int,owned_count:int,remaining:int,can_create:bool}
+     */
+    private function roomLimits(User $user): array
+    {
+        $ownedRoomsCount = Room::query()
+            ->whereBelongsTo($user, 'owner')
+            ->count();
+        $remaining = max(0, Room::MAX_OWNED_PER_USER - $ownedRoomsCount);
+
+        return [
+            'max' => Room::MAX_OWNED_PER_USER,
+            'owned_count' => $ownedRoomsCount,
+            'remaining' => $remaining,
+            'can_create' => $remaining > 0,
         ];
     }
 }
