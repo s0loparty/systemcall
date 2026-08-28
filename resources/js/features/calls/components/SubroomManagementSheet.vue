@@ -13,13 +13,7 @@ import {
     SheetDescription,
     SheetHeader,
     SheetTitle,
-    SheetTrigger,
 } from '@/components/ui/sheet';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 import type { RoomMemberSummary, RoomSubroomSummary } from '../types';
 
@@ -30,7 +24,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
-const open = ref(false);
+const open = defineModel<boolean>({ required: false, default: false })
 const newSubroomName = ref('');
 
 const emit = defineEmits<{
@@ -68,14 +62,6 @@ function subroomName(member: RoomMemberSummary): string {
 
 <template>
     <Sheet v-model:open="open">
-        <SheetTrigger as-child>
-            <Tooltip>
-                <TooltipTrigger as-child>
-                    <slot />
-                </TooltipTrigger>
-                <TooltipContent side="top"> Подкомнаты </TooltipContent>
-            </Tooltip>
-        </SheetTrigger>
         <SheetContent
             class="w-full gap-0 overflow-y-auto border-slate-200 bg-white p-0 sm:max-w-xl"
             data-test="subrooms-sheet"

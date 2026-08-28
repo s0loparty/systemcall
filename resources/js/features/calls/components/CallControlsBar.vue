@@ -58,6 +58,7 @@ type Props = {
 
 const props = defineProps<Props>();
 const waitingRoomDialogOpen = ref(false);
+const subroomsOpen = ref(false);
 
 const emit = defineEmits<{
     toggleMicrophone: [];
@@ -138,29 +139,24 @@ const emit = defineEmits<{
                 </TooltipContent>
             </Tooltip>
 
-            <SubroomManagementSheet
-                v-if="canManageSubrooms"
-                :members="roomMembers"
-                :subrooms="roomSubrooms"
-                :disabled="subroomsBusy"
-                @create="emit('createSubroom', $event)"
-                @move="
-                    (memberId, subroomPublicId) =>
-                        emit('moveMemberSubroom', memberId, subroomPublicId)
-                "
-            >
-                <Button
-                    type="button"
-                    data-test="toggle-subrooms-sheet"
-                    :data-count="roomSubrooms.length"
-                    :disabled="subroomsBusy"
-                    aria-label="Открыть подкомнаты"
-                    variant="outline"
-                    size="icon-lg"
-                >
-                    <DoorOpen />
-                </Button>
-            </SubroomManagementSheet>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <Button
+                        type="button"
+                        data-test="toggle-subrooms-sheet"
+                        :data-count="roomSubrooms.length"
+                        :disabled="subroomsBusy"
+                        aria-label="Открыть подкомнаты"
+                        variant="outline"
+                        size="icon-lg"
+                        @click="subroomsOpen = !subroomsOpen"
+                    >
+                        <DoorOpen />
+                    </Button>
+                </TooltipTrigger>
+
+                <TooltipContent> Подкомнаты </TooltipContent>
+            </Tooltip>
 
             <Tooltip v-if="waitingRoomEnabled && canModerateWaitingRoom">
                 <TooltipTrigger as-child>
@@ -287,6 +283,19 @@ const emit = defineEmits<{
             </Tooltip>
         </TooltipProvider>
     </nav>
+
+    <SubroomManagementSheet
+        v-if="canManageSubrooms"
+        v-model="subroomsOpen"
+        :members="roomMembers"
+        :subrooms="roomSubrooms"
+        :disabled="subroomsBusy"
+        @create="emit('createSubroom', $event)"
+        @move="
+            (memberId, subroomPublicId) =>
+                emit('moveMemberSubroom', memberId, subroomPublicId)
+        "
+    />
 
     <Dialog v-model:open="waitingRoomDialogOpen">
         <DialogContent
