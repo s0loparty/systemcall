@@ -515,19 +515,14 @@ onMounted(() => {
 <template>
     <Head :title="`Звонок: ${room.name}`" />
 
-    <main
-        class="relative h-dvh overflow-hidden bg-[#f7f7fb] text-slate-950 antialiased"
-    >
-        <div
-            class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_8%,rgba(124,92,255,0.12),transparent_28%),radial-gradient(circle_at_82%_0%,rgba(59,130,246,0.08),transparent_26%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.08),transparent_30%)]"
-        />
+    <main class="relative h-dvh overflow-hidden bg-[#141417]">
         <header
-            class="pointer-events-none fixed inset-x-0 top-0 z-20 bg-linear-to-b from-[#f7f7fb]/96 via-[#f7f7fb]/76 to-transparent px-5 py-4"
+            class="pointer-events-none fixed inset-x-0 top-0 z-20 px-5 py-4"
         >
             <div class="flex items-center justify-between gap-4">
                 <div class="min-w-0">
                     <h1
-                        class="truncate text-lg font-semibold tracking-tight text-slate-950"
+                        class="truncate text-lg font-semibold tracking-tight text-gray-50"
                     >
                         {{ room.name }}
                     </h1>
@@ -541,9 +536,11 @@ onMounted(() => {
                         type="button"
                         size="icon-sm"
                         variant="outline"
+                        class="bg-white/92 text-slate-950 border-none hover:bg-white/85 shadow-none sm:w-max sm:px-2 font-normal"
                         @click="shareRoomLink"
                     >
                         <Share2 class="size-3.5" />
+                        <span class="max-sm:hidden">Поделиться ссылкой</span>
                     </Button>
                 </div>
             </div>
@@ -559,7 +556,7 @@ onMounted(() => {
 
         <section
             class="relative flex h-full p-4 pt-20 pb-24 transition-[padding-right] duration-200 ease-out"
-            :class="chatOpen ? 'lg:pr-[28.5rem]' : ''"
+            :class="chatOpen ? 'lg:pr-114' : ''"
         >
             <ParticipantGrid
                 class="min-h-0 w-full"

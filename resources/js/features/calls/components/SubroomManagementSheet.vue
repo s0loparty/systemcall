@@ -15,6 +15,11 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import type { RoomMemberSummary, RoomSubroomSummary } from '../types';
 
@@ -64,7 +69,12 @@ function subroomName(member: RoomMemberSummary): string {
 <template>
     <Sheet v-model:open="open">
         <SheetTrigger as-child>
-            <slot />
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <slot />
+                </TooltipTrigger>
+                <TooltipContent side="top"> Подкомнаты </TooltipContent>
+            </Tooltip>
         </SheetTrigger>
         <SheetContent
             class="w-full gap-0 overflow-y-auto border-slate-200 bg-white p-0 sm:max-w-xl"

@@ -54,15 +54,6 @@ const orderedTiles = computed(() => {
                 return left.tile.handRaised ? -1 : 1;
             }
 
-            const leftActive =
-                left.tile.identity === props.activeSpeakerIdentity;
-            const rightActive =
-                right.tile.identity === props.activeSpeakerIdentity;
-
-            if (leftActive !== rightActive) {
-                return leftActive ? -1 : 1;
-            }
-
             return left.index - right.index;
         })
         .map(({ tile }) => tile);
@@ -142,7 +133,7 @@ const sideTiles = computed(() =>
 
         <aside
             data-test="participant-side-rail"
-            class="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-md border border-slate-200/80 bg-white/70 p-2 shadow-sm backdrop-blur"
+            class="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-md bg-neutral-950 p-2"
             aria-label="Участники звонка"
         >
             <ParticipantTile
@@ -184,7 +175,7 @@ const sideTiles = computed(() =>
     <ScrollArea v-else class="[&_[data-reka-scroll-area-viewport]>div]:h-full">
         <section
             data-test="participant-grid"
-            class="mx-auto grid h-full w-full flex-1 auto-rows-fr content-center gap-3 p-1 md:gap-4 md:overflow-hidden"
+            class="mx-auto grid sm:h-full w-full flex-1 auto-rows-fr content-center gap-3 p-1 md:gap-4 md:overflow-hidden"
             :class="gridClass"
         >
             <ParticipantTile

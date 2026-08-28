@@ -6,6 +6,7 @@ import {
     MicIcon,
     MicOffIcon,
     PinIcon,
+    User2Icon,
 } from '@lucide/vue';
 
 import type {
@@ -60,7 +61,7 @@ const emit = defineEmits<{
         :data-camera-enabled="tile.camera ? 'true' : 'false'"
         :data-screen-share-enabled="tile.screenShare ? 'true' : 'false'"
         :data-hand-raised="tile.handRaised ? 'true' : 'false'"
-        class="group relative overflow-hidden border border-slate-200/80 bg-[#161719] transition-colors duration-200 ease-out"
+        class="group relative overflow-hidden bg-neutral-800 transition-colors duration-200 ease-out @container"
         :class="[
             size === 'share'
                 ? 'h-full min-h-96 rounded-md'
@@ -116,17 +117,18 @@ const emit = defineEmits<{
             @ban="emit('ban', tile.identity)"
         />
         <div
-            class="absolute inset-0 flex items-center justify-center bg-[radial-gradient(circle_at_center,#30343b,#151618_62%)] text-5xl font-semibold text-slate-300 empty:hidden"
+            class="absolute inset-0 flex items-center justify-center bg-neutral-800 empty:hidden"
         >
             <span
                 v-if="!tile.camera && !(tile.screenShare && size === 'share')"
                 data-test="participant-fallback-avatar"
+                class="text-center text-2xl md:text-5xl font-semibold text-slate-300"
             >
-                {{ tile.name.slice(0, 1).toUpperCase() }}
+                <User2Icon class="size-10 @md:size-24" />
             </span>
         </div>
         <div
-            class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 bg-linear-to-t from-black/82 via-black/35 to-transparent p-4 text-white"
+            class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 text-white"
         >
             <div>
                 <p class="text-sm font-medium drop-shadow">
@@ -157,9 +159,8 @@ const emit = defineEmits<{
                 <div
                     v-if="tile.handRaised"
                     data-test="participant-hand-raised-badge"
-                    class="rounded-md bg-[#fbbc04]/90 p-2 text-black"
+                    class="rounded-md bg-[#fbbc04]/90 p-2 text-white"
                 >
-                    <!-- 🤚 -->
                     <HandIcon class="size-5" />
                 </div>
                 <div
@@ -168,12 +169,6 @@ const emit = defineEmits<{
                 >
                     <CastIcon class="size-5" />
                 </div>
-                <!-- <span
-                    v-if="active || tile.speaking"
-                    class="rounded-full bg-emerald-400 px-2 py-1 text-xs font-medium text-emerald-950"
-                >
-                    говорит
-                </span> -->
             </div>
         </div>
     </article>
