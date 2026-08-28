@@ -12,7 +12,7 @@ import {
     VideoOff,
 } from '@lucide/vue';
 
-import { ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,10 @@ type Props = {
 const props = defineProps<Props>();
 const waitingRoomDialogOpen = ref(false);
 const subroomsOpen = ref(false);
+const controlsHidden = ref(false);
+const isMobileViewport = ref(false);
+let hideTimer: ReturnType<typeof setTimeout> | null = null;
+let mobileMediaQuery: MediaQueryList | null = null;
 
 const emit = defineEmits<{
     toggleMicrophone: [];
@@ -71,11 +75,95 @@ const emit = defineEmits<{
     moveMemberSubroom: [memberId: number, subroomPublicId: string | null];
     leave: [];
 }>();
+
+const controlsAreHidden = computed(
+    () =>
+        controlsHidden.value &&
+        !waitingRoomDialogOpen.value &&
+        !subroomsOpen.value,
+);
+
+function clearHideTimer(): void {
+    if (hideTimer === null) {
+        return;
+    }
+
+    clearTimeout(hideTimer);
+    hideTimer = null;
+}
+
+function scheduleAutoHide(): void {
+    clearHideTimer();
+
+    hideTimer = setTimeout(() => {
+        controlsHidden.value = true;
+    }, 10_000);
+}
+
+function showControls(): void {
+    controlsHidden.value = false;
+    scheduleAutoHide();
+}
+
+function updateMobileViewport(): void {
+    isMobileViewport.value = Boolean(
+        mobileMediaQuery?.matches ?? window.innerWidth < 768,
+    );
+}
+
+function handleDesktopMouseMove(): void {
+    if (!isMobileViewport.value) {
+        showControls();
+    }
+}
+
+function handleUserActivity(): void {
+    showControls();
+}
+
+onMounted(() => {
+    mobileMediaQuery = window.matchMedia(
+        '(pointer: coarse), (max-width: 767px)',
+    );
+    updateMobileViewport();
+    mobileMediaQuery.addEventListener('change', updateMobileViewport);
+
+    window.addEventListener('resize', updateMobileViewport);
+    window.addEventListener('mousemove', handleDesktopMouseMove, {
+        passive: true,
+    });
+    window.addEventListener('pointerdown', handleUserActivity, {
+        passive: true,
+    });
+    window.addEventListener('touchstart', handleUserActivity, {
+        passive: true,
+    });
+    window.addEventListener('keydown', handleUserActivity);
+    scheduleAutoHide();
+});
+
+onBeforeUnmount(() => {
+    clearHideTimer();
+    mobileMediaQuery?.removeEventListener('change', updateMobileViewport);
+    window.removeEventListener('resize', updateMobileViewport);
+    window.removeEventListener('mousemove', handleDesktopMouseMove);
+    window.removeEventListener('pointerdown', handleUserActivity);
+    window.removeEventListener('touchstart', handleUserActivity);
+    window.removeEventListener('keydown', handleUserActivity);
+});
 </script>
 
 <template>
     <nav
-        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 p-2 text-slate-950 max-[460px]:grid max-[460px]:grid-cols-4"
+        data-test="call-controls-bar"
+        :data-hidden="controlsAreHidden ? 'true' : 'false'"
+        :data-mobile="isMobileViewport ? 'true' : 'false'"
+        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 p-2 text-slate-950 transition-[opacity,transform] duration-300 ease-out max-[460px]:grid max-[460px]:grid-cols-4"
+        :class="
+            controlsAreHidden
+                ? 'translate-y-8 opacity-0 pointer-events-none md:translate-y-12'
+                : 'translate-y-0 opacity-100'
+        "
         aria-label="Управление звонком"
     >
         <TooltipProvider :delay-duration="120">
@@ -284,6 +372,17 @@ const emit = defineEmits<{
             </Tooltip>
         </TooltipProvider>
     </nav>
+
+    <button
+        v-if="isMobileViewport && controlsAreHidden"
+        type="button"
+        data-test="show-call-controls-tab"
+        class="fixed inset-x-0 bottom-0 z-30 mx-auto h-7 w-24 rounded-t-md border border-b-0 border-slate-200/80 bg-white/92 text-xs font-medium text-slate-600 shadow-[0_-8px_28px_rgba(15,23,42,0.12)] active:scale-[0.96]"
+        aria-label="Показать управление звонком"
+        @click="showControls"
+    >
+        Управление
+    </button>
 
     <SubroomManagementSheet
         v-if="canManageSubrooms"

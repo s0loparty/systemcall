@@ -572,7 +572,7 @@ onMounted(() => {
         </header>
 
         <section
-            class="relative flex h-full p-4 pt-20 pb-24 transition-[padding-right] duration-200 ease-out"
+            class="relative flex h-full p-4 pt-20 pb-4 transition-[padding-right] duration-200 ease-out"
             :class="chatOpen ? 'lg:pr-114' : ''"
         >
             <ParticipantGrid
