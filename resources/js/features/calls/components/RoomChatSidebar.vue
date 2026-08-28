@@ -49,7 +49,7 @@ async function sendMessage(): Promise<void> {
 <template>
     <aside
         data-test="chat-sidebar"
-        class="fixed inset-y-3 right-3 z-40 flex w-[calc(100%-1.5rem)] max-w-[26rem] flex-col overflow-hidden rounded-md border border-slate-200/80 bg-white/95 text-slate-950 shadow-[0_24px_90px_rgba(15,23,42,0.18)] backdrop-blur-xl"
+        class="fixed inset-y-3 right-3 z-40 flex w-[calc(100%-1.5rem)] max-w-104 flex-col overflow-hidden rounded-md border border-slate-200/80 bg-white/95 text-slate-950 shadow-[0_24px_90px_rgba(15,23,42,0.18)] backdrop-blur-xl"
     >
         <header
             class="flex items-center justify-between gap-3 border-b border-slate-200/80 p-4"

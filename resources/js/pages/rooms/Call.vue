@@ -561,6 +561,7 @@ onMounted(() => {
             <ParticipantGrid
                 class="min-h-0 w-full"
                 :tiles="tilesWithApplicationState"
+                :room-members="roomMembers"
                 :active-speaker-identity="activeSpeakerIdentity"
                 :personal-pinned-identity="personalPinnedIdentity"
                 :global-pinned-identity="globalPinnedIdentity"

@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, toRef } from 'vue';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 
+import { useParticipantOrdering } from '../composables/useParticipantOrdering';
 import type {
     ParticipantTileActions,
     ParticipantTile as ParticipantTileData,
+    RoomMemberSummary,
     RoomSubroomSummary,
 } from '../types';
 import ParticipantTile from './ParticipantTile.vue';
 
 type Props = {
     tiles: ParticipantTileData[];
+    roomMembers: RoomMemberSummary[];
     activeSpeakerIdentity: string | null;
     personalPinnedIdentity: string | null;
     globalPinnedIdentity: string | null;
@@ -36,27 +39,9 @@ const emit = defineEmits<{
     ban: [identity: string];
 }>();
 
-const orderedTiles = computed(() => {
-    const pinnedIdentity =
-        props.personalPinnedIdentity ?? props.globalPinnedIdentity;
-
-    return props.tiles
-        .map((tile, index) => ({ tile, index }))
-        .sort((left, right) => {
-            const leftPinned = left.tile.identity === pinnedIdentity;
-            const rightPinned = right.tile.identity === pinnedIdentity;
-
-            if (leftPinned !== rightPinned) {
-                return leftPinned ? -1 : 1;
-            }
-
-            if (left.tile.handRaised !== right.tile.handRaised) {
-                return left.tile.handRaised ? -1 : 1;
-            }
-
-            return left.index - right.index;
-        })
-        .map(({ tile }) => tile);
+const { orderedTiles, visualOrder, raisedQueue } = useParticipantOrdering({
+    tiles: toRef(props, 'tiles'),
+    members: toRef(props, 'roomMembers'),
 });
 
 const gridClass = computed(() => {
@@ -78,6 +63,7 @@ const gridClass = computed(() => {
 const screenShareTile = computed(
     () => orderedTiles.value.find((tile) => tile.screenShare) ?? null,
 );
+
 const pinnedTile = computed(() => {
     const pinnedIdentity =
         props.personalPinnedIdentity ?? props.globalPinnedIdentity;
@@ -88,7 +74,13 @@ const pinnedTile = computed(() => {
           ) ?? null)
         : null;
 });
+
+/**
+ * Focus is deliberately independent from ordering:
+ * screen share > personal pin > global pin > normal grid.
+ */
 const focusedTile = computed(() => screenShareTile.value ?? pinnedTile.value);
+
 const sideTiles = computed(() =>
     focusedTile.value
         ? orderedTiles.value.filter(
@@ -96,6 +88,10 @@ const sideTiles = computed(() =>
           )
         : [],
 );
+
+// Kept available for Vue DevTools while implementing/tuning the behavior.
+void visualOrder;
+void raisedQueue;
 </script>
 
 <template>
@@ -104,7 +100,7 @@ const sideTiles = computed(() =>
         :data-test="
             screenShareTile ? 'screen-share-layout' : 'focused-tile-layout'
         "
-        class="mx-auto grid h-full w-full max-w-[96rem] flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2.45fr)_minmax(15rem,0.72fr)] xl:grid-cols-[minmax(0,2.7fr)_minmax(18rem,0.72fr)]"
+        class="mx-auto grid h-full w-full max-w-384 flex-1 gap-3 overflow-hidden p-1 lg:grid-cols-[minmax(0,2.45fr)_minmax(15rem,0.72fr)] xl:grid-cols-[minmax(0,2.7fr)_minmax(18rem,0.72fr)]"
     >
         <ParticipantTile
             :tile="focusedTile"
@@ -175,7 +171,7 @@ const sideTiles = computed(() =>
     <ScrollArea v-else class="[&_[data-reka-scroll-area-viewport]>div]:h-full">
         <section
             data-test="participant-grid"
-            class="mx-auto grid sm:h-full w-full flex-1 auto-rows-fr content-center gap-3 p-1 md:gap-4 md:overflow-hidden"
+            class="mx-auto grid w-full flex-1 auto-rows-fr content-center gap-3 p-1 sm:h-full md:gap-4 md:overflow-hidden"
             :class="gridClass"
         >
             <ParticipantTile
@@ -188,13 +184,6 @@ const sideTiles = computed(() =>
                 :actions="tileActionsByIdentity[tile.identity]"
                 :subrooms="subrooms"
                 :actions-disabled="actionsDisabled"
-                :class="
-                    (tile.identity === personalPinnedIdentity ||
-                        tile.identity === globalPinnedIdentity) &&
-                    tiles.length > 1
-                        ? 'sm:col-span-2 sm:row-span-2'
-                        : ''
-                "
                 @media-host="
                     (identity, element) => emit('media-host', identity, element)
                 "
