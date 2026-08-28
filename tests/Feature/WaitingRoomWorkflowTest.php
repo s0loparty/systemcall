@@ -181,12 +181,16 @@ test('room owners bypass waiting room after leaving and rejoining', function () 
         ->for($owner)
         ->create(['left_at' => now()]);
 
+    Event::fake([RoomMemberJoined::class]);
+
     $this->actingAs($owner)
         ->postJson(route('rooms.memberships.store', $room))
         ->assertCreated()
         ->assertJsonPath('member.display_name', $owner->name)
         ->assertJsonPath('member.role', RoomRole::Owner->value)
         ->assertJsonMissingPath('waiting_room');
+
+    Event::assertDispatched(RoomMemberJoined::class);
 
     expect(
         WaitingRoomMember::whereBelongsTo($room)
