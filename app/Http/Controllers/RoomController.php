@@ -33,7 +33,7 @@ class RoomController extends Controller
                 ->whereNull('left_at'))
             ->latest()
             ->get()
-            ->map(fn (Room $room): array => $this->roomPayload($room));
+            ->map(fn (Room $room): array => $this->roomPayload($room, $user));
 
         if (! $request->expectsJson()) {
             return Inertia::render('rooms/Index', [
@@ -55,7 +55,7 @@ class RoomController extends Controller
             return to_route('rooms.call.prepare', $room);
         }
 
-        return response()->json(['room' => $this->roomPayload($room->load('members'))], 201);
+        return response()->json(['room' => $this->roomPayload($room->load('members'), $user)], 201);
     }
 
     public function show(Request $request, Room $room): JsonResponse|RedirectResponse
@@ -66,21 +66,25 @@ class RoomController extends Controller
             return to_route('rooms.call.prepare', $room);
         }
 
-        return response()->json(['room' => $this->roomPayload($room)]);
+        return response()->json(['room' => $this->roomPayload($room, $request->user())]);
     }
 
     public function update(UpdateRoomRequest $request, Room $room, UpdateRoomAction $updateRoom): JsonResponse
     {
         $room = $updateRoom->handle($room, $request->roomData());
 
-        return response()->json(['room' => $this->roomPayload($room)]);
+        return response()->json(['room' => $this->roomPayload($room, $request->user())]);
     }
 
-    public function destroy(Request $request, Room $room): JsonResponse
+    public function destroy(Request $request, Room $room): JsonResponse|RedirectResponse
     {
         Gate::forUser($request->user())->authorize('delete', $room);
 
         $room->delete();
+
+        if (! $request->expectsJson()) {
+            return to_route('rooms.index');
+        }
 
         return response()->json(status: 204);
     }
@@ -99,7 +103,7 @@ class RoomController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function roomPayload(Room $room): array
+    private function roomPayload(Room $room, ?User $user = null): array
     {
         return [
             'public_id' => $room->public_id,
@@ -111,6 +115,7 @@ class RoomController extends Controller
             'waiting_room_enabled' => $room->waiting_room_enabled,
             'max_participants' => $room->max_participants,
             'ended_at' => $room->ended_at?->toISOString(),
+            'can_delete' => $user instanceof User && Gate::forUser($user)->allows('delete', $room),
         ];
     }
 }

@@ -66,6 +66,7 @@ test('authenticated owners can manage rooms using public ids', function () {
 
 test('authenticated users can manage rooms through Inertia pages', function () {
     $owner = User::factory()->create();
+    $otherOwner = User::factory()->create();
     $room = Room::factory()
         ->for($owner, 'owner')
         ->public()
@@ -79,13 +80,29 @@ test('authenticated users can manage rooms through Inertia pages', function () {
         ->owner()
         ->create();
 
+    $joinedRoom = Room::factory()
+        ->for($otherOwner, 'owner')
+        ->public()
+        ->create([
+            'name' => 'Joined call',
+            'created_at' => now()->subMinute(),
+        ]);
+
+    RoomMember::factory()
+        ->for($joinedRoom)
+        ->for($owner)
+        ->create();
+
     $this->actingAs($owner)
         ->get(route('rooms.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('rooms/Index')
             ->where('rooms.0.public_id', $room->public_id)
-            ->where('rooms.0.name', 'Existing call'));
+            ->where('rooms.0.name', 'Existing call')
+            ->where('rooms.0.can_delete', true)
+            ->where('rooms.1.public_id', $joinedRoom->public_id)
+            ->where('rooms.1.can_delete', false));
 
     $response = $this->actingAs($owner)
         ->post(route('rooms.store'), [
@@ -103,6 +120,12 @@ test('authenticated users can manage rooms through Inertia pages', function () {
     $response->assertRedirect(route('rooms.call.prepare', $createdRoom));
     expect($createdRoom->waiting_room_enabled)->toBeTrue()
         ->and($createdRoom->max_participants)->toBe(8);
+
+    $this->actingAs($owner)
+        ->delete(route('rooms.destroy', $room))
+        ->assertRedirect(route('rooms.index'));
+
+    $this->assertModelMissing($room);
 });
 
 test('public and private room access rules are enforced', function () {

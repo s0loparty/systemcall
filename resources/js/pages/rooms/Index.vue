@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
 
-import { ArrowRight, DoorOpen, Lock, ShieldCheck, Video } from '@lucide/vue';
+import {
+    ArrowRight,
+    DoorOpen,
+    Lock,
+    ShieldCheck,
+    Trash2,
+    Video,
+} from '@lucide/vue';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,13 +20,23 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { dashboard } from '@/routes';
 
-import { store as storeRoom } from '@/routes/rooms';
+import { destroy as destroyRoom, store as storeRoom } from '@/routes/rooms';
 import { prepare as prepareCall } from '@/routes/rooms/call';
 
 import InputError from '@/components/InputError.vue';
@@ -34,6 +51,7 @@ type RoomSummary = {
     waiting_room_enabled: boolean;
     max_participants: number | null;
     ended_at: string | null;
+    can_delete: boolean;
 };
 
 defineProps<{
@@ -373,23 +391,107 @@ function visibilityLabel(visibility: RoomSummary['visibility']): string {
                                             </p>
                                         </div>
 
-                                        <Button
-                                            as-child
-                                            class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 sm:w-auto sm:px-5"
-                                            size="sm"
+                                        <div
+                                            class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center"
                                         >
-                                            <Link
-                                                :href="
-                                                    prepareCall(room.public_id)
-                                                "
-                                                class="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                                            <Button
+                                                as-child
+                                                class="w-full rounded-full bg-neutral-900 px-4 py-2 text-white hover:bg-neutral-700 sm:w-auto sm:px-5"
+                                                size="sm"
                                             >
-                                                Подготовиться
-                                                <ArrowRight
-                                                    class="size-3.5 sm:size-4"
-                                                />
-                                            </Link>
-                                        </Button>
+                                                <Link
+                                                    :href="
+                                                        prepareCall(
+                                                            room.public_id,
+                                                        )
+                                                    "
+                                                    class="flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                                                >
+                                                    Подготовиться
+                                                    <ArrowRight
+                                                        class="size-3.5 sm:size-4"
+                                                    />
+                                                </Link>
+                                            </Button>
+
+                                            <Dialog v-if="room.can_delete">
+                                                <DialogTrigger as-child>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="icon"
+                                                        class="h-9 w-full rounded-md border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 sm:w-9"
+                                                        :aria-label="`Удалить комнату ${room.name}`"
+                                                        :data-test="`delete-room-${room.public_id}`"
+                                                    >
+                                                        <Trash2
+                                                            class="size-4"
+                                                        />
+                                                    </Button>
+                                                </DialogTrigger>
+
+                                                <DialogContent
+                                                    class="rounded-md sm:max-w-md"
+                                                >
+                                                    <Form
+                                                        v-bind="
+                                                            destroyRoom.form(
+                                                                room.public_id,
+                                                            )
+                                                        "
+                                                        :options="{
+                                                            preserveScroll: true,
+                                                        }"
+                                                        v-slot="{ processing }"
+                                                        class="space-y-6"
+                                                    >
+                                                        <DialogHeader
+                                                            class="space-y-3"
+                                                        >
+                                                            <DialogTitle>
+                                                                Удалить комнату?
+                                                            </DialogTitle>
+                                                            <DialogDescription>
+                                                                Комната «{{
+                                                                    room.name
+                                                                }}» будет
+                                                                удалена. Это
+                                                                действие нельзя
+                                                                отменить.
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+
+                                                        <DialogFooter
+                                                            class="gap-2"
+                                                        >
+                                                            <DialogClose
+                                                                as-child
+                                                            >
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="secondary"
+                                                                    class="rounded-md"
+                                                                >
+                                                                    Отмена
+                                                                </Button>
+                                                            </DialogClose>
+
+                                                            <Button
+                                                                type="submit"
+                                                                variant="destructive"
+                                                                class="rounded-md"
+                                                                :disabled="
+                                                                    processing
+                                                                "
+                                                                :data-test="`confirm-delete-room-${room.public_id}`"
+                                                            >
+                                                                Удалить
+                                                            </Button>
+                                                        </DialogFooter>
+                                                    </Form>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </div>
                                     </div>
                                 </article>
                             </div>

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Room;
+use App\Models\RoomMember;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -150,7 +151,28 @@ it('lets an authenticated user create a room and navigate the call flow before m
         ->assertSee('Подготовиться')
         ->assertSourceHas('/rooms/'.$room->public_id.'/prepare')
         ->assertSourceMissing('/rooms/'.$room->public_id.'/call')
+        ->click('@delete-room-'.$room->public_id)
+        ->assertSee('Удалить комнату?')
+        ->click('@confirm-delete-room-'.$room->public_id)
+        ->assertPathEndsWith('/rooms')
+        ->assertSee('Комнат пока нет')
+        ->assertDontSee($roomName)
         ->assertNoJavaScriptErrors();
+
+    $this->assertModelMissing($room);
+
+    $room = Room::factory()
+        ->for($user, 'owner')
+        ->public()
+        ->create([
+            'name' => $roomName,
+        ]);
+
+    RoomMember::factory()
+        ->for($room)
+        ->for($user)
+        ->owner()
+        ->create();
 
     $this->actingAs($user);
 
