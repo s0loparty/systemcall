@@ -6,6 +6,8 @@ import { Share2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Toaster } from '@/components/ui/sonner';
 
 import {
@@ -21,7 +23,6 @@ import CallControlsBar from '@/features/calls/components/CallControlsBar.vue';
 import CallError from '@/features/calls/components/CallError.vue';
 import ParticipantGrid from '@/features/calls/components/ParticipantGrid.vue';
 import RoomChatSidebar from '@/features/calls/components/RoomChatSidebar.vue';
-import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
 import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
 import { useCallSession } from '@/features/calls/composables/useCallSession';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
@@ -130,6 +131,12 @@ const {
 
 const needsPassword = computed(
     () => props.room.has_password && !props.can_join_without_password,
+);
+const needsGuestIdentity = computed(
+    () =>
+        currentUser.value === null &&
+        props.current_room_member_id === null &&
+        props.current_waiting_room_entry === null,
 );
 const canShareRoomLink = computed(() => props.room.visibility === 'public');
 const currentRoomMemberId = computed(
@@ -506,6 +513,16 @@ async function leaveCall(): Promise<void> {
 }
 
 onMounted(() => {
+    if (needsGuestIdentity.value) {
+        router.visit(
+            showPrepare.url(props.room.public_id, {
+                query: deviceQuery.toQuery(selectedDevices.value),
+            }),
+        );
+
+        return;
+    }
+
     if (!needsPassword.value) {
         void connectToCall();
     }
@@ -598,12 +615,26 @@ onMounted(() => {
                     Камеру и микрофон можно оставить выключенными.
                 </p>
 
-                <RoomPasswordPanel
-                    v-if="needsPassword"
-                    v-model:password="joinRequest.password"
-                    class="mt-4"
-                    :error="joinRequest.errors.password"
-                />
+                <div v-if="needsPassword" class="space-y-1 mt-4">
+                    <Label class="text-sm" for="room-password">
+                        Пароль комнаты
+                    </Label>
+                    <Input
+                        id="room-password"
+                        v-model="joinRequest.password"
+                        data-test="room-password"
+                        type="password"
+                        autocomplete="current-password"
+                        class="rounded-lg border-border/60 bg-white/80"
+                        placeholder="Введите пароль комнаты"
+                    />
+                    <small
+                        v-if="joinRequest.errors.password"
+                        class="text-red-500"
+                    >
+                        {{ joinRequest.errors.password }}
+                    </small>
+                </div>
 
                 <button
                     v-if="needsPassword"

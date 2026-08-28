@@ -168,6 +168,34 @@ test('approved participants can reuse their membership without creating a new pe
     )->toBeFalse();
 });
 
+test('room owners bypass waiting room after leaving and rejoining', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create(['waiting_room_enabled' => true]);
+
+    RoomMember::factory()
+        ->owner()
+        ->for($room)
+        ->for($owner)
+        ->create(['left_at' => now()]);
+
+    $this->actingAs($owner)
+        ->postJson(route('rooms.memberships.store', $room))
+        ->assertCreated()
+        ->assertJsonPath('member.display_name', $owner->name)
+        ->assertJsonPath('member.role', RoomRole::Owner->value)
+        ->assertJsonMissingPath('waiting_room');
+
+    expect(
+        WaitingRoomMember::whereBelongsTo($room)
+            ->whereBelongsTo($owner)
+            ->where('status', WaitingRoomStatus::Pending)
+            ->exists()
+    )->toBeFalse();
+});
+
 test('moderators can reject waiting-room entries without creating room members', function () {
     Event::fake([WaitingRoomEntryDecided::class]);
 

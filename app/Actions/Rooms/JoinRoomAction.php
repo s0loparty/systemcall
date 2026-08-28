@@ -29,7 +29,7 @@ class JoinRoomAction
             throw new AuthorizationException('This room is private.');
         }
 
-        if ($room->password_hash !== null && ! Hash::check($data['password'] ?? '', $room->password_hash)) {
+        if ($this->requiresPassword($room, $user, $guestId) && ! Hash::check($data['password'] ?? '', $room->password_hash)) {
             throw ValidationException::withMessages([
                 'password' => __('The room password is incorrect.'),
             ]);
@@ -103,6 +103,34 @@ class JoinRoomAction
 
         return $room->members()
             ->whereBelongsTo($user)
+            ->whereNull('left_at')
+            ->exists();
+    }
+
+    private function requiresPassword(Room $room, ?User $user, ?string $guestId): bool
+    {
+        if ($room->password_hash === null) {
+            return false;
+        }
+
+        if ($user instanceof User && $room->owner()->is($user)) {
+            return false;
+        }
+
+        if (! $user instanceof User && $guestId === null) {
+            return true;
+        }
+
+        return ! $room->members()
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
+            })
             ->whereNull('left_at')
             ->exists();
     }

@@ -1,6 +1,6 @@
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import { Room, Track, createLocalTracks } from 'livekit-client';
+import { Track, createLocalTracks } from 'livekit-client';
 import type { LocalTrack } from 'livekit-client';
 
 import type { SelectedDevices, TestingMediaMode } from '../types';
@@ -15,20 +15,55 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     const audioInputs = ref<MediaDeviceInfo[]>([]);
     const videoInputs = ref<MediaDeviceInfo[]>([]);
     const selectedDevices = ref<SelectedDevices>({
+        audioInputId: '',
+        videoInputId: '',
+    });
+    const preferredDevices = ref<SelectedDevices>({
         audioInputId: options.initialSelectedDevices?.audioInputId ?? '',
         videoInputId: options.initialSelectedDevices?.videoInputId ?? '',
     });
+
+    const audioPermissionRequested = ref(false);
+    const videoPermissionRequested = ref(false);
+    const audioPermissionLoading = ref(false);
+    const videoPermissionLoading = ref(false);
+    const permissionsRequested = computed(
+        () => audioPermissionRequested.value || videoPermissionRequested.value,
+    );
+    const permissionsLoading = computed(
+        () => audioPermissionLoading.value || videoPermissionLoading.value,
+    );
+
     const previewEnabled = ref(false);
     const previewLoading = ref(false);
     const previewHasVideo = ref(false);
     const deviceErrorMessage = ref<string | null>(null);
+
     const previewHost = ref<HTMLElement | null>(null);
     const previewTracks = ref<LocalTrack[]>([]);
+
     let previewGeneration = 0;
 
-    async function loadDevices(requestPermissions = false): Promise<void> {
+    /**
+     * Enumerates devices only.
+     *
+     * IMPORTANT:
+     * This function never calls getUserMedia() and therefore never owns
+     * the browser permission request flow.
+     */
+    async function loadDevices(): Promise<void> {
         if (options.testingMediaMode === 'fake') {
-            loadTestingDevices(requestPermissions);
+            if (audioPermissionRequested.value) {
+                loadTestingDevices('audio');
+            } else {
+                audioInputs.value = [];
+            }
+
+            if (videoPermissionRequested.value) {
+                loadTestingDevices('video');
+            } else {
+                videoInputs.value = [];
+            }
 
             return;
         }
@@ -41,106 +76,241 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             return;
         }
 
-        let permissionError: unknown = null;
+        if (!navigator.mediaDevices?.enumerateDevices) {
+            audioInputs.value = [];
+            videoInputs.value = [];
+            deviceErrorMessage.value =
+                'Браузер не поддерживает получение списка устройств.';
 
-        try {
-            if (requestPermissions) {
-                await requestMediaPermissions();
-            }
-        } catch (error) {
-            permissionError = error;
-        }
-
-        const [nextAudioInputs, nextVideoInputs] = await Promise.allSettled([
-            Room.getLocalDevices('audioinput', false),
-            Room.getLocalDevices('videoinput', false),
-        ]);
-
-        const loadedAudioInputs =
-            nextAudioInputs.status === 'fulfilled' ? nextAudioInputs.value : [];
-        const loadedVideoInputs =
-            nextVideoInputs.status === 'fulfilled' ? nextVideoInputs.value : [];
-
-        audioInputs.value = loadedAudioInputs;
-        videoInputs.value = loadedVideoInputs;
-
-        if (loadedAudioInputs.length > 0 || loadedVideoInputs.length > 0) {
-            deviceErrorMessage.value = null;
-        } else if (permissionError) {
-            deviceErrorMessage.value = formatDeviceError(permissionError);
-        } else {
-            const deviceError =
-                nextAudioInputs.status === 'rejected'
-                    ? nextAudioInputs.reason
-                    : nextVideoInputs.status === 'rejected'
-                      ? nextVideoInputs.reason
-                      : null;
-
-            deviceErrorMessage.value = deviceError
-                ? formatDeviceError(deviceError)
-                : null;
-        }
-
-        if (
-            requestPermissions &&
-            options.autoSelectCameraAfterPermission === true &&
-            (selectedDevices.value.videoInputId === '' ||
-                !loadedVideoInputs.some(
-                    (device) =>
-                        device.deviceId === selectedDevices.value.videoInputId,
-                )) &&
-            loadedVideoInputs.length > 0
-        ) {
-            selectedDevices.value = {
-                ...selectedDevices.value,
-                videoInputId: loadedVideoInputs[0].deviceId,
-            };
-        }
-
-        if (requestPermissions && selectedDevices.value.videoInputId !== '') {
-            void startPreview();
-        }
-    }
-
-    async function requestMediaPermissions(): Promise<void> {
-        if (!navigator.mediaDevices?.getUserMedia) {
             return;
         }
 
-        const requestedStreams: MediaStream[] = [];
-
         try {
-            requestedStreams.push(
-                await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: true,
-                }),
+            const devices = await navigator.mediaDevices.enumerateDevices();
+
+            const nextAudioInputs = devices.filter(
+                (device) => device.kind === 'audioinput',
             );
-        } catch (combinedError) {
-            const fallbackResults = await Promise.allSettled([
-                navigator.mediaDevices.getUserMedia({ audio: true }),
-                navigator.mediaDevices.getUserMedia({ video: true }),
-            ]);
+            const nextVideoInputs = devices.filter(
+                (device) => device.kind === 'videoinput',
+            );
 
-            if (
-                fallbackResults.every((result) => result.status === 'rejected')
-            ) {
-                throw combinedError;
-            }
+            audioInputs.value = audioPermissionRequested.value
+                ? nextAudioInputs
+                : [];
+            videoInputs.value = videoPermissionRequested.value
+                ? nextVideoInputs
+                : [];
 
-            fallbackResults.forEach((result) => {
-                if (result.status === 'fulfilled') {
-                    requestedStreams.push(result.value);
-                }
-            });
-        } finally {
-            requestedStreams.forEach((stream) => {
-                stream.getTracks().forEach((track) => track.stop());
-            });
+            deviceErrorMessage.value = null;
+        } catch (error) {
+            audioInputs.value = [];
+            videoInputs.value = [];
+            deviceErrorMessage.value = formatDeviceError(error);
         }
     }
 
+    /**
+     * The ONLY entry point that is allowed to request camera/microphone
+     * permission from the browser.
+     *
+     * Call this only from an explicit user action.
+     */
+    async function requestAudioPermission(
+        event?: MouseEvent | KeyboardEvent,
+    ): Promise<void> {
+        if (!isTrustedPermissionEvent(event)) {
+            return;
+        }
+
+        if (audioPermissionLoading.value) {
+            return;
+        }
+
+        audioPermissionLoading.value = true;
+        deviceErrorMessage.value = null;
+
+        try {
+            if (options.testingMediaMode === 'fake') {
+                audioPermissionRequested.value = true;
+                loadTestingDevices('audio');
+                selectAudioAfterPermission();
+
+                return;
+            }
+
+            if (options.testingMediaMode === 'error') {
+                audioPermissionRequested.value = true;
+                audioInputs.value = [];
+                deviceErrorMessage.value = 'E2 permission denied';
+
+                return;
+            }
+
+            await requestMediaPermission('audio');
+            audioPermissionRequested.value = true;
+
+            await loadDevices();
+            selectAudioAfterPermission();
+        } catch (error) {
+            audioPermissionRequested.value = true;
+            deviceErrorMessage.value = formatDeviceError(error);
+            await loadDevices();
+        } finally {
+            audioPermissionLoading.value = false;
+        }
+    }
+
+    async function requestVideoPermission(
+        event?: MouseEvent | KeyboardEvent,
+    ): Promise<void> {
+        if (!isTrustedPermissionEvent(event)) {
+            return;
+        }
+
+        if (videoPermissionLoading.value) {
+            return;
+        }
+
+        videoPermissionLoading.value = true;
+        deviceErrorMessage.value = null;
+
+        try {
+            if (options.testingMediaMode === 'fake') {
+                videoPermissionRequested.value = true;
+                loadTestingDevices('video');
+                selectCameraAfterPermission();
+                await startPreviewIfSelected();
+
+                return;
+            }
+
+            if (options.testingMediaMode === 'error') {
+                videoPermissionRequested.value = true;
+                videoInputs.value = [];
+                deviceErrorMessage.value = 'E2 permission denied';
+
+                return;
+            }
+
+            await requestMediaPermission('video');
+            videoPermissionRequested.value = true;
+
+            await loadDevices();
+            selectCameraAfterPermission();
+            await startPreviewIfSelected();
+        } catch (error) {
+            videoPermissionRequested.value = true;
+            deviceErrorMessage.value = formatDeviceError(error);
+            await loadDevices();
+        } finally {
+            videoPermissionLoading.value = false;
+        }
+    }
+
+    async function requestMediaPermission(
+        kind: 'audio' | 'video',
+    ): Promise<void> {
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error(
+                'Браузер не поддерживает доступ к камере и микрофону.',
+            );
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+            audio: kind === 'audio',
+            video: kind === 'video',
+        });
+
+        try {
+            await Promise.resolve();
+        } finally {
+            stream.getTracks().forEach((track) => track.stop());
+        }
+    }
+
+    function isTrustedPermissionEvent(
+        event?: MouseEvent | KeyboardEvent,
+    ): boolean {
+        if (!event?.isTrusted) {
+            return false;
+        }
+
+        return event.type === 'click' || event.type === 'keydown';
+    }
+
+    function selectCameraAfterPermission(): void {
+        if (
+            options.autoSelectCameraAfterPermission !== true ||
+            videoInputs.value.length === 0
+        ) {
+            return;
+        }
+
+        const preferredVideoInputId =
+            selectedDevices.value.videoInputId ||
+            preferredDevices.value.videoInputId;
+        const selectedVideoExists = videoInputs.value.some(
+            (device) => device.deviceId === preferredVideoInputId,
+        );
+
+        if (preferredVideoInputId !== '' && selectedVideoExists) {
+            selectedDevices.value = {
+                ...selectedDevices.value,
+                videoInputId: preferredVideoInputId,
+            };
+
+            return;
+        }
+
+        selectedDevices.value = {
+            ...selectedDevices.value,
+            videoInputId: videoInputs.value[0].deviceId,
+        };
+    }
+
+    function selectAudioAfterPermission(): void {
+        if (audioInputs.value.length === 0) {
+            return;
+        }
+
+        const preferredAudioInputId =
+            selectedDevices.value.audioInputId ||
+            preferredDevices.value.audioInputId;
+        const selectedAudioExists = audioInputs.value.some(
+            (device) => device.deviceId === preferredAudioInputId,
+        );
+
+        if (preferredAudioInputId !== '' && selectedAudioExists) {
+            selectedDevices.value = {
+                ...selectedDevices.value,
+                audioInputId: preferredAudioInputId,
+            };
+
+            return;
+        }
+
+        selectedDevices.value = {
+            ...selectedDevices.value,
+            audioInputId: audioInputs.value[0].deviceId,
+        };
+    }
+
+    async function startPreviewIfSelected(): Promise<void> {
+        if (selectedDevices.value.videoInputId === '') {
+            return;
+        }
+
+        await startPreview();
+    }
+
     async function startPreview(): Promise<void> {
+        // Prevent a persisted videoInputId or any accidental caller from
+        // triggering createLocalTracks before an explicit permission request.
+        if (!videoPermissionRequested.value) {
+            return;
+        }
+
         const generation = ++previewGeneration;
 
         await stopPreview(false);
@@ -161,7 +331,10 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
                     : await createLocalTracks({
                           audio: false,
                           video: selectedDevices.value.videoInputId
-                              ? { deviceId: selectedDevices.value.videoInputId }
+                              ? {
+                                    deviceId:
+                                        selectedDevices.value.videoInputId,
+                                }
                               : false,
                       });
 
@@ -209,6 +382,10 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     }
 
     function setAudioInput(deviceId: string): void {
+        preferredDevices.value = {
+            ...preferredDevices.value,
+            audioInputId: deviceId,
+        };
         selectedDevices.value = {
             ...selectedDevices.value,
             audioInputId: deviceId,
@@ -216,12 +393,16 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     }
 
     function setVideoInput(deviceId: string): void {
+        preferredDevices.value = {
+            ...preferredDevices.value,
+            videoInputId: deviceId,
+        };
         selectedDevices.value = {
             ...selectedDevices.value,
             videoInputId: deviceId,
         };
 
-        if (deviceId !== '') {
+        if (deviceId !== '' && videoPermissionRequested.value) {
             void startPreview();
 
             return;
@@ -261,32 +442,20 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         }
     }
 
-    function loadTestingDevices(requestPermissions: boolean): void {
-        const nextAudioInputs = [
-            testingDevice('audioinput', 'e2-mic', 'E2 Fake Microphone'),
-        ];
-        const nextVideoInputs = [
-            testingDevice('videoinput', 'e2-camera', 'E2 Fake Camera'),
-        ];
+    function loadTestingDevices(kind?: 'audio' | 'video'): void {
+        if (kind === undefined || kind === 'audio') {
+            audioInputs.value = [
+                testingDevice('audioinput', 'e2-mic', 'E2 Fake Microphone'),
+            ];
+        }
 
-        audioInputs.value = nextAudioInputs;
-        videoInputs.value = nextVideoInputs;
+        if (kind === undefined || kind === 'video') {
+            videoInputs.value = [
+                testingDevice('videoinput', 'e2-camera', 'E2 Fake Camera'),
+            ];
+        }
+
         deviceErrorMessage.value = null;
-
-        if (
-            requestPermissions &&
-            options.autoSelectCameraAfterPermission === true &&
-            selectedDevices.value.videoInputId === ''
-        ) {
-            selectedDevices.value = {
-                ...selectedDevices.value,
-                videoInputId: nextVideoInputs[0].deviceId,
-            };
-        }
-
-        if (requestPermissions && selectedDevices.value.videoInputId !== '') {
-            void startPreview();
-        }
     }
 
     function testingDevice(
@@ -322,12 +491,48 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
     }
 
     function formatDeviceError(error: unknown): string {
+        if (error instanceof DOMException) {
+            if (
+                error.name === 'NotAllowedError' ||
+                error.name === 'PermissionDeniedError'
+            ) {
+                return 'Доступ к камере и микрофону запрещён в браузере.';
+            }
+
+            if (error.name === 'NotFoundError') {
+                return 'Камера или микрофон не найдены.';
+            }
+
+            if (error.name === 'NotReadableError') {
+                return 'Не удалось открыть устройство. Возможно, оно используется другим приложением.';
+            }
+        }
+
         if (error instanceof Error) {
             return error.message;
         }
 
         return 'Не удалось получить доступ к устройствам.';
     }
+
+    function handleDeviceChange(): void {
+        // Do not enumerate or touch media devices before the user has
+        // explicitly interacted with the permission button.
+        if (!permissionsRequested.value) {
+            return;
+        }
+
+        void loadDevices();
+    }
+
+    onMounted(() => {
+        // Intentionally no loadDevices(), no getUserMedia(), no
+        // createLocalTracks() here.
+        navigator.mediaDevices?.addEventListener(
+            'devicechange',
+            handleDeviceChange,
+        );
+    });
 
     onBeforeUnmount(() => {
         navigator.mediaDevices?.removeEventListener(
@@ -337,31 +542,23 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         void stopPreview();
     });
 
-    function handleDeviceChange(): void {
-        void loadDevices();
-    }
-
-    onMounted(async () => {
-        await loadDevices(options.autoSelectCameraAfterPermission === true);
-        navigator.mediaDevices?.addEventListener(
-            'devicechange',
-            handleDeviceChange,
-        );
-
-        if (selectedDevices.value.videoInputId !== '') {
-            void startPreview();
-        }
-    });
-
     return {
         audioInputs,
         videoInputs,
         selectedDevices,
+        permissionsRequested,
+        permissionsLoading,
+        audioPermissionRequested,
+        videoPermissionRequested,
+        audioPermissionLoading,
+        videoPermissionLoading,
         previewEnabled,
         previewLoading,
         previewHasVideo,
         deviceErrorMessage,
         loadDevices,
+        requestAudioPermission,
+        requestVideoPermission,
         startPreview,
         stopPreview,
         setPreviewHost,

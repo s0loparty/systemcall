@@ -71,7 +71,7 @@ class RoomCallController extends Controller
                 'waiting_room_enabled' => $room->waiting_room_enabled,
                 'livekit_room_name' => $liveKit->roomName($room),
             ],
-            'can_join_without_password' => $this->canJoinWithoutPassword($request, $room),
+            'can_join_without_password' => $this->canJoinWithoutPassword($request, $room, $guestIdentity),
             'can_moderate_waiting_room' => $canModerateWaitingRoom,
             'can_moderate_members' => $canModerateWaitingRoom,
             'current_room_member_id' => $currentRoomMemberId,
@@ -127,7 +127,7 @@ class RoomCallController extends Controller
         return $user instanceof User && Gate::forUser($user)->allows('view', $room);
     }
 
-    private function canJoinWithoutPassword(Request $request, Room $room): bool
+    private function canJoinWithoutPassword(Request $request, Room $room, GuestIdentity $guestIdentity): bool
     {
         if ($room->password_hash === null) {
             return true;
@@ -135,16 +135,27 @@ class RoomCallController extends Controller
 
         $user = $request->user();
 
-        if (! $user instanceof User) {
-            return false;
-        }
-
-        if ($room->owner()->is($user)) {
+        if ($user instanceof User && $room->owner()->is($user)) {
             return true;
         }
 
-        return $room->members()
-            ->whereBelongsTo($user)
+        $guestId = $guestIdentity->current($request);
+
+        if (! $user instanceof User && $guestId === null) {
+            return false;
+        }
+
+        return $room
+            ->members()
+            ->where(function ($query) use ($user, $guestId): void {
+                if ($user instanceof User) {
+                    $query->whereBelongsTo($user);
+
+                    return;
+                }
+
+                $query->where('guest_id', $guestId);
+            })
             ->whereNull('left_at')
             ->exists();
     }

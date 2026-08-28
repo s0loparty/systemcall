@@ -25,7 +25,7 @@ it('lets guests open shared room preparation links before entering a nickname', 
         ->assertNoJavaScriptErrors();
 });
 
-it('shows password input for guest shared links to password protected rooms', function () {
+it('asks guests for nickname before password on password protected shared links', function () {
     $room = Room::factory()->public()->create([
         'name' => 'E1 Password Guest Room',
         'password_hash' => Hash::make('correct-password'),
@@ -35,8 +35,36 @@ it('shows password input for guest shared links to password protected rooms', fu
         ->assertPathEndsWith('/prepare')
         ->assertSee('E1 Password Guest Room')
         ->assertSee('Никнейм')
+        ->assertNotPresent('#room-password')
+        ->fill('[data-test="guest-display-name"]', 'Password Guest')
+        ->click('@continue-to-room')
         ->assertSee('Пароль комнаты')
         ->assertPresent('#room-password')
+        ->assertSee('E1 Password Guest Room')
+        ->assertNoJavaScriptErrors();
+});
+
+it('asks authenticated non owners for password on password protected preparation pages', function () {
+    $owner = User::factory()->create();
+    $participant = User::factory()->create([
+        'name' => 'E1 Password Participant',
+    ]);
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create([
+            'name' => 'E1 Auth Password Room',
+            'password_hash' => Hash::make('correct-password'),
+        ]);
+
+    $this->actingAs($participant);
+
+    visit(route('rooms.call.prepare', $room, absolute: false))
+        ->assertPathEndsWith('/prepare')
+        ->assertSee('E1 Auth Password Room')
+        ->assertSee('Пароль комнаты')
+        ->assertPresent('#room-password')
+        ->assertDontSee('Никнейм')
         ->assertNoJavaScriptErrors();
 });
 
@@ -54,6 +82,35 @@ it('lets guests enter a nickname and continue from shared room links', function 
         ->click('@continue-to-room')
         ->assertPathEndsWith('/waiting')
         ->assertSee('Заявка в зал ожидания отправлена')
+        ->assertNoJavaScriptErrors();
+});
+
+it('requests media devices only after explicit setup button clicks', function () {
+    $user = User::factory()->create([
+        'name' => 'E1 Device User',
+    ]);
+    $room = Room::factory()->for($user, 'owner')->public()->create([
+        'name' => 'E1 Device Room',
+    ]);
+
+    $this->actingAs($user);
+
+    visit(route('rooms.call.prepare', [
+        'room' => $room,
+        '_e2e_media' => 'fake',
+    ], false))
+        ->assertPathEndsWith('/prepare')
+        ->assertScript(e1DevicePanelAudioCount(), '0')
+        ->assertScript(e1DevicePanelVideoCount(), '0')
+        ->click('@request-audio-permission')
+        ->wait()
+        ->assertScript(e1DevicePanelAudioCount(), '1')
+        ->assertScript(e1DevicePanelVideoCount(), '0')
+        ->assertScript(e1DevicePanelSelectedAudio(), 'e2-mic')
+        ->click('@request-video-permission')
+        ->wait()
+        ->assertScript(e1DevicePanelVideoCount(), '1')
+        ->assertScript(e1DevicePanelSelectedVideo(), 'e2-camera')
         ->assertNoJavaScriptErrors();
 });
 
@@ -112,3 +169,23 @@ it('lets an authenticated user create a room and navigate the call flow before m
             ->where('room.public_id', $room->public_id)
             ->where('room.name', $roomName));
 });
+
+function e1DevicePanelAudioCount(): string
+{
+    return 'document.querySelector("[data-test=device-setup-panel]").dataset.audioInputCount';
+}
+
+function e1DevicePanelVideoCount(): string
+{
+    return 'document.querySelector("[data-test=device-setup-panel]").dataset.videoInputCount';
+}
+
+function e1DevicePanelSelectedAudio(): string
+{
+    return 'document.querySelector("[data-test=device-setup-panel]").dataset.selectedAudioInputId';
+}
+
+function e1DevicePanelSelectedVideo(): string
+{
+    return 'document.querySelector("[data-test=device-setup-panel]").dataset.selectedVideoInputId';
+}

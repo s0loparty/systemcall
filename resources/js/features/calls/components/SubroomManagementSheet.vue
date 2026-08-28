@@ -24,7 +24,7 @@ type Props = {
 };
 
 const props = defineProps<Props>();
-const open = defineModel<boolean>({ required: false, default: false })
+const open = defineModel<boolean>({ required: false, default: false });
 const newSubroomName = ref('');
 
 const emit = defineEmits<{

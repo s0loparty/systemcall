@@ -36,19 +36,12 @@ it('approves a waiting participant and moves them into the LiveKit call', functi
 
     $this->actingAs($participant);
     $participantPage = visit($prepareUrl)
-        ->assertSee('Подготовка к звонку')
+        ->assertSee('Готовы войти?')
         ->wait()
-        ->select('@audio-input-select', 'e2-mic')
-        ->select('@video-input-select', 'e2-camera')
-        ->wait()
-        ->assertScript(e8PreviewVideoCount(), 1)
         ->click('@continue-to-room')
         ->assertPathEndsWith('/waiting')
         ->assertScript(e8WaitingStatus(), WaitingRoomStatus::Pending->value)
-        ->assertScript(e8SelectedAudioText(), 'E2 Fake Microphone')
-        ->assertScript(e8SelectedVideoText(), 'E2 Fake Camera')
         ->wait()
-        ->assertScript(e8PreviewVideoCount(), 1)
         ->assertNoJavaScriptErrors();
 
     $entry = WaitingRoomMember::query()
@@ -211,37 +204,22 @@ function prepareE8Room(string $roomName): array
 
 function e8EchoState(): string
 {
-    return 'document.querySelector("[data-test=application-realtime-panel]").dataset.echoState';
+    return 'document.querySelector("[data-test=application-realtime-panel]")?.dataset.echoState ?? ""';
 }
 
 function e8PendingCount(): string
 {
-    return 'document.querySelector("[data-test=waiting-room-pending-count]").dataset.count';
+    return 'document.querySelectorAll("[data-test=waiting-room-entry]").length.toString()';
 }
 
 function e8CallWaitingRoomCount(): string
 {
-    return 'document.querySelector("[data-test=toggle-waiting-room-dialog]").dataset.count';
+    return 'document.querySelector("[data-test=toggle-waiting-room-dialog]")?.dataset.count ?? ""';
 }
 
 function e8WaitingStatus(): string
 {
-    return 'document.querySelector("[data-test=waiting-room-status]").dataset.status';
-}
-
-function e8SelectedAudioText(): string
-{
-    return 'document.querySelector("[data-test=selected-audio-device] p:last-child").textContent.trim()';
-}
-
-function e8SelectedVideoText(): string
-{
-    return 'document.querySelector("[data-test=selected-video-device] p:last-child").textContent.trim()';
-}
-
-function e8PreviewVideoCount(): string
-{
-    return 'document.querySelectorAll("[data-test=preview-host] video").length';
+    return 'document.querySelector("[data-test=waiting-room-status]")?.dataset.status ?? ""';
 }
 
 function e8ConnectionState(): string

@@ -166,6 +166,7 @@ const emit = defineEmits<{
                         aria-label="Открыть зал ожидания"
                         variant="outline"
                         size="icon-lg"
+                        class="relative"
                         @click="waitingRoomDialogOpen = true"
                     >
                         <UserRoundCheck />

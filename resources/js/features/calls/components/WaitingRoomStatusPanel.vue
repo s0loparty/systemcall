@@ -8,7 +8,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardHeader,
     CardTitle,
 } from '@/components/ui/card';
 
@@ -57,9 +56,9 @@ const statusContent = computed(() => {
         v-if="entry"
         data-test="waiting-room-status"
         :data-status="entry.status"
-        class="border-none shadow-none p-0"
+        class="border-none shadow-none p-0 bg-transparent"
     >
-        <CardHeader class="flex flex-row items-start gap-4 p-0">
+        <CardContent class="flex flex-row items-start gap-4 p-0">
             <div
                 :class="[
                     'flex size-11 shrink-0 items-center justify-center rounded-md border',
@@ -79,11 +78,6 @@ const statusContent = computed(() => {
                     {{ statusContent.description }}
                 </CardDescription>
             </div>
-        </CardHeader>
-        <CardContent class="p-0">
-            <p class="rounded-md bg-slate-50 p-3 text-sm text-slate-500">
-                Страница обновится автоматически после решения модератора.
-            </p>
         </CardContent>
     </Card>
 </template>

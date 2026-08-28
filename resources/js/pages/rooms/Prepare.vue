@@ -19,13 +19,14 @@ import { index as showRooms } from '@/routes/rooms/index';
 
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
-import RoomPasswordPanel from '@/features/calls/components/RoomPasswordPanel.vue';
 import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
 import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomJoin } from '@/features/calls/composables/useRoomJoin';
 import type { CallPageProps } from '@/features/calls/types';
 
 const props = defineProps<CallPageProps>();
+type PrepareStep = 'identity' | 'password';
+
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user ?? null);
 const isGuest = computed(() => currentUser.value === null);
@@ -37,18 +38,44 @@ const devices = useMediaDevices({
     autoSelectCameraAfterPermission: true,
     testingMediaMode: props.testing_media_mode,
 });
+const {
+    audioInputs,
+    videoInputs,
+    selectedDevices,
+    audioPermissionRequested,
+    videoPermissionRequested,
+    audioPermissionLoading,
+    videoPermissionLoading,
+    previewHasVideo,
+    previewLoading,
+    deviceErrorMessage,
+    setAudioInput,
+    setVideoInput,
+    setPreviewHost,
+    requestAudioPermission,
+    requestVideoPermission,
+} = devices;
 const roomJoin = useRoomJoin(props.room.public_id, defaultDisplayName.value);
 
 const needsPassword = computed(
     () => props.room.has_password && !props.can_join_without_password,
 );
+const prepareStep = ref<PrepareStep>(
+    !isGuest.value && needsPassword.value ? 'password' : 'identity',
+);
+const isIdentityStep = computed(() => prepareStep.value === 'identity');
+const isPasswordStep = computed(() => prepareStep.value === 'password');
 const guestDisplayNameMissing = computed(
     () => isGuest.value && roomJoin.joinRequest.display_name.trim() === '',
+);
+const passwordMissing = computed(
+    () => isPasswordStep.value && roomJoin.joinRequest.password.trim() === '',
 );
 const backHref = computed(() => (isGuest.value ? home.url() : showRooms.url()));
 const continueDisabled = computed(
     () =>
         guestDisplayNameMissing.value ||
+        passwordMissing.value ||
         roomJoin.joinRequest.processing ||
         roomJoin.tokenRequest.processing,
 );
@@ -60,8 +87,16 @@ const continueButtonLabel = computed(() => {
         return 'Введите никнейм';
     }
 
+    if (passwordMissing.value) {
+        return 'Введите пароль';
+    }
+
     if (roomJoin.joinRequest.processing || roomJoin.tokenRequest.processing) {
         return 'Проверяем доступ...';
+    }
+
+    if (isIdentityStep.value && isGuest.value && needsPassword.value) {
+        return 'Дальше';
     }
 
     return props.room.waiting_room_enabled ? 'Подключиться' : 'Войти в звонок';
@@ -73,8 +108,15 @@ async function continueToRoom(): Promise<void> {
     }
 
     joinErrorMessage.value = null;
+    roomJoin.joinRequest.clearErrors();
 
     const query = deviceQuery.toQuery(devices.selectedDevices.value);
+
+    if (isIdentityStep.value && isGuest.value && needsPassword.value) {
+        prepareStep.value = 'password';
+
+        return;
+    }
 
     if (
         !isGuest.value &&
@@ -112,32 +154,31 @@ async function continueToRoom(): Promise<void> {
 <template>
     <Head :title="`Подготовка: ${room.name}`" />
 
-    <div
-        class="min-h-screen bg-[#fafaf9] flex items-center justify-center p-4 sm:p-6"
-    >
-        <div class="w-full max-w-4xl space-y-6">
+    <div class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+        <div class="w-full max-w-xl">
             <!-- Back to rooms -->
-            <div>
-                <Link
-                    :href="backHref"
-                    class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    <ArrowLeft class="h-4 w-4" />
-                    Вернуться назад
-                </Link>
-            </div>
+            <Button
+                v-if="currentUser"
+                :as="Link"
+                :href="backHref"
+                variant="ghost"
+                class="mb-2"
+            >
+                <ArrowLeft />
+                Вернуться назад
+            </Button>
 
             <!-- Main card -->
             <Card class="border-border/60 bg-white/70 shadow-sm p-0">
                 <CardContent class="p-6 sm:p-8 space-y-6">
-                    <h1 class="text-2xl text-center font-light tracking-tight">
+                    <h1 class="text-2xl text-center font-bold tracking-tight">
                         Готовы войти?
                     </h1>
-                    <div class="grid sm:grid-cols-2 gap-6">
+                    <div class="space-y-4">
                         <div>
                             <!-- Room info -->
-                            <div class="space-y-2">
-                                <p class="text-sm text-muted-foreground">
+                            <div class="space-y-1">
+                                <p class="text-muted-foreground">
                                     Вы подключаетесь как
                                     <span class="font-medium text-foreground">
                                         {{
@@ -146,13 +187,12 @@ async function continueToRoom(): Promise<void> {
                                     >.
                                 </p>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span class="text-sm text-muted-foreground"
+                                    <span class="text-muted-foreground"
                                         >Комната</span
                                     >
-                                    <span
-                                        class="text-sm font-medium text-foreground"
-                                        >{{ room.name }}</span
-                                    >
+                                    <span class="font-medium text-foreground">{{
+                                        room.name
+                                    }}</span>
                                     <Badge
                                         v-if="room.has_password"
                                         variant="outline"
@@ -163,14 +203,9 @@ async function continueToRoom(): Promise<void> {
                                 </div>
                             </div>
 
-                            <Separator class="my-5" />
-
-                            <div>
-                                <div
-                                    class="grid md:grid-cols-2 w-full gap-4 items-center"
-                                >
-                                    <!-- Guest name input -->
-                                    <div v-if="isGuest" class="space-y-1.5">
+                            <div class="my-4">
+                                <div v-if="isIdentityStep" class="space-y-4">
+                                    <div v-if="isGuest" class="space-y-1">
                                         <Label
                                             for="guest-display-name"
                                             class="text-sm"
@@ -187,23 +222,43 @@ async function continueToRoom(): Promise<void> {
                                             maxlength="120"
                                             placeholder="Будет видно участникам"
                                             type="text"
-                                            class="rounded-lg border-border/60 bg-white/80"
+                                            class="rounded-md border-neutral-200 bg-neutral-100 h-12 text-2xl"
                                         />
                                     </div>
-
-                                    <!-- Password panel -->
-                                    <RoomPasswordPanel
-                                        v-if="needsPassword"
-                                        v-model:password="
-                                            roomJoin.joinRequest.password
-                                        "
-                                    />
                                 </div>
+
+                                <div
+                                    v-else-if="isPasswordStep"
+                                    class="space-y-4"
+                                >
+                                    <div class="space-y-1.5">
+                                        <Label
+                                            class="text-sm"
+                                            for="room-password"
+                                        >
+                                            Пароль комнаты
+                                        </Label>
+                                        <Input
+                                            id="room-password"
+                                            v-model="
+                                                roomJoin.joinRequest.password
+                                            "
+                                            data-test="room-password"
+                                            type="password"
+                                            autocomplete="current-password"
+                                            class="rounded-md border-neutral-200 bg-neutral-100 h-12 text-2xl"
+                                            placeholder="Введите пароль комнаты"
+                                        />
+                                    </div>
+                                </div>
+
                                 <p
                                     v-if="
-                                        roomJoin.joinRequest.errors
-                                            .display_name ||
-                                        guestDisplayNameMissing
+                                        (isIdentityStep &&
+                                            roomJoin.joinRequest.errors
+                                                .display_name) ||
+                                        (isIdentityStep &&
+                                            guestDisplayNameMissing)
                                     "
                                     class="text-sm text-red-600 mt-1"
                                 >
@@ -218,7 +273,7 @@ async function continueToRoom(): Promise<void> {
                             <!-- Join button -->
                             <Button
                                 data-test="continue-to-room"
-                                class="w-full rounded-full mt-4 bg-neutral-900 text-white hover:bg-neutral-700 py-3 text-sm font-medium"
+                                class="w-full rounded-full bg-neutral-900 text-white hover:bg-neutral-700 py-6 text-sm font-medium"
                                 type="button"
                                 :disabled="continueDisabled"
                                 @click="continueToRoom"
@@ -249,23 +304,35 @@ async function continueToRoom(): Promise<void> {
                             </div>
                         </div>
 
+                        <Separator class="my-4" />
+
                         <DeviceSetupPanel
-                            class="shadow-none bg-neutral-50"
-                            class-content="p-4 sm:p-4"
-                            :audio-inputs="devices.audioInputs.value"
-                            :video-inputs="devices.videoInputs.value"
+                            class="shadow-none bg-none border-none"
+                            class-content="p-0 sm:p-0"
+                            :audio-inputs="audioInputs"
+                            :video-inputs="videoInputs"
                             :selected-audio-input-id="
-                                devices.selectedDevices.value.audioInputId
+                                selectedDevices.audioInputId
                             "
                             :selected-video-input-id="
-                                devices.selectedDevices.value.videoInputId
+                                selectedDevices.videoInputId
                             "
-                            :preview-has-video="devices.previewHasVideo.value"
-                            :preview-loading="devices.previewLoading.value"
-                            :error="devices.deviceErrorMessage.value"
-                            @update-audio-input="devices.setAudioInput"
-                            @update-video-input="devices.setVideoInput"
-                            @preview-host="devices.setPreviewHost"
+                            :audio-permission-requested="
+                                audioPermissionRequested
+                            "
+                            :video-permission-requested="
+                                videoPermissionRequested
+                            "
+                            :audio-permission-loading="audioPermissionLoading"
+                            :video-permission-loading="videoPermissionLoading"
+                            :preview-has-video="previewHasVideo"
+                            :preview-loading="previewLoading"
+                            :error="deviceErrorMessage"
+                            @update-audio-input="setAudioInput"
+                            @update-video-input="setVideoInput"
+                            @preview-host="setPreviewHost"
+                            @request-audio-permission="requestAudioPermission"
+                            @request-video-permission="requestVideoPermission"
                         />
                     </div>
                 </CardContent>

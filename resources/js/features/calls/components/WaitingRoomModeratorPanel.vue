@@ -52,10 +52,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
 </script>
 
 <template>
-    <Card
-        data-test="waiting-room-moderator-panel"
-        class="rounded-md border-slate-200/80 bg-white/90 shadow-sm"
-    >
+    <Card data-test="waiting-room-moderator-panel" class="max-h-[70dvh]">
         <CardHeader class="flex flex-row items-center gap-3">
             <div
                 class="flex size-10 items-center justify-center rounded-md bg-violet-50 text-violet-600 grow-0"
@@ -70,7 +67,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
             </div>
         </CardHeader>
 
-        <CardContent>
+        <CardContent class="min-h-0">
             <p
                 v-if="entries.length === 0"
                 class="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500"
@@ -78,14 +75,14 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                 Сейчас никто не ожидает.
             </p>
 
-            <ScrollArea v-else>
+            <ScrollArea style="height: 500px" v-else>
                 <ol class="flex flex-col gap-2">
                     <li
                         v-for="entry in entries"
                         :key="entry.id"
                         data-test="waiting-room-entry"
                         :data-entry-id="entry.id"
-                        class="rounded-md border border-slate-200 bg-slate-50 p-3 flex items-center justify-between"
+                        class="rounded-md border border-slate-200 bg-slate-50 p-3 flex items-center justify-between hover:border-slate-300 hover:bg-slate-100"
                     >
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
@@ -100,11 +97,12 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="flex gap-2">
                             <Button
-                                class="text-xs rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
+                                class="bg-emerald-600 text-white hover:bg-emerald-500"
                                 type="button"
                                 data-test="approve-waiting-entry"
+                                size="icon-sm"
                                 :data-entry-id="entry.id"
                                 :disabled="
                                     approveRequest.processing ||
@@ -112,12 +110,12 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                                 "
                                 @click="approveEntry(entry)"
                             >
-                                <Check class="size-4" />
-                                Одобрить
+                                <Check />
                             </Button>
                             <Button
-                                class="text-xs rounded-md bg-red-600 text-white hover:bg-red-500"
                                 type="button"
+                                size="icon-sm"
+                                variant="destructive"
                                 data-test="reject-waiting-entry"
                                 :data-entry-id="entry.id"
                                 :disabled="
@@ -126,8 +124,7 @@ async function rejectEntry(entry: WaitingRoomEntry): Promise<void> {
                                 "
                                 @click="rejectEntry(entry)"
                             >
-                                <X class="size-4" />
-                                Отклонить
+                                <X />
                             </Button>
                         </div>
                     </li>

@@ -28,6 +28,12 @@ class RoomMembershipController extends Controller
         $guestId = $user === null ? $guestIdentity->getOrCreate($request) : null;
 
         if ($room->waiting_room_enabled) {
+            if ($this->canBypassWaitingRoom($room, $user)) {
+                $member = $joinRoom->handle($room, $user, $guestId, $request->joinData());
+
+                return response()->json(['member' => $this->memberPayload($member)], 201);
+            }
+
             $member = $this->activeMember($room, $user, $guestId);
 
             if ($member instanceof RoomMember) {
@@ -109,5 +115,10 @@ class RoomMembershipController extends Controller
         return $guestId === null
             ? null
             : $query->where('guest_id', $guestId)->first();
+    }
+
+    private function canBypassWaitingRoom(Room $room, ?User $user): bool
+    {
+        return $user instanceof User && $room->owner()->is($user);
     }
 }

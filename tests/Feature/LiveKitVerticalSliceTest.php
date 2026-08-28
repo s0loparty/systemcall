@@ -107,6 +107,94 @@ test('room owners can open password protected rooms without re-entering password
             ->where('can_join_without_password', true));
 });
 
+test('room owners can join password protected rooms without re-entering password', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create([
+            'password_hash' => Hash::make('correct-password'),
+        ]);
+
+    $this->actingAs($owner)
+        ->postJson(route('rooms.memberships.store', $room))
+        ->assertCreated()
+        ->assertJsonPath('member.display_name', $owner->name)
+        ->assertJsonPath('member.role', 'owner');
+});
+
+test('authenticated non owners need password before joining password protected rooms', function () {
+    $owner = User::factory()->create();
+    $participant = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create([
+            'password_hash' => Hash::make('correct-password'),
+        ]);
+
+    $this->actingAs($participant)
+        ->postJson(route('rooms.memberships.store', $room))
+        ->assertJsonValidationErrors('password');
+
+    $joinResponse = $this->actingAs($participant)
+        ->postJson(route('rooms.memberships.store', $room), [
+            'password' => 'correct-password',
+        ]);
+
+    $joinResponse
+        ->assertCreated()
+        ->assertJsonPath('member.display_name', $participant->name)
+        ->assertJsonPath('member.role', 'participant');
+
+    $this->actingAs($participant)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Call')
+            ->where('can_join_without_password', true));
+});
+
+test('guests do not need room password again after joining password protected rooms', function () {
+    $room = Room::factory()
+        ->public()
+        ->create([
+            'password_hash' => Hash::make('correct-password'),
+        ]);
+
+    $joinResponse = $this->postJson(route('rooms.memberships.store', $room), [
+        'display_name' => 'Password Guest',
+        'password' => 'correct-password',
+    ]);
+
+    $joinResponse
+        ->assertCreated()
+        ->assertJsonPath('member.display_name', 'Password Guest');
+
+    $member = RoomMember::query()
+        ->whereBelongsTo($room)
+        ->where('display_name', 'Password Guest')
+        ->firstOrFail();
+
+    expect($member->guest_id)->not->toBeNull();
+
+    $this->withCredentials()
+        ->withCookie('video_call_guest_id', $member->guest_id)
+        ->get(route('rooms.call.show', $room))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('rooms/Call')
+            ->where('can_join_without_password', true));
+
+    $this->withCredentials()
+        ->withCookie('video_call_guest_id', $member->guest_id)
+        ->postJson(route('rooms.memberships.store', $room), [
+            'display_name' => 'Ignored Guest Name',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('member.display_name', 'Password Guest');
+});
+
 test('guest room joins require a display name before membership creation', function () {
     $room = Room::factory()
         ->public()

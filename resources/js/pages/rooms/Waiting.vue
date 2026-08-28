@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 
-import { ArrowRight, Clock3, User, Users } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, User, Users } from '@lucide/vue';
 
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card';
 
 import { show as showCall } from '@/routes/rooms/call';
+import { index as showRooms } from '@/routes/rooms/index';
 
 import CallError from '@/features/calls/components/CallError.vue';
 import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
@@ -26,12 +27,31 @@ import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
 import type { CallPageProps } from '@/features/calls/types';
 
+const page = usePage();
+const currentUser = computed(() => page.props.auth.user ?? null);
 const props = defineProps<CallPageProps>();
 const deviceQuery = useCallDeviceQuery();
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     testingMediaMode: props.testing_media_mode,
 });
+const {
+    audioInputs,
+    videoInputs,
+    selectedDevices,
+    audioPermissionRequested,
+    videoPermissionRequested,
+    audioPermissionLoading,
+    videoPermissionLoading,
+    previewHasVideo,
+    previewLoading,
+    deviceErrorMessage,
+    setAudioInput,
+    setVideoInput,
+    setPreviewHost,
+    requestAudioPermission,
+    requestVideoPermission,
+} = devices;
 const currentWaitingRoomEntry = ref(props.current_waiting_room_entry);
 const realtime = useRoomApplicationEvents(props.room.public_id, {
     waitingRoomEntries: props.waiting_room_entries,
@@ -66,12 +86,6 @@ async function goToCall(): Promise<void> {
         }),
     );
 }
-
-onMounted(() => {
-    if (devices.selectedDevices.value.videoInputId !== '') {
-        void devices.startPreview();
-    }
-});
 </script>
 
 <template>
@@ -84,29 +98,18 @@ onMounted(() => {
             class="hidden"
         />
 
-        <div class="mx-auto max-w-7xl space-y-4">
+        <div class="mx-auto max-w-7xl">
             <!-- Back to rooms -->
-            <div>
-                <a
-                    href="/rooms"
-                    class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                    <svg
-                        class="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                        />
-                    </svg>
-                    Вернуться к комнатам
-                </a>
-            </div>
+            <Button
+                v-if="currentUser"
+                :as="Link"
+                :href="showRooms.url()"
+                variant="ghost"
+                class="mb-2"
+            >
+                <ArrowLeft />
+                Вернуться к комнатам
+            </Button>
 
             <div class="grid gap-4 lg:grid-cols-[1fr_400px]">
                 <!-- Left column -->
@@ -116,38 +119,24 @@ onMounted(() => {
                         <CardContent class="p-5 sm:p-6 space-y-4">
                             <!-- Room info -->
                             <div class="space-y-1.5">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <Badge
-                                        variant="outline"
-                                        class="border-amber-200/60 bg-amber-50 text-amber-700 text-xs"
-                                    >
-                                        <Clock3 class="size-3 mr-1" />
-                                        Зал ожидания
-                                    </Badge>
-                                    <Badge
-                                        v-if="room.has_password"
-                                        variant="outline"
-                                        class="border-border/60 bg-white/50 text-xs"
-                                    >
-                                        🔒 с паролем
-                                    </Badge>
-                                </div>
                                 <h1 class="text-xl font-light tracking-tight">
                                     {{ room.name }}
                                 </h1>
-                                <p class="text-sm text-muted-foreground">
-                                    Модератор проверит заявку и откроет доступ к
-                                    комнате.
-                                </p>
                             </div>
 
-                            <hr class="border-border/60" />
+                            <!-- <hr class="border-border/60" /> -->
 
                             <!-- Waiting room status -->
                             <WaitingRoomStatusPanel
                                 :entry="currentWaitingRoomEntry"
                                 compact
                             />
+                            <p
+                                class="rounded-md bg-slate-100 p-3 text-sm text-slate-500"
+                            >
+                                Страница обновится автоматически после решения
+                                модератора.
+                            </p>
                         </CardContent>
                     </Card>
 
@@ -159,20 +148,22 @@ onMounted(() => {
 
                     <!-- Devices setup -->
                     <DeviceSetupPanel
-                        :audio-inputs="devices.audioInputs.value"
-                        :video-inputs="devices.videoInputs.value"
-                        :selected-audio-input-id="
-                            devices.selectedDevices.value.audioInputId
-                        "
-                        :selected-video-input-id="
-                            devices.selectedDevices.value.videoInputId
-                        "
-                        :preview-has-video="devices.previewHasVideo.value"
-                        :preview-loading="devices.previewLoading.value"
-                        :error="devices.deviceErrorMessage.value"
-                        @update-audio-input="devices.setAudioInput"
-                        @update-video-input="devices.setVideoInput"
-                        @preview-host="devices.setPreviewHost"
+                        :audio-inputs="audioInputs"
+                        :video-inputs="videoInputs"
+                        :selected-audio-input-id="selectedDevices.audioInputId"
+                        :selected-video-input-id="selectedDevices.videoInputId"
+                        :audio-permission-requested="audioPermissionRequested"
+                        :video-permission-requested="videoPermissionRequested"
+                        :audio-permission-loading="audioPermissionLoading"
+                        :video-permission-loading="videoPermissionLoading"
+                        :preview-has-video="previewHasVideo"
+                        :preview-loading="previewLoading"
+                        :error="deviceErrorMessage"
+                        @update-audio-input="setAudioInput"
+                        @update-video-input="setVideoInput"
+                        @preview-host="setPreviewHost"
+                        @request-audio-permission="requestAudioPermission"
+                        @request-video-permission="requestVideoPermission"
                     />
 
                     <!-- Join button -->
@@ -277,46 +268,6 @@ onMounted(() => {
                     />
                 </aside>
             </div>
-
-            <!-- Footer -->
-            <footer class="border-t border-border/60 pt-4 mt-2">
-                <div
-                    class="flex flex-col items-start justify-between gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center"
-                >
-                    <div class="flex items-center gap-3">
-                        <span class="flex items-center gap-1.5">
-                            <span
-                                class="inline-block size-2 rounded-full bg-emerald-500"
-                            ></span>
-                            онлайн
-                        </span>
-                        <span>•</span>
-                        <span>готово для команд</span>
-                    </div>
-                    <div class="flex gap-4">
-                        <a
-                            href="#"
-                            class="transition hover:text-foreground hover:underline underline-offset-2"
-                            >Помощь</a
-                        >
-                        <a
-                            href="#"
-                            class="transition hover:text-foreground hover:underline underline-offset-2"
-                            >API</a
-                        >
-                        <a
-                            href="#"
-                            class="transition hover:text-foreground hover:underline underline-offset-2"
-                            >Блог</a
-                        >
-                    </div>
-                </div>
-                <div
-                    class="mt-3 text-center text-[10px] text-muted-foreground/60"
-                >
-                    Systemcall · групповые видеокомнаты · минимализм
-                </div>
-            </footer>
         </div>
     </div>
 </template>

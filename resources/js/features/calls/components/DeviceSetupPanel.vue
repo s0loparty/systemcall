@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Camera, Mic, VideoOff } from '@lucide/vue';
+import { Camera, Loader2, Mic, ShieldCheck, VideoOff } from '@lucide/vue';
 
 import { computed } from 'vue';
 import type { HTMLAttributes } from 'vue';
 
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,18 +23,29 @@ type Props = {
     videoInputs: MediaDeviceInfo[];
     selectedAudioInputId: string;
     selectedVideoInputId: string;
+    audioPermissionRequested: boolean;
+    videoPermissionRequested: boolean;
+    audioPermissionLoading: boolean;
+    videoPermissionLoading: boolean;
     previewHasVideo: boolean;
     previewLoading: boolean;
     error: string | null;
     classContent?: HTMLAttributes['class'];
 };
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    audioPermissionRequested: false,
+    videoPermissionRequested: false,
+    audioPermissionLoading: false,
+    videoPermissionLoading: false,
+});
 
 const emit = defineEmits<{
     'update-audio-input': [deviceId: string];
     'update-video-input': [deviceId: string];
     'preview-host': [element: HTMLElement | null];
+    'request-audio-permission': [event: MouseEvent | KeyboardEvent];
+    'request-video-permission': [event: MouseEvent | KeyboardEvent];
 }>();
 
 const disabledDeviceValue = 'none';
@@ -106,6 +118,10 @@ function updateVideoInput(value: AcceptableValue): void {
                         </Label>
                         <Select
                             :model-value="selectedAudioInputValue"
+                            :disabled="
+                                !audioPermissionRequested ||
+                                audioPermissionLoading
+                            "
                             @update:model-value="updateAudioInput"
                         >
                             <SelectTrigger
@@ -133,6 +149,27 @@ function updateVideoInput(value: AcceptableValue): void {
                                 </SelectItem>
                             </SelectContent>
                         </Select>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="w-full rounded-lg bg-white"
+                            data-test="request-audio-permission"
+                            :disabled="audioPermissionLoading"
+                            @click="emit('request-audio-permission', $event)"
+                        >
+                            <Loader2
+                                v-if="audioPermissionLoading"
+                                class="size-4 animate-spin"
+                            />
+                            <ShieldCheck v-else class="size-4" />
+                            {{
+                                audioPermissionLoading
+                                    ? 'Запрашиваем...'
+                                    : audioPermissionRequested
+                                      ? 'Обновить микрофоны'
+                                      : 'Разрешить микрофон'
+                            }}
+                        </Button>
                     </div>
 
                     <!-- Camera -->
@@ -145,6 +182,10 @@ function updateVideoInput(value: AcceptableValue): void {
                         </Label>
                         <Select
                             :model-value="selectedVideoInputValue"
+                            :disabled="
+                                !videoPermissionRequested ||
+                                videoPermissionLoading
+                            "
                             @update:model-value="updateVideoInput"
                         >
                             <SelectTrigger
@@ -172,6 +213,27 @@ function updateVideoInput(value: AcceptableValue): void {
                                 </SelectItem>
                             </SelectContent>
                         </Select>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            class="w-full rounded-lg bg-white"
+                            data-test="request-video-permission"
+                            :disabled="videoPermissionLoading"
+                            @click="emit('request-video-permission', $event)"
+                        >
+                            <Loader2
+                                v-if="videoPermissionLoading"
+                                class="size-4 animate-spin"
+                            />
+                            <ShieldCheck v-else class="size-4" />
+                            {{
+                                videoPermissionLoading
+                                    ? 'Запрашиваем...'
+                                    : videoPermissionRequested
+                                      ? 'Обновить камеры'
+                                      : 'Разрешить камеру'
+                            }}
+                        </Button>
                     </div>
                 </div>
 
@@ -205,9 +267,11 @@ function updateVideoInput(value: AcceptableValue): void {
                             class="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4 text-center"
                         >
                             <VideoOff class="h-12 w-12 text-white/40" />
-                            <span class="text-sm text-white/70"
-                                >Выберите камеру, чтобы увидеть превью.</span
-                            >
+                            <span class="text-sm text-white/70">{{
+                                videoPermissionRequested
+                                    ? 'Выберите камеру, чтобы увидеть превью.'
+                                    : 'Разрешите камеру, чтобы увидеть превью.'
+                            }}</span>
                         </div>
                         <div
                             v-if="previewLoading"
