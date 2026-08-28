@@ -33,7 +33,7 @@ defineOptions({
                 <PasswordInput
                     id="password"
                     name="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full dark:border-neutral-700 dark:bg-neutral-950"
                     required
                     autocomplete="current-password"
                     autofocus
@@ -44,7 +44,7 @@ defineOptions({
 
             <div class="flex items-center">
                 <Button
-                    class="w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
+                    class="mx-auto flex"
                     :disabled="processing"
                     data-test="confirm-password-button"
                 >

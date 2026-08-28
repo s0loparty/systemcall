@@ -39,7 +39,7 @@ defineOptions({
         />
 
         <Card
-            class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm"
+            class="overflow-hidden rounded-md dark:bg-neutral-900 dark:border-neutral-800 border-slate-200/80 bg-white/90 shadow-sm"
         >
             <CardHeader>
                 <CardTitle>Тема интерфейса</CardTitle>

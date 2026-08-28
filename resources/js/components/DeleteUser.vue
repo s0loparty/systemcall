@@ -35,19 +35,19 @@ const passwordInput = useTemplateRef('passwordInput');
 <template>
     <div class="space-y-6">
         <Card
-            class="overflow-hidden rounded-md border-red-200 bg-red-50/80 shadow-sm"
+            class="overflow-hidden rounded-md border-red-200 bg-red-50/80 shadow-sm dark:bg-neutral-900 dark:border-red-900"
         >
             <CardHeader class="flex flex-row items-start gap-3">
                 <div
-                    class="flex size-10 shrink-0 items-center justify-center rounded-md bg-red-100 text-red-700"
+                    class="flex size-10 shrink-0 items-center justify-center rounded-md bg-red-300 text-red-700"
                 >
                     <AlertTriangle class="size-5" />
                 </div>
                 <div>
-                    <CardTitle class="text-red-950">
+                    <CardTitle class="text-red-800">
                         Удалить аккаунт
                     </CardTitle>
-                    <CardDescription class="text-red-800/80">
+                    <CardDescription class="text-red-800">
                         Удаление аккаунта необратимо. Все связанные данные будут
                         удалены.
                     </CardDescription>

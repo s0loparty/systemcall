@@ -51,7 +51,7 @@ const user = computed(() => page.props.auth.user);
         />
 
         <Card
-            class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm"
+            class="overflow-hidden dark:bg-neutral-900 dark:border-neutral-800 rounded-md border-slate-200/80 bg-white/90 shadow-sm"
         >
             <CardHeader>
                 <CardTitle>Основная информация</CardTitle>
@@ -59,7 +59,7 @@ const user = computed(() => page.props.auth.user);
                     Обновите имя и email для входа и уведомлений.
                 </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent class="dark:bg-neutral-900">
                 <Form
                     v-bind="ProfileController.update.form()"
                     class="space-y-5"

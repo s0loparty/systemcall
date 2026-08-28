@@ -41,7 +41,7 @@ onUnmounted(() => clearTwoFactorAuthData());
 <template>
     <div v-if="canManageTwoFactor" class="space-y-6">
         <Card
-            class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm"
+            class="overflow-hidden rounded-md border-slate-200/80 bg-white/90 shadow-sm dark:bg-neutral-900 dark:border-neutral-800"
         >
             <CardHeader>
                 <CardTitle class="flex items-center gap-2">

@@ -87,15 +87,15 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 </div>
                 <Button
                     type="submit"
-                    class="w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                     :disabled="processing"
+                    class="mx-auto block"
                     >Продолжить</Button
                 >
                 <div class="text-center text-sm text-muted-foreground">
                     <span>или можно </span>
                     <button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500 cursor-pointer"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}
@@ -121,8 +121,8 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                 <InputError :message="errors.recovery_code" />
                 <Button
                     type="submit"
-                    class="w-full bg-gradient-to-r from-violet-600 to-blue-600 text-white shadow-lg shadow-violet-100 hover:from-violet-500 hover:to-blue-500"
                     :disabled="processing"
+                    class="mx-auto block"
                     >Продолжить</Button
                 >
 
@@ -130,7 +130,7 @@ const toggleRecoveryMode = (clearErrors: () => void): void => {
                     <span>или можно </span>
                     <button
                         type="button"
-                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                        class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500 cursor-pointer"
                         @click="() => toggleRecoveryMode(clearErrors)"
                     >
                         {{ authConfigContent.buttonText }}

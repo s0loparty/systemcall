@@ -13,14 +13,14 @@ defineProps<{
 
 <template>
     <div
-        class="min-h-screen bg-[#fafaf9] flex items-center justify-center p-4 sm:p-6"
+        class="flex min-h-screen items-center justify-center bg-[#fafaf9] p-4 dark:bg-neutral-950 sm:p-6"
     >
         <div class="w-full max-w-md space-y-6">
             <!-- Back to home -->
             <div>
                 <Link
                     :href="home()"
-                    class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    class="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
                 >
                     <ArrowLeft class="h-4 w-4" />
                     На главную
@@ -29,13 +29,13 @@ defineProps<{
 
             <!-- Main card -->
             <div
-                class="bg-white/70 backdrop-blur-[1px] rounded-3xl shadow-sm border border-border/60 p-6 sm:p-8 space-y-6"
+                class="space-y-6 rounded-3xl border border-border/60 bg-white/70 p-6 shadow-sm backdrop-blur-[1px] dark:border-neutral-800 dark:bg-neutral-900/70 sm:p-8"
             >
                 <!-- Header -->
                 <div class="space-y-2 text-center">
                     <div class="flex justify-center">
                         <div
-                            class="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-white"
+                            class="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-white dark:border-neutral-700 dark:bg-neutral-950"
                         >
                             <RadioTower class="h-6 w-6 text-foreground" />
                         </div>
@@ -48,7 +48,7 @@ defineProps<{
                     </p>
                 </div>
 
-                <hr class="border-border/60" />
+                <hr class="border-border/60 dark:border-neutral-800" />
 
                 <!-- Slot for form -->
                 <slot />
