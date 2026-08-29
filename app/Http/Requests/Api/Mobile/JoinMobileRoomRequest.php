@@ -19,11 +19,19 @@ class JoinMobileRoomRequest extends FormRequest
     {
         return [
             'display_name' => ['required', 'string', 'max:120'],
+            'password' => ['nullable', 'string', 'max:255'],
         ];
     }
 
     public function displayName(): string
     {
         return (string) $this->validated('display_name');
+    }
+
+    public function password(): ?string
+    {
+        $password = $this->validated('password');
+
+        return is_string($password) ? $password : null;
     }
 }
