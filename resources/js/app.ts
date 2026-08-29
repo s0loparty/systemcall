@@ -53,3 +53,11 @@ initializeTheme();
 
 // This will listen for flash toast data from the server...
 initializeFlashToast();
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
+            console.error('Service worker registration failed:', error);
+        });
+    });
+}
