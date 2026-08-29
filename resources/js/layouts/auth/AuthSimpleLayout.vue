@@ -9,6 +9,8 @@ defineProps<{
     title?: string;
     description?: string;
 }>();
+
+const { VITE_APP_NAME } = import.meta.env;
 </script>
 
 <template>
@@ -56,7 +58,7 @@ defineProps<{
 
             <!-- Footer -->
             <div class="text-center text-xs text-muted-foreground/60">
-                Systemcall · групповые видеокомнаты
+                {{ VITE_APP_NAME }} · групповые видеокомнаты
             </div>
         </div>
     </div>

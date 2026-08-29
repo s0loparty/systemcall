@@ -4,6 +4,8 @@ import { Link } from '@inertiajs/vue3';
 import { Separator } from '@/components/ui/separator';
 
 import { cn } from '@/lib/utils';
+
+const { VITE_APP_NAME } = import.meta.env;
 </script>
 
 <template>
@@ -51,7 +53,7 @@ import { cn } from '@/lib/utils';
         <p
             class="text-center text-[11px] mt-4 tracking-wide text-muted-foreground/60"
         >
-            Systemcall · групповые видеокомнаты
+            {{ VITE_APP_NAME }} · групповые видеокомнаты
         </p>
     </footer>
 </template>

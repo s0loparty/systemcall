@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 
-import { ArrowRight, RadioTower } from '@lucide/vue';
+import { ArrowRight } from '@lucide/vue';
 
 import { computed } from 'vue';
 
@@ -13,14 +13,17 @@ import { dashboard, login, register } from '@/routes';
 
 import { index as roomsIndex } from '@/routes/rooms';
 
+import AppLogo from '@/components/AppLogo.vue';
 import AppFooter from '@/layouts/AppFooter.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+
+const { VITE_APP_NAME } = import.meta.env;
 </script>
 
 <template>
-    <Head title="Systemcall" />
+    <Head :title="VITE_APP_NAME" />
 
     <main class="min-h-screen bg-gray-100 dark:bg-neutral-950">
         <div
@@ -37,11 +40,11 @@ const user = computed(() => page.props.auth.user);
                     <div
                         class="flex h-10 w-10 items-center justify-center rounded-lg border border-border bg-background dark:border-neutral-800 dark:bg-neutral-900"
                     >
-                        <RadioTower class="h-5 w-5 text-foreground" />
+                        <AppLogo />
                     </div>
                     <div>
                         <h1 class="text-xl font-semibold tracking-tight">
-                            Systemcall
+                            {{ VITE_APP_NAME }}
                         </h1>
                         <p class="text-xs text-muted-foreground">
                             групповые видеокомнаты
@@ -178,7 +181,7 @@ const user = computed(() => page.props.auth.user);
                                 <code
                                     class="relative rounded bg-muted px-[0.6rem] py-[0.2rem] font-mono text-xs font-semibold dark:bg-neutral-800"
                                 >
-                                    systemcall.ru/room/abc
+                                    https://example.com/room/abc
                                 </code>
                                 <Button
                                     variant="ghost"
