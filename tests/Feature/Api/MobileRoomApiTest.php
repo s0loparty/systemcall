@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RoomRole;
 use App\Enums\WaitingRoomStatus;
 use App\Models\Room;
 use App\Models\RoomMember;
@@ -151,7 +152,7 @@ it('returns livekit credentials after a waiting guest is approved', function () 
         'room_id' => $room->id,
         'guest_id' => $guestId,
         'display_name' => 'Approved Guest',
-        'role' => \App\Enums\RoomRole::Participant,
+        'role' => RoomRole::Participant,
         'livekit_identity' => 'room-member:test-approved',
         'joined_at' => now(),
     ]);
