@@ -9,13 +9,24 @@ import { initializeFlashToast } from '@/lib/flashToast';
 
 import './assets/css/app.css';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const fallbackAppName =
+    import.meta.env.VITE_APP_NAME &&
+    !import.meta.env.VITE_APP_NAME.includes('${')
+        ? import.meta.env.VITE_APP_NAME
+        : 'Laravel';
 
 // This configures Laravel Echo for Reverb private application channels...
 initializeEcho();
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    title: (title, page) => {
+        const appName =
+            typeof page.props.name === 'string'
+                ? page.props.name
+                : fallbackAppName;
+
+        return title ? `${title} - ${appName}` : appName;
+    },
     layout: (name) => {
         switch (true) {
             case name === 'Welcome':

@@ -399,7 +399,7 @@ onBeforeUnmount(() => {
 
     <Dialog v-model:open="waitingRoomDialogOpen">
         <DialogContent
-            class="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-md border-slate-200 bg-white p-0 sm:max-w-xl"
+            class="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-md dark:border-neutral-800 dark:bg-neutral-900 border-slate-200 bg-white p-0 sm:max-w-xl"
         >
             <DialogHeader class="px-5 pt-5">
                 <DialogTitle>Зал ожидания</DialogTitle>
