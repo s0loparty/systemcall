@@ -10,6 +10,7 @@ type UseMediaDevicesOptions = {
     autoSelectCameraAfterPermission?: boolean;
     testingMediaMode?: TestingMediaMode;
     processPreviewVideoTrack?: (track: LocalVideoTrack) => Promise<void>;
+    cleanupPreviewVideoTrack?: (track: LocalVideoTrack) => Promise<void>;
 };
 
 export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
@@ -367,6 +368,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
             previewGeneration++;
         }
 
+        await cleanupPreviewVideoTrack();
         previewTracks.value.forEach((track) => track.stop());
         previewTracks.value = [];
         previewEnabled.value = false;
@@ -462,6 +464,25 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
 
         await options.processPreviewVideoTrack(videoTrack);
         renderPreview();
+    }
+
+    async function cleanupPreviewVideoTrack(): Promise<void> {
+        if (!options.cleanupPreviewVideoTrack) {
+            return;
+        }
+
+        const videoTrack = previewTracks.value.find(
+            (track): track is LocalVideoTrack =>
+                track.kind === Track.Kind.Video &&
+                'setProcessor' in track &&
+                'stopProcessor' in track,
+        );
+
+        if (!videoTrack) {
+            return;
+        }
+
+        await options.cleanupPreviewVideoTrack(videoTrack);
     }
 
     function loadTestingDevices(kind?: 'audio' | 'video'): void {
