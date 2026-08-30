@@ -27,6 +27,11 @@ type UseLiveKitOptions = {
     testingMediaMode?: TestingMediaMode;
 };
 
+const SCREEN_SHARE_WIDTH = 1920;
+const SCREEN_SHARE_HEIGHT = 1080;
+const SCREEN_SHARE_FRAMERATE = 15;
+const SCREEN_SHARE_MAX_BITRATE = 3_000_000;
+
 export function useLiveKit(options: UseLiveKitOptions = {}) {
     const activeRoom = shallowRef<Room | null>(null);
     const connected = ref(false);
@@ -175,8 +180,23 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
 
         await activeRoom.value.localParticipant.setScreenShareEnabled(
             enabled,
-            { audio: true },
-            { simulcast: true },
+            {
+                audio: true,
+                contentHint: 'detail',
+                resolution: {
+                    width: SCREEN_SHARE_WIDTH,
+                    height: SCREEN_SHARE_HEIGHT,
+                    frameRate: SCREEN_SHARE_FRAMERATE,
+                },
+            },
+            {
+                simulcast: false,
+                degradationPreference: 'maintain-resolution',
+                screenShareEncoding: {
+                    maxBitrate: SCREEN_SHARE_MAX_BITRATE,
+                    maxFramerate: SCREEN_SHARE_FRAMERATE,
+                },
+            },
         );
         screenShareEnabled.value = hasActiveScreenShare(
             activeRoom.value.localParticipant,
@@ -468,7 +488,15 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
             fakeScreenShareTrack = createFakeScreenShareTrack();
             await activeRoom.value.localParticipant.publishTrack(
                 fakeScreenShareTrack,
-                { source: Track.Source.ScreenShare, simulcast: true },
+                {
+                    source: Track.Source.ScreenShare,
+                    simulcast: false,
+                    degradationPreference: 'maintain-resolution',
+                    screenShareEncoding: {
+                        maxBitrate: SCREEN_SHARE_MAX_BITRATE,
+                        maxFramerate: SCREEN_SHARE_FRAMERATE,
+                    },
+                },
             );
         }
 
