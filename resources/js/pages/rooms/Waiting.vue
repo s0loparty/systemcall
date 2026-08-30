@@ -25,15 +25,23 @@ import WaitingRoomStatusPanel from '@/features/calls/components/WaitingRoomStatu
 import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
 import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomApplicationEvents';
+import { useVideoBackground } from '@/features/calls/composables/useVideoBackground';
 import type { CallPageProps } from '@/features/calls/types';
+import type { LocalVideoTrack } from 'livekit-client';
 
 const page = usePage();
 const currentUser = computed(() => page.props.auth.user ?? null);
 const props = defineProps<CallPageProps>();
 const deviceQuery = useCallDeviceQuery();
+const videoBackground = useVideoBackground({
+    initialEnabled: deviceQuery.videoBackground.value.enabled,
+    initialBlurRadius: deviceQuery.videoBackground.value.blurRadius,
+    testingMediaMode: props.testing_media_mode,
+});
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     testingMediaMode: props.testing_media_mode,
+    processPreviewVideoTrack: processPreviewTrackBackground,
 });
 const {
     audioInputs,
@@ -51,6 +59,7 @@ const {
     setPreviewHost,
     requestAudioPermission,
     requestVideoPermission,
+    processPreviewVideoTrack,
 } = devices;
 const currentWaitingRoomEntry = ref(props.current_waiting_room_entry);
 const realtime = useRoomApplicationEvents(props.room.public_id, {
@@ -76,15 +85,38 @@ const otherWaitingEntries = computed(() =>
 const rejected = computed(
     () => currentWaitingRoomEntry.value?.status === 'rejected',
 );
+const previewErrorMessage = computed(
+    () => deviceErrorMessage.value ?? videoBackground.errorMessage.value,
+);
 
 async function goToCall(): Promise<void> {
     await devices.stopPreview();
 
     router.visit(
         showCall.url(props.room.public_id, {
-            query: deviceQuery.toQuery(devices.selectedDevices.value),
+            query: deviceQuery.toQuery(
+                devices.selectedDevices.value,
+                videoBackground.preferences(),
+            ),
         }),
     );
+}
+
+async function processPreviewTrackBackground(
+    track: LocalVideoTrack,
+): Promise<void> {
+    if (videoBackground.enabled.value) {
+        await videoBackground.setProcessor(track);
+
+        return;
+    }
+
+    await videoBackground.removeProcessor(track);
+}
+
+async function updateBackgroundBlur(enabled: boolean): Promise<void> {
+    await videoBackground.setEnabled(enabled);
+    await processPreviewVideoTrack();
 }
 </script>
 
@@ -160,9 +192,19 @@ async function goToCall(): Promise<void> {
                         :video-permission-loading="videoPermissionLoading"
                         :preview-has-video="previewHasVideo"
                         :preview-loading="previewLoading"
-                        :error="deviceErrorMessage"
+                        :background-blur-enabled="videoBackground.enabled.value"
+                        :background-blur-disabled="
+                            videoBackground.processing.value
+                        "
+                        :background-blur-processing="
+                            videoBackground.processing.value
+                        "
+                        :error="previewErrorMessage"
                         @update-audio-input="setAudioInput"
                         @update-video-input="setVideoInput"
+                        @update-background-blur="
+                            (enabled) => void updateBackgroundBlur(enabled)
+                        "
                         @preview-host="setPreviewHost"
                         @request-audio-permission="requestAudioPermission"
                         @request-video-permission="requestVideoPermission"

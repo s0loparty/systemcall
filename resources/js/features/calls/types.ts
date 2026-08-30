@@ -108,6 +108,7 @@ export type ParticipantTile = {
     microphone: boolean;
     speaking: boolean;
     screenShare: boolean;
+    backgroundBlur: boolean;
     handRaised: boolean;
 };
 
@@ -133,6 +134,11 @@ export type CallConnectionState =
 export type SelectedDevices = {
     audioInputId: string;
     videoInputId: string;
+};
+
+export type VideoBackgroundPreferences = {
+    enabled: boolean;
+    blurRadius: number;
 };
 
 export type EchoConnectionState =

@@ -1,13 +1,5 @@
 <script setup lang="ts">
-import {
-    CastIcon,
-    EarthIcon,
-    HandIcon,
-    MicIcon,
-    MicOffIcon,
-    PinIcon,
-    User2Icon,
-} from '@lucide/vue';
+import { CastIcon, EarthIcon, MicIcon, MicOffIcon, PinIcon } from '@lucide/vue';
 
 import type {
     ParticipantTile,
@@ -60,6 +52,7 @@ const emit = defineEmits<{
         :data-microphone-enabled="tile.microphone ? 'true' : 'false'"
         :data-camera-enabled="tile.camera ? 'true' : 'false'"
         :data-screen-share-enabled="tile.screenShare ? 'true' : 'false'"
+        :data-background-blur-enabled="tile.backgroundBlur ? 'true' : 'false'"
         :data-hand-raised="tile.handRaised ? 'true' : 'false'"
         class="group relative overflow-hidden bg-neutral-800 transition-colors duration-200 ease-out @container"
         :class="[
@@ -116,33 +109,46 @@ const emit = defineEmits<{
             @kick="emit('kick', tile.identity)"
             @ban="emit('ban', tile.identity)"
         />
+
         <div
-            class="absolute inset-0 flex items-center justify-center bg-neutral-800 empty:hidden"
+            data-test="participant-hand-raised-badge"
+            class="text-2xl @md:text-3xl absolute top-4 left-4 z-10"
+            :class="[tile.handRaised ? 'opacity-100' : 'opacity-0']"
+        >
+            <!-- <HandIcon class="size-5" /> -->
+            ✋
+        </div>
+
+        <div
+            class="absolute inset-0 flex items-center justify-center bg-neutral-800 empty:hidden @container-normal"
         >
             <span
                 v-if="!tile.camera && !(tile.screenShare && size === 'share')"
                 data-test="participant-fallback-avatar"
-                class="text-center text-2xl md:text-5xl font-semibold text-slate-300"
+                class="text-center @sm:text-2xl @lg:text-3xl @xl:text-4xl font-semibold text-slate-300"
             >
-                <User2Icon class="size-10 @md:size-24" />
+                {{ tile.name }}
             </span>
         </div>
         <div
             class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4 text-white"
         >
-            <div>
-                <p class="text-sm font-medium drop-shadow">
+            <div class="py-1 px-1.5 bg-black/60 rounded">
+                <p
+                    class="text-sm font-medium drop-shadow flex items-center gap-x-1"
+                >
+                    <component
+                        :is="tile.microphone ? MicIcon : MicOffIcon"
+                        :class="[
+                            'size-4',
+                            tile.microphone ? '' : 'text-red-400',
+                        ]"
+                    />
                     {{ tile.name }}
                     <span v-if="tile.local" class="text-white/65">(вы)</span>
                 </p>
             </div>
             <div class="flex flex-wrap justify-end gap-1.5">
-                <div class="rounded-md bg-black/50 p-2">
-                    <component
-                        :is="tile.microphone ? MicIcon : MicOffIcon"
-                        class="size-5"
-                    />
-                </div>
                 <div
                     v-if="personallyPinned"
                     class="rounded-md bg-sky-300 p-2 text-black"
@@ -155,13 +161,6 @@ const emit = defineEmits<{
                     class="rounded-md bg-indigo-300 p-2 text-black"
                 >
                     <EarthIcon class="size-5" />
-                </div>
-                <div
-                    v-if="tile.handRaised"
-                    data-test="participant-hand-raised-badge"
-                    class="rounded-md bg-[#fbbc04]/90 p-2 text-white"
-                >
-                    <HandIcon class="size-5" />
                 </div>
                 <div
                     v-if="tile.screenShare"

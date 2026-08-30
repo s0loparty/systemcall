@@ -1,7 +1,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 
 import { Track, createLocalTracks } from 'livekit-client';
-import type { LocalTrack } from 'livekit-client';
+import type { LocalTrack, LocalVideoTrack } from 'livekit-client';
 
 import type { SelectedDevices, TestingMediaMode } from '../types';
 
@@ -9,6 +9,7 @@ type UseMediaDevicesOptions = {
     initialSelectedDevices?: SelectedDevices;
     autoSelectCameraAfterPermission?: boolean;
     testingMediaMode?: TestingMediaMode;
+    processPreviewVideoTrack?: (track: LocalVideoTrack) => Promise<void>;
 };
 
 export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
@@ -346,6 +347,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
 
             previewTracks.value = nextPreviewTracks;
             previewEnabled.value = true;
+            await processPreviewVideoTrack();
 
             await nextTick();
 
@@ -440,6 +442,26 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         if (previewHasVideo.value !== hasVideo) {
             previewHasVideo.value = hasVideo;
         }
+    }
+
+    async function processPreviewVideoTrack(): Promise<void> {
+        if (!options.processPreviewVideoTrack) {
+            return;
+        }
+
+        const videoTrack = previewTracks.value.find(
+            (track): track is LocalVideoTrack =>
+                track.kind === Track.Kind.Video &&
+                'setProcessor' in track &&
+                'stopProcessor' in track,
+        );
+
+        if (!videoTrack) {
+            return;
+        }
+
+        await options.processPreviewVideoTrack(videoTrack);
+        renderPreview();
     }
 
     function loadTestingDevices(kind?: 'audio' | 'video'): void {
@@ -561,6 +583,7 @@ export function useMediaDevices(options: UseMediaDevicesOptions = {}) {
         requestVideoPermission,
         startPreview,
         stopPreview,
+        processPreviewVideoTrack,
         setPreviewHost,
         setAudioInput,
         setVideoInput,
