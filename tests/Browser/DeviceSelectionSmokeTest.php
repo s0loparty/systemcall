@@ -72,7 +72,7 @@ it('preserves background blur preference when entering a call from preparation',
         ->click('Войти в звонок')
         ->assertPathEndsWith('/call')
         ->assertScript('new URLSearchParams(window.location.search).get("background_blur")', '1')
-        ->assertScript('new URLSearchParams(window.location.search).get("background_blur_radius")', '10')
+        ->assertScript('new URLSearchParams(window.location.search).get("background_blur_radius")', '30')
         ->assertNoJavaScriptErrors();
 });
 
@@ -92,7 +92,7 @@ it('preserves background blur preference when entering a call from waiting room'
         ->click('Войти в звонок')
         ->assertPathEndsWith('/call')
         ->assertScript('new URLSearchParams(window.location.search).get("background_blur")', '1')
-        ->assertScript('new URLSearchParams(window.location.search).get("background_blur_radius")', '10')
+        ->assertScript('new URLSearchParams(window.location.search).get("background_blur_radius")', '30')
         ->assertNoJavaScriptErrors();
 });
 
