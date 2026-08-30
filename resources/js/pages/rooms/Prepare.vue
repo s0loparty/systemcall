@@ -45,6 +45,7 @@ const devices = useMediaDevices({
     autoSelectCameraAfterPermission: true,
     testingMediaMode: props.testing_media_mode,
     processPreviewVideoTrack: processPreviewTrackBackground,
+    cleanupPreviewVideoTrack: videoBackground.removeProcessor,
 });
 const {
     audioInputs,
@@ -138,6 +139,7 @@ async function continueToRoom(): Promise<void> {
         !props.room.waiting_room_enabled &&
         !needsPassword.value
     ) {
+        await devices.stopPreview();
         router.visit(showCall.url(props.room.public_id, { query }));
 
         return;
@@ -157,11 +159,13 @@ async function continueToRoom(): Promise<void> {
     }
 
     if ('waiting_room' in response) {
+        await devices.stopPreview();
         router.visit(showWaiting.url(props.room.public_id, { query }));
 
         return;
     }
 
+    await devices.stopPreview();
     router.visit(showCall.url(props.room.public_id, { query }));
 }
 

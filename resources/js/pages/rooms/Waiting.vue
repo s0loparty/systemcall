@@ -42,6 +42,7 @@ const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     testingMediaMode: props.testing_media_mode,
     processPreviewVideoTrack: processPreviewTrackBackground,
+    cleanupPreviewVideoTrack: videoBackground.removeProcessor,
 });
 const {
     audioInputs,

@@ -173,6 +173,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
             return;
         }
 
+        if (!enabled) {
+            await videoBackground.removeProcessor();
+        }
+
         await activeRoom.value.localParticipant.setCameraEnabled(
             enabled,
             undefined,
@@ -316,10 +320,6 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
                             true,
                             publication.source,
                         );
-
-                        if (publication.source === Track.Source.Camera) {
-                            void applyVideoBackgroundToLocalCamera();
-                        }
                     }
 
                     syncParticipantState(participant);
