@@ -17,7 +17,9 @@ import type {
     ScreenSharePreset,
     SelectedDevices,
     TestingMediaMode,
+    VideoBackgroundPreferences,
 } from '../types';
+import { useVideoBackground } from './useVideoBackground';
 
 type InitialMediaState = {
     microphone?: boolean;
@@ -26,6 +28,7 @@ type InitialMediaState = {
 
 type UseLiveKitOptions = {
     testingMediaMode?: TestingMediaMode;
+    initialVideoBackground?: VideoBackgroundPreferences;
 };
 
 type ScreenShareQuality = {
@@ -56,6 +59,11 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     const activeSpeakerIdentity = ref<string | null>(null);
     const deviceErrorMessage = ref<string | null>(null);
     const tiles = ref<ParticipantTile[]>([]);
+    const videoBackground = useVideoBackground({
+        initialEnabled: options.initialVideoBackground?.enabled,
+        initialBlurRadius: options.initialVideoBackground?.blurRadius,
+        testingMediaMode: options.testingMediaMode,
+    });
     const mediaHosts = new Map<string, HTMLElement>();
     const mediaElements = new Map<string, HTMLMediaElement[]>();
     let fakeMicrophoneTrack: MediaStreamTrack | null = null;
@@ -106,6 +114,8 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         if (activeRoom.value !== liveKitRoom) {
             return;
         }
+
+        await applyVideoBackgroundToLocalCamera();
 
         const failedMediaRequest = mediaResults.find(
             (result) => result.status === 'rejected',
@@ -168,6 +178,7 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
             undefined,
             { simulcast: true },
         );
+        await applyVideoBackgroundToLocalCamera();
         cameraEnabled.value = activeRoom.value.localParticipant.isCameraEnabled;
         syncParticipantState(activeRoom.value.localParticipant);
     }
@@ -305,6 +316,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
                             true,
                             publication.source,
                         );
+
+                        if (publication.source === Track.Source.Camera) {
+                            void applyVideoBackgroundToLocalCamera();
+                        }
                     }
 
                     syncParticipantState(participant);
@@ -386,6 +401,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
             microphone: participant.isMicrophoneEnabled,
             speaking: participant.isSpeaking,
             screenShare: hasActiveScreenShare(participant),
+            backgroundBlur:
+                participant.isLocal &&
+                participant.isCameraEnabled &&
+                videoBackground.enabled.value,
             handRaised: false,
         };
         const index = tiles.value.findIndex(
@@ -477,7 +496,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         }
 
         cameraEnabled.value = enabled;
-        patchLocalTile({ camera: enabled });
+        patchLocalTile({
+            camera: enabled,
+            backgroundBlur: enabled && videoBackground.enabled.value,
+        });
     }
 
     async function setFakeScreenShareEnabled(
@@ -694,6 +716,38 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         );
     }
 
+    async function setVideoBackgroundEnabled(enabled: boolean): Promise<void> {
+        await videoBackground.setEnabled(enabled);
+        await applyVideoBackgroundToLocalCamera();
+    }
+
+    async function applyVideoBackgroundToLocalCamera(): Promise<void> {
+        const publication =
+            activeRoom.value?.localParticipant.getTrackPublication(
+                Track.Source.Camera,
+            );
+        const track = publication?.track;
+
+        if (!track || !videoBackground.isCameraTrack(track)) {
+            patchLocalTile({ backgroundBlur: false });
+
+            return;
+        }
+
+        if (videoBackground.enabled.value) {
+            await videoBackground.setProcessor(track);
+        } else {
+            await videoBackground.removeProcessor(track);
+        }
+
+        patchLocalTile({
+            backgroundBlur:
+                Boolean(publication) &&
+                !publication.isMuted &&
+                videoBackground.enabled.value,
+        });
+    }
+
     function detachIdentityMedia(identity: string): void {
         mediaElements.get(identity)?.forEach((element) => element.remove());
         mediaElements.delete(identity);
@@ -713,6 +767,7 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         fakeCameraTrack = null;
         fakeScreenShareTrack?.stop();
         fakeScreenShareTrack = null;
+        void videoBackground.removeProcessor();
 
         if (fakeCameraFrameTimer !== null) {
             window.clearInterval(fakeCameraFrameTimer);
@@ -741,6 +796,8 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         cameraEnabled.value = false;
         screenShareEnabled.value = false;
         activeSpeakerIdentity.value = null;
+        videoBackground.enabled.value =
+            options.initialVideoBackground?.enabled ?? false;
         tiles.value = [];
         detachAllMedia();
     }
@@ -783,6 +840,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         toggleMicrophone,
         toggleCamera,
         toggleScreenShare,
+        videoBackgroundEnabled: videoBackground.enabled,
+        videoBackgroundProcessing: videoBackground.processing,
+        videoBackgroundErrorMessage: videoBackground.errorMessage,
+        setVideoBackgroundEnabled,
         setMediaHost,
     };
 }

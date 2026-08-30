@@ -52,6 +52,7 @@ const emit = defineEmits<{
         :data-microphone-enabled="tile.microphone ? 'true' : 'false'"
         :data-camera-enabled="tile.camera ? 'true' : 'false'"
         :data-screen-share-enabled="tile.screenShare ? 'true' : 'false'"
+        :data-background-blur-enabled="tile.backgroundBlur ? 'true' : 'false'"
         :data-hand-raised="tile.handRaised ? 'true' : 'false'"
         class="group relative overflow-hidden bg-neutral-800 transition-colors duration-200 ease-out @container"
         :class="[

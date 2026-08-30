@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { Camera, Loader2, Mic, ShieldCheck, VideoOff } from '@lucide/vue';
+import {
+    Camera,
+    Loader2,
+    Mic,
+    ShieldCheck,
+    Sparkles,
+    VideoOff,
+} from '@lucide/vue';
 
 import { computed } from 'vue';
 import type { HTMLAttributes } from 'vue';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -29,6 +37,9 @@ type Props = {
     videoPermissionLoading: boolean;
     previewHasVideo: boolean;
     previewLoading: boolean;
+    backgroundBlurEnabled?: boolean;
+    backgroundBlurDisabled?: boolean;
+    backgroundBlurProcessing?: boolean;
     error: string | null;
     classContent?: HTMLAttributes['class'];
 };
@@ -38,6 +49,9 @@ const props = withDefaults(defineProps<Props>(), {
     videoPermissionRequested: false,
     audioPermissionLoading: false,
     videoPermissionLoading: false,
+    backgroundBlurEnabled: false,
+    backgroundBlurDisabled: false,
+    backgroundBlurProcessing: false,
 });
 
 const emit = defineEmits<{
@@ -46,6 +60,7 @@ const emit = defineEmits<{
     'preview-host': [element: HTMLElement | null];
     'request-audio-permission': [event: MouseEvent | KeyboardEvent];
     'request-video-permission': [event: MouseEvent | KeyboardEvent];
+    'update-background-blur': [enabled: boolean];
 }>();
 
 const disabledDeviceValue = 'none';
@@ -76,6 +91,10 @@ function updateAudioInput(value: AcceptableValue): void {
 
 function updateVideoInput(value: AcceptableValue): void {
     emit('update-video-input', normalizeDeviceValue(value));
+}
+
+function updateBackgroundBlur(value: boolean | 'indeterminate'): void {
+    emit('update-background-blur', value === true);
 }
 </script>
 
@@ -238,6 +257,40 @@ function updateVideoInput(value: AcceptableValue): void {
                             }}
                         </Button>
                     </div>
+                </div>
+
+                <div
+                    class="flex items-start gap-3 rounded-md border border-border/60 bg-white/60 p-3 dark:border-neutral-800 dark:bg-neutral-950/50"
+                >
+                    <Checkbox
+                        id="background-blur"
+                        data-test="background-blur-checkbox"
+                        :model-value="backgroundBlurEnabled"
+                        :disabled="backgroundBlurDisabled"
+                        class="mt-0.5"
+                        @update:model-value="updateBackgroundBlur"
+                    />
+                    <Label
+                        for="background-blur"
+                        class="grid cursor-pointer gap-1 text-sm leading-none"
+                    >
+                        <span class="flex items-center gap-2 font-medium">
+                            <Loader2
+                                v-if="backgroundBlurProcessing"
+                                class="size-4 animate-spin text-violet-500"
+                            />
+                            <Sparkles v-else class="size-4 text-violet-500" />
+                            {{
+                                backgroundBlurProcessing
+                                    ? 'Применяем размытие...'
+                                    : 'Размыть фон'
+                            }}
+                        </span>
+                        <span class="text-xs leading-5 text-muted-foreground">
+                            Фон будет размыт для всех участников, лицо останется
+                            в фокусе.
+                        </span>
+                    </Label>
                 </div>
 
                 <!-- Error message -->
