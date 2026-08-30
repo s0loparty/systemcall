@@ -27,6 +27,7 @@ export type CallPageProps = {
 
 export type TestingMediaMode = 'fake' | 'error' | null;
 export type ScreenSharePreset = '480p' | '720p' | '1024p';
+export type MediaControlKind = 'microphone' | 'camera';
 
 export type JoinForm = {
     display_name: string;
@@ -117,6 +118,10 @@ export type ParticipantTileActions = {
     canGlobalPin: boolean;
     canPromoteModerator: boolean;
     canMoveSubroom: boolean;
+    canRequestMicrophone: boolean;
+    canRequestCamera: boolean;
+    canDisableMicrophone: boolean;
+    canDisableCamera: boolean;
     canKick: boolean;
     canBan: boolean;
 };
@@ -190,6 +195,30 @@ export type RoomMemberMutedEvent = {
     room_public_id: string;
     member: RoomMemberSummary;
     moderator_user_id: number;
+    occurred_at: string;
+};
+
+export type RoomMemberMediaRequestedEvent = {
+    type: 'member_media_requested';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    media_kind: MediaControlKind;
+    moderator: {
+        id: number;
+        name: string;
+    };
+    occurred_at: string;
+};
+
+export type RoomMemberMediaDisabledEvent = {
+    type: 'member_media_disabled';
+    room_public_id: string;
+    member: RoomMemberSummary;
+    media_kind: MediaControlKind;
+    moderator: {
+        id: number;
+        name: string;
+    };
     occurred_at: string;
 };
 

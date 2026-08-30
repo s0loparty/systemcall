@@ -3,10 +3,14 @@ import {
     Ban,
     DoorOpen,
     Globe2,
+    Mic,
+    MicOff,
     Pin,
     PinOff,
     ShieldPlus,
     UserMinus,
+    Video,
+    VideoOff,
 } from '@lucide/vue';
 
 import { computed, ref } from 'vue';
@@ -54,6 +58,8 @@ const emit = defineEmits<{
     'pin-global': [];
     'promote-moderator': [];
     'move-subroom': [subroomPublicId: string | null];
+    'request-media': [mediaKind: 'microphone' | 'camera'];
+    'disable-media': [mediaKind: 'microphone' | 'camera'];
     kick: [];
     ban: [];
 }>();
@@ -64,6 +70,10 @@ const hasActions = computed(
         props.actions.canGlobalPin ||
         props.actions.canPromoteModerator ||
         props.actions.canMoveSubroom ||
+        props.actions.canRequestMicrophone ||
+        props.actions.canRequestCamera ||
+        props.actions.canDisableMicrophone ||
+        props.actions.canDisableCamera ||
         props.actions.canKick ||
         props.actions.canBan,
 );
@@ -220,6 +230,78 @@ function confirm(): void {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            <Tooltip v-if="actions.canRequestMicrophone">
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-9 items-center justify-center rounded-md text-emerald-100 transition hover:bg-emerald-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        data-test="request-microphone-participant"
+                        :disabled="disabled"
+                        aria-label="Попросить включить микрофон"
+                        @click.stop="emit('request-media', 'microphone')"
+                    >
+                        <Mic class="size-4" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                    <p>Попросить включить микрофон</p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="actions.canRequestCamera">
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-9 items-center justify-center rounded-md text-purple-100 transition hover:bg-purple-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        data-test="request-camera-participant"
+                        :disabled="disabled"
+                        aria-label="Попросить включить камеру"
+                        @click.stop="emit('request-media', 'camera')"
+                    >
+                        <Video class="size-4" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                    <p>Попросить включить камеру</p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="actions.canDisableMicrophone">
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-9 items-center justify-center rounded-md text-orange-100 transition hover:bg-orange-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        data-test="disable-microphone-participant"
+                        :disabled="disabled"
+                        aria-label="Выключить микрофон"
+                        @click.stop="emit('disable-media', 'microphone')"
+                    >
+                        <MicOff class="size-4" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                    <p>Выключить микрофон</p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="actions.canDisableCamera">
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-9 items-center justify-center rounded-md text-red-100 transition hover:bg-red-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        data-test="disable-camera-participant"
+                        :disabled="disabled"
+                        aria-label="Выключить камеру"
+                        @click.stop="emit('disable-media', 'camera')"
+                    >
+                        <VideoOff class="size-4" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                    <p>Выключить камеру</p>
+                </TooltipContent>
+            </Tooltip>
 
             <Tooltip v-if="actions.canKick">
                 <TooltipTrigger as-child>

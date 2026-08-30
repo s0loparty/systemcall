@@ -2,6 +2,8 @@
 
 use App\Enums\RoomRole;
 use App\Events\Rooms\RoomMemberBanned;
+use App\Events\Rooms\RoomMemberMediaDisabled;
+use App\Events\Rooms\RoomMemberMediaRequested;
 use App\Events\Rooms\RoomMemberMuted;
 use App\Events\Rooms\RoomMemberRemoved;
 use App\Events\Rooms\RoomMemberRoleChanged;
@@ -115,6 +117,105 @@ test('mute all affects active participants but keeps moderators protected', func
         ->and($moderator->fresh()->can_publish_audio)->toBeTrue()
         ->and($liveKit->permissionUpdates)->toContain($participant->livekit_identity, $secondParticipant->livekit_identity)
         ->and($liveKit->permissionUpdates)->not->toContain($ownerMember->livekit_identity, $moderator->livekit_identity);
+});
+
+test('moderators can request a participant to enable microphone or camera', function () {
+    [$room, , , $participant, $moderatorUser] = moderationRoom();
+
+    Event::fake();
+
+    $this->actingAs($moderatorUser)
+        ->postJson(route('rooms.members.media_request', [$room, $participant]), [
+            'media_kind' => 'camera',
+        ])
+        ->assertOk()
+        ->assertJsonPath('member.id', $participant->id);
+
+    Event::assertDispatched(
+        RoomMemberMediaRequested::class,
+        fn (RoomMemberMediaRequested $event): bool => $event->member->is($participant)
+            && $event->moderator->is($moderatorUser)
+            && $event->mediaKind === 'camera',
+    );
+});
+
+test('moderators can disable a participant microphone or camera without revoking publish permissions', function () {
+    [$room, , , $participant, $moderatorUser] = moderationRoom();
+    $liveKit = fakeLiveKitRoomService();
+
+    Event::fake();
+
+    $this->actingAs($moderatorUser)
+        ->postJson(route('rooms.members.media_disable', [$room, $participant]), [
+            'media_kind' => 'microphone',
+        ])
+        ->assertOk()
+        ->assertJsonPath('member.can_publish_audio', true);
+
+    expect($participant->fresh()->can_publish_audio)->toBeTrue()
+        ->and($participant->fresh()->can_publish_video)->toBeTrue()
+        ->and($liveKit->permissionUpdates)->toBe([]);
+
+    Event::assertDispatched(
+        RoomMemberMediaDisabled::class,
+        fn (RoomMemberMediaDisabled $event): bool => $event->member->is($participant)
+            && $event->moderator->is($moderatorUser)
+            && $event->mediaKind === 'microphone',
+    );
+});
+
+test('disable media all affects active participants but keeps moderators protected', function () {
+    [$room, $owner, $moderator, $participant, , $ownerMember] = moderationRoom();
+    $secondParticipant = RoomMember::factory()
+        ->for($room)
+        ->for(User::factory()->create())
+        ->create();
+
+    Event::fake();
+
+    $this->actingAs($owner)
+        ->postJson(route('rooms.members.media_disable_all', $room), [
+            'media_kind' => 'camera',
+        ])
+        ->assertOk()
+        ->assertJsonCount(2, 'members');
+
+    Event::assertDispatched(
+        RoomMemberMediaDisabled::class,
+        fn (RoomMemberMediaDisabled $event): bool => $event->member->is($participant)
+            && $event->mediaKind === 'camera',
+    );
+    Event::assertDispatched(
+        RoomMemberMediaDisabled::class,
+        fn (RoomMemberMediaDisabled $event): bool => $event->member->is($secondParticipant)
+            && $event->mediaKind === 'camera',
+    );
+    Event::assertNotDispatched(
+        RoomMemberMediaDisabled::class,
+        fn (RoomMemberMediaDisabled $event): bool => $event->member->is($ownerMember) || $event->member->is($moderator),
+    );
+});
+
+test('participants cannot request or disable media for other members', function () {
+    [$room, , $moderator, $participant] = moderationRoom();
+
+    $this->actingAs($participant->user)
+        ->postJson(route('rooms.members.media_request', [$room, $moderator]), [
+            'media_kind' => 'microphone',
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($participant->user)
+        ->postJson(route('rooms.members.media_disable', [$room, $moderator]), [
+            'media_kind' => 'camera',
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($participant->user)
+        ->postJson(route('rooms.members.media_disable_all', $room), [
+            'media_kind' => 'camera',
+        ])
+        ->assertForbidden();
 });
 
 test('moderators can kick active participants from the room and LiveKit', function () {

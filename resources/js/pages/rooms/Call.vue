@@ -6,6 +6,14 @@ import { Share2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Toaster } from '@/components/ui/sonner';
@@ -16,7 +24,13 @@ import {
 } from '@/routes/rooms/call';
 import { update as updateGlobalPin } from '@/routes/rooms/global_pin';
 import { update as updateHand } from '@/routes/rooms/hand';
-import { ban, kick } from '@/routes/rooms/members';
+import {
+    ban,
+    media_disable_all as disableAllMemberMedia,
+    media_disable as disableMemberMedia,
+    kick,
+    media_request as requestMemberMedia,
+} from '@/routes/rooms/members';
 import { update as updateRole } from '@/routes/rooms/members/role';
 
 import CallControlsBar from '@/features/calls/components/CallControlsBar.vue';
@@ -29,8 +43,11 @@ import { useRoomApplicationEvents } from '@/features/calls/composables/useRoomAp
 import { useSubroomManagement } from '@/features/calls/composables/useSubroomManagement';
 import type {
     CallPageProps,
+    MediaControlKind,
     ParticipantTile,
     ParticipantTileActions,
+    RoomMemberMediaDisabledEvent,
+    RoomMemberMediaRequestedEvent,
     RoomMemberSubroomChangedEvent,
     RoomMemberSummary,
 } from '@/features/calls/types';
@@ -62,12 +79,28 @@ const globalPinRequest = useHttp<
 });
 const kickRequest = useHttp<Record<string, never>, MemberResponse>({});
 const banRequest = useHttp<Record<string, never>, unknown>({});
+const mediaRequest = useHttp<{ media_kind: MediaControlKind }, MemberResponse>({
+    media_kind: 'microphone',
+});
+const mediaDisableRequest = useHttp<
+    { media_kind: MediaControlKind },
+    MemberResponse
+>({
+    media_kind: 'microphone',
+});
+const mediaDisableAllRequest = useHttp<
+    { media_kind: MediaControlKind },
+    { members: RoomMemberSummary[] }
+>({
+    media_kind: 'microphone',
+});
 const roleRequest = useHttp<
     { role: RoomMemberSummary['role'] },
     MemberResponse
 >({
     role: 'participant',
 });
+const pendingMediaRequest = ref<RoomMemberMediaRequestedEvent | null>(null);
 
 const call = useCallSession({
     roomPublicId: props.room.public_id,
@@ -89,6 +122,12 @@ const realtime = useRoomApplicationEvents(props.room.public_id, {
     },
     onMemberSubroomChanged: (event) => {
         void handleMemberSubroomChanged(event);
+    },
+    onMemberMediaRequested: (event) => {
+        handleMemberMediaRequested(event);
+    },
+    onMemberMediaDisabled: (event) => {
+        void handleMemberMediaDisabled(event);
     },
 });
 const subroomManagement = useSubroomManagement(props.room.public_id);
@@ -221,6 +260,10 @@ const tileActionsByIdentity = computed(() =>
                 currentRoomMember.value?.role === 'owner' &&
                 member?.role === 'participant',
             canMoveSubroom: canTarget && canManageSubrooms.value,
+            canRequestMicrophone: canModerateTarget && !tile.microphone,
+            canRequestCamera: canModerateTarget && !tile.camera,
+            canDisableMicrophone: canModerateTarget && tile.microphone,
+            canDisableCamera: canModerateTarget && tile.camera,
             canKick: canModerateTarget,
             canBan: canModerateTarget,
         };
@@ -234,6 +277,9 @@ const tileActionsBusy = computed(
         roleRequest.processing ||
         kickRequest.processing ||
         banRequest.processing ||
+        mediaRequest.processing ||
+        mediaDisableRequest.processing ||
+        mediaDisableAllRequest.processing ||
         subroomManagement.moveRequest.processing,
 );
 
@@ -433,6 +479,125 @@ async function moveTileToSubroom(
     await moveMemberToSubroom(member.id, subroomPublicId);
 }
 
+function handleMemberMediaRequested(
+    event: RoomMemberMediaRequestedEvent,
+): void {
+    if (event.member.id !== currentRoomMemberId.value) {
+        return;
+    }
+
+    if (
+        (event.media_kind === 'microphone' && microphoneEnabled.value) ||
+        (event.media_kind === 'camera' && cameraEnabled.value)
+    ) {
+        return;
+    }
+
+    pendingMediaRequest.value = event;
+}
+
+async function handleMemberMediaDisabled(
+    event: RoomMemberMediaDisabledEvent,
+): Promise<void> {
+    if (event.member.id !== currentRoomMemberId.value) {
+        return;
+    }
+
+    if (event.media_kind === 'microphone' && microphoneEnabled.value) {
+        await toggleMicrophone();
+        toast.info(`${event.moderator.name} выключил ваш микрофон`);
+    }
+
+    if (event.media_kind === 'camera' && cameraEnabled.value) {
+        await toggleCamera();
+        toast.info(`${event.moderator.name} выключил вашу камеру`);
+    }
+}
+
+async function acceptPendingMediaRequest(): Promise<void> {
+    const request = pendingMediaRequest.value;
+
+    if (!request) {
+        return;
+    }
+
+    pendingMediaRequest.value = null;
+
+    if (request.media_kind === 'microphone' && !microphoneEnabled.value) {
+        await toggleMicrophone();
+    }
+
+    if (request.media_kind === 'camera' && !cameraEnabled.value) {
+        await toggleCamera();
+    }
+}
+
+function rejectPendingMediaRequest(): void {
+    pendingMediaRequest.value = null;
+}
+
+async function requestParticipantMedia(
+    identity: string,
+    mediaKind: MediaControlKind,
+): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (!member || !canModerateRoomMember(member) || mediaRequest.processing) {
+        return;
+    }
+
+    mediaRequest.media_kind = mediaKind;
+
+    await mediaRequest.post(
+        requestMemberMedia.url({
+            room: props.room.public_id,
+            roomMember: member.id,
+        }),
+    );
+}
+
+async function disableParticipantMedia(
+    identity: string,
+    mediaKind: MediaControlKind,
+): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (
+        !member ||
+        !canModerateRoomMember(member) ||
+        mediaDisableRequest.processing
+    ) {
+        return;
+    }
+
+    mediaDisableRequest.media_kind = mediaKind;
+
+    await mediaDisableRequest.post(
+        disableMemberMedia.url({
+            room: props.room.public_id,
+            roomMember: member.id,
+        }),
+    );
+}
+
+async function disableAllMedia(mediaKind: MediaControlKind): Promise<void> {
+    if (!canModerateMembers.value || mediaDisableAllRequest.processing) {
+        return;
+    }
+
+    mediaDisableAllRequest.media_kind = mediaKind;
+
+    const response = await mediaDisableAllRequest.post(
+        disableAllMemberMedia.url(props.room.public_id),
+    );
+
+    toast.info(
+        mediaKind === 'camera'
+            ? `Камеры выключены: ${response?.members.length ?? 0}`
+            : `Микрофоны выключены: ${response?.members.length ?? 0}`,
+    );
+}
+
 async function handleMemberSubroomChanged(
     event: RoomMemberSubroomChangedEvent,
 ): Promise<void> {
@@ -613,6 +778,8 @@ onMounted(() => {
                 @pin-global="toggleGlobalPin"
                 @promote-moderator="promoteModerator"
                 @move-subroom="moveTileToSubroom"
+                @request-media="requestParticipantMedia"
+                @disable-media="disableParticipantMedia"
                 @kick="kickParticipant"
                 @ban="banParticipant"
             />
@@ -699,6 +866,7 @@ onMounted(() => {
             :can-share-screen="canShareScreen"
             :waiting-room-enabled="room.waiting_room_enabled"
             :can-moderate-waiting-room="can_moderate_waiting_room"
+            :can-moderate-members="canModerateMembers"
             :can-manage-subrooms="canManageSubrooms"
             :waiting-room-entries="pendingWaitingRoomEntries"
             :room-members="roomMembers"
@@ -715,8 +883,62 @@ onMounted(() => {
             @waiting-room-entry-decided="removeWaitingRoomEntry"
             @create-subroom="createSubroom"
             @move-member-subroom="moveMemberToSubroom"
+            @disable-all-media="disableAllMedia"
             @leave="leaveCall"
         />
+
+        <Dialog
+            :open="pendingMediaRequest !== null"
+            @update:open="
+                (open) => {
+                    if (!open) rejectPendingMediaRequest();
+                }
+            "
+        >
+            <DialogContent
+                data-test="media-request-dialog"
+                class="rounded-md border-slate-200 bg-white sm:max-w-md dark:border-neutral-800 dark:bg-neutral-900"
+            >
+                <DialogHeader>
+                    <DialogTitle>
+                        {{
+                            pendingMediaRequest?.media_kind === 'camera'
+                                ? 'Включить камеру?'
+                                : 'Включить микрофон?'
+                        }}
+                    </DialogTitle>
+                    <DialogDescription>
+                        {{ pendingMediaRequest?.moderator.name }} просит
+                        {{
+                            pendingMediaRequest?.media_kind === 'camera'
+                                ? 'включить камеру'
+                                : 'включить микрофон'
+                        }}.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <Button
+                        type="button"
+                        data-test="reject-media-request"
+                        variant="outline"
+                        @click="rejectPendingMediaRequest"
+                    >
+                        Отклонить
+                    </Button>
+                    <Button
+                        type="button"
+                        data-test="accept-media-request"
+                        @click="acceptPendingMediaRequest"
+                    >
+                        {{
+                            pendingMediaRequest?.media_kind === 'camera'
+                                ? 'Включить камеру'
+                                : 'Включить микрофон'
+                        }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
 
         <Toaster />
     </main>

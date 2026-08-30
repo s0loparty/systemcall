@@ -70,6 +70,12 @@ Route::middleware(['auth', 'verified', 'throttle:60,1'])->group(function () {
         ->name('rooms.members.mute');
     Route::post('rooms/{room}/members/mute-all', [RoomModerationController::class, 'muteAll'])
         ->name('rooms.members.mute_all');
+    Route::post('rooms/{room}/members/{roomMember}/media-request', [RoomModerationController::class, 'requestMedia'])
+        ->name('rooms.members.media_request');
+    Route::post('rooms/{room}/members/{roomMember}/media-disable', [RoomModerationController::class, 'disableMedia'])
+        ->name('rooms.members.media_disable');
+    Route::post('rooms/{room}/members/media-disable-all', [RoomModerationController::class, 'disableMediaAll'])
+        ->name('rooms.members.media_disable_all');
     Route::delete('rooms/{room}/members/{roomMember}', [RoomModerationController::class, 'kick'])
         ->name('rooms.members.kick');
     Route::post('rooms/{room}/members/{roomMember}/ban', [RoomModerationController::class, 'ban'])

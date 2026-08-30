@@ -54,6 +54,7 @@ type Props = {
     canShareScreen: boolean;
     waitingRoomEnabled: boolean;
     canModerateWaitingRoom: boolean;
+    canModerateMembers: boolean;
     canManageSubrooms: boolean;
     waitingRoomEntries: WaitingRoomEntry[];
     roomMembers: RoomMemberSummary[];
@@ -83,6 +84,7 @@ const emit = defineEmits<{
     waitingRoomEntryDecided: [entryId: number];
     createSubroom: [name: string];
     moveMemberSubroom: [memberId: number, subroomPublicId: string | null];
+    disableAllMedia: [mediaKind: 'microphone' | 'camera'];
     leave: [];
 }>();
 
@@ -292,6 +294,44 @@ onBeforeUnmount(() => {
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top"><p>Зал ожидания</p></TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="canModerateMembers">
+                <TooltipTrigger as-child>
+                    <Button
+                        type="button"
+                        data-test="disable-all-microphones"
+                        :disabled="busy"
+                        aria-label="Выключить микрофоны всем"
+                        variant="outline"
+                        size="icon-lg"
+                        @click="emit('disableAllMedia', 'microphone')"
+                    >
+                        <MicOff />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>Выключить микрофоны всем</p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="canModerateMembers">
+                <TooltipTrigger as-child>
+                    <Button
+                        type="button"
+                        data-test="disable-all-cameras"
+                        :disabled="busy"
+                        aria-label="Выключить камеры всем"
+                        variant="outline"
+                        size="icon-lg"
+                        @click="emit('disableAllMedia', 'camera')"
+                    >
+                        <VideoOff />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                    <p>Выключить камеры всем</p>
+                </TooltipContent>
             </Tooltip>
 
             <Tooltip>
