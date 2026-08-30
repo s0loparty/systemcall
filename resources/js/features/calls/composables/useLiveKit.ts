@@ -104,18 +104,18 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         ]);
 
         if (activeRoom.value !== liveKitRoom) {
-return;
-}
+            return;
+        }
 
         const failedMediaRequest = mediaResults.find(
             (result) => result.status === 'rejected',
         );
 
         if (failedMediaRequest) {
-deviceErrorMessage.value = mediaErrorMessage(
+            deviceErrorMessage.value = mediaErrorMessage(
                 failedMediaRequest.reason,
             );
-}
+        }
 
         microphoneEnabled.value =
             liveKitRoom.localParticipant.isMicrophoneEnabled;
@@ -133,8 +133,8 @@ deviceErrorMessage.value = mediaErrorMessage(
 
     async function toggleMicrophone(): Promise<void> {
         if (!activeRoom.value) {
-return;
-}
+            return;
+        }
 
         const enabled = !microphoneEnabled.value;
 
@@ -152,8 +152,8 @@ return;
 
     async function toggleCamera(): Promise<void> {
         if (!activeRoom.value) {
-return;
-}
+            return;
+        }
 
         const enabled = !cameraEnabled.value;
 
@@ -176,8 +176,8 @@ return;
         preset: ScreenSharePreset = '720p',
     ): Promise<void> {
         if (!activeRoom.value) {
-return;
-}
+            return;
+        }
 
         const enabled = !screenShareEnabled.value;
         const quality = SCREEN_SHARE_PRESETS[preset];
@@ -299,13 +299,13 @@ return;
                         publication.track &&
                         publication.track.kind === Track.Kind.Video
                     ) {
-attachMedia(
+                        attachMedia(
                             participant.identity,
                             publication.track,
                             true,
                             publication.source,
                         );
-}
+                    }
 
                     syncParticipantState(participant);
                 },
@@ -326,12 +326,12 @@ attachMedia(
             )
             .on(RoomEvent.TrackMuted, (publication, participant) => {
                 if (publication.source === Track.Source.ScreenShare) {
-detachMedia(
+                    detachMedia(
                         participant.identity,
                         publication.track,
                         publication.source,
                     );
-}
+                }
 
                 syncParticipantState(participant);
             })
@@ -367,13 +367,13 @@ detachMedia(
     function attachExistingTracks(participant: Participant): void {
         participant.getTrackPublications().forEach((publication) => {
             if (publication.track) {
-attachMedia(
+                attachMedia(
                     participant.identity,
                     publication.track,
                     false,
                     publication.source,
                 );
-}
+            }
         });
     }
 
@@ -405,8 +405,8 @@ attachMedia(
 
     function syncParticipantState(participant: Participant): void {
         if (participant.isLocal) {
-screenShareEnabled.value = hasActiveScreenShare(participant);
-}
+            screenShareEnabled.value = hasActiveScreenShare(participant);
+        }
 
         upsertParticipant(participant);
     }
@@ -420,8 +420,8 @@ screenShareEnabled.value = hasActiveScreenShare(participant);
         const localIdentity = activeRoom.value?.localParticipant.identity;
 
         if (!localIdentity) {
-return;
-}
+            return;
+        }
 
         tiles.value = tiles.value.map((tile) =>
             tile.identity === localIdentity ? { ...tile, ...partial } : tile,
@@ -430,8 +430,8 @@ return;
 
     async function setFakeMicrophoneEnabled(enabled: boolean): Promise<void> {
         if (!activeRoom.value) {
-return;
-}
+            return;
+        }
 
         if (enabled && !fakeMicrophoneTrack) {
             fakeMicrophoneTrack = createFakeAudioTrack();
@@ -456,8 +456,8 @@ return;
 
     async function setFakeCameraEnabled(enabled: boolean): Promise<void> {
         if (!activeRoom.value) {
-return;
-}
+            return;
+        }
 
         if (enabled && !fakeCameraTrack) {
             fakeCameraTrack = createFakeVideoTrack();
@@ -485,8 +485,8 @@ return;
         quality: ScreenShareQuality,
     ): Promise<void> {
         if (!activeRoom.value) {
-return;
-}
+            return;
+        }
 
         if (enabled && !fakeScreenShareTrack) {
             fakeScreenShareTrack = createFakeScreenShareTrack();
@@ -547,8 +547,8 @@ return;
         canvas.height = height;
         const drawFrame = () => {
             if (!context) {
-return;
-}
+                return;
+            }
 
             context.fillStyle = '#1f2937';
             context.fillRect(0, 0, width, height);
@@ -586,8 +586,8 @@ return;
         canvas.height = height;
         const drawFrame = () => {
             if (!context) {
-return;
-}
+                return;
+            }
 
             context.fillStyle = '#020617';
             context.fillRect(0, 0, width, height);
@@ -628,26 +628,26 @@ return;
         source = track?.source,
     ): void {
         if (!track) {
-return;
-}
+            return;
+        }
 
         if (source) {
-detachMedia(identity, undefined, source);
-}
+            detachMedia(identity, undefined, source);
+        }
 
         const element = track.attach();
         element.autoplay = true;
 
         if (element instanceof HTMLVideoElement) {
-element.playsInline = true;
-}
+            element.playsInline = true;
+        }
 
         element.muted = muted;
         element.dataset.identity = identity;
 
         if (source) {
-element.dataset.source = source.replaceAll('_', '-');
-}
+            element.dataset.source = source.replaceAll('_', '-');
+        }
 
         mediaElements.set(identity, [
             ...(mediaElements.get(identity) ?? []),
@@ -668,7 +668,7 @@ element.dataset.source = source.replaceAll('_', '-');
         detachedElements.forEach((element) => element.remove());
 
         if (normalizedSource) {
-currentElements
+            currentElements
                 .filter(
                     (element) => element.dataset.source === normalizedSource,
                 )
@@ -676,7 +676,7 @@ currentElements
                     element.remove();
                     detachedSet.add(element);
                 });
-}
+        }
 
         mediaElements.set(
             identity,
@@ -728,8 +728,8 @@ currentElements
         const host = mediaHosts.get(identity);
 
         if (!host) {
-return;
-}
+            return;
+        }
 
         host.replaceChildren(...(mediaElements.get(identity) ?? []));
     }
@@ -748,23 +748,23 @@ return;
         state: ConnectionState,
     ): CallConnectionState {
         if (state === 'connected') {
-return 'connected';
-}
+            return 'connected';
+        }
 
         if (state === 'connecting') {
-return 'connecting';
-}
+            return 'connecting';
+        }
 
         if (state === 'disconnected') {
-return 'disconnected';
-}
+            return 'disconnected';
+        }
 
         return 'reconnecting';
     }
     function mediaErrorMessage(error: unknown): string {
         if (error instanceof Error) {
-return error.message;
-}
+            return error.message;
+        }
 
         return 'Вы подключены к комнате, но камеру или микрофон включить не удалось.';
     }
