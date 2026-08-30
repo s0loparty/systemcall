@@ -73,6 +73,7 @@ const call = useCallSession({
     roomPublicId: props.room.public_id,
     displayName: defaultDisplayName.value,
     initialSelectedDevices: deviceQuery.query.value,
+    initialVideoBackground: deviceQuery.videoBackground.value,
     testingMediaMode: props.testing_media_mode,
 });
 call.waitingRoomEntry.value = props.current_waiting_room_entry;
@@ -100,6 +101,8 @@ const {
     microphoneEnabled,
     cameraEnabled,
     screenShareEnabled,
+    videoBackgroundEnabled,
+    videoBackgroundProcessing,
     waitingRoomEntry,
     joinedMember,
     activeSpeakerIdentity,
@@ -159,6 +162,10 @@ const canShareScreen = computed(
         joinedMember.value?.can_publish_screen ??
         false,
 );
+const currentVideoBackground = computed(() => ({
+    enabled: videoBackgroundEnabled.value,
+    blurRadius: deviceQuery.videoBackground.value.blurRadius,
+}));
 const canManageSubrooms = computed(() => props.can_moderate_members);
 const pendingWaitingRoomEntries = computed(() =>
     waitingRoomEntries.value.filter((entry) => entry.status === 'pending'),
@@ -269,7 +276,10 @@ async function connectToCall(): Promise<void> {
     if (waitingRoomEntry.value?.status === 'pending') {
         router.visit(
             showWaiting.url(props.room.public_id, {
-                query: deviceQuery.toQuery(selectedDevices.value),
+                query: deviceQuery.toQuery(
+                    selectedDevices.value,
+                    currentVideoBackground.value,
+                ),
             }),
         );
 
@@ -506,7 +516,10 @@ async function leaveCall(): Promise<void> {
     } finally {
         router.visit(
             showPrepare.url(props.room.public_id, {
-                query: deviceQuery.toQuery(selectedDevices.value),
+                query: deviceQuery.toQuery(
+                    selectedDevices.value,
+                    currentVideoBackground.value,
+                ),
             }),
         );
     }
@@ -516,7 +529,10 @@ onMounted(() => {
     if (needsGuestIdentity.value) {
         router.visit(
             showPrepare.url(props.room.public_id, {
-                query: deviceQuery.toQuery(selectedDevices.value),
+                query: deviceQuery.toQuery(
+                    selectedDevices.value,
+                    currentVideoBackground.value,
+                ),
             }),
         );
 
@@ -568,6 +584,13 @@ onMounted(() => {
                 <span data-test="echo-connection-state">
                     {{ echoConnectionStatus }}
                 </span>
+                <span
+                    data-test="video-background-state"
+                    :data-enabled="videoBackgroundEnabled ? 'true' : 'false'"
+                    :data-processing="
+                        videoBackgroundProcessing ? 'true' : 'false'
+                    "
+                />
             </div>
         </header>
 

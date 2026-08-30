@@ -26,6 +26,7 @@ export type CallPageProps = {
 };
 
 export type TestingMediaMode = 'fake' | 'error' | null;
+export type ScreenSharePreset = '480p' | '720p' | '1024p';
 
 export type JoinForm = {
     display_name: string;
@@ -107,6 +108,7 @@ export type ParticipantTile = {
     microphone: boolean;
     speaking: boolean;
     screenShare: boolean;
+    backgroundBlur: boolean;
     handRaised: boolean;
 };
 
@@ -132,6 +134,11 @@ export type CallConnectionState =
 export type SelectedDevices = {
     audioInputId: string;
     videoInputId: string;
+};
+
+export type VideoBackgroundPreferences = {
+    enabled: boolean;
+    blurRadius: number;
 };
 
 export type EchoConnectionState =

@@ -22,7 +22,9 @@ import DeviceSetupPanel from '@/features/calls/components/DeviceSetupPanel.vue';
 import { useCallDeviceQuery } from '@/features/calls/composables/useCallDeviceQuery';
 import { useMediaDevices } from '@/features/calls/composables/useMediaDevices';
 import { useRoomJoin } from '@/features/calls/composables/useRoomJoin';
+import { useVideoBackground } from '@/features/calls/composables/useVideoBackground';
 import type { CallPageProps } from '@/features/calls/types';
+import type { LocalVideoTrack } from 'livekit-client';
 
 const props = defineProps<CallPageProps>();
 type PrepareStep = 'identity' | 'password';
@@ -33,10 +35,16 @@ const isGuest = computed(() => currentUser.value === null);
 const defaultDisplayName = computed(() => currentUser.value?.name ?? '');
 const deviceQuery = useCallDeviceQuery();
 const joinErrorMessage = ref<string | null>(null);
+const videoBackground = useVideoBackground({
+    initialEnabled: deviceQuery.videoBackground.value.enabled,
+    initialBlurRadius: deviceQuery.videoBackground.value.blurRadius,
+    testingMediaMode: props.testing_media_mode,
+});
 const devices = useMediaDevices({
     initialSelectedDevices: deviceQuery.query.value,
     autoSelectCameraAfterPermission: true,
     testingMediaMode: props.testing_media_mode,
+    processPreviewVideoTrack: processPreviewTrackBackground,
 });
 const {
     audioInputs,
@@ -54,6 +62,7 @@ const {
     setPreviewHost,
     requestAudioPermission,
     requestVideoPermission,
+    processPreviewVideoTrack,
 } = devices;
 const roomJoin = useRoomJoin(props.room.public_id, defaultDisplayName.value);
 
@@ -81,6 +90,9 @@ const continueDisabled = computed(
 );
 const hasJoinErrors = computed(
     () => Object.keys(roomJoin.joinRequest.errors).length > 0,
+);
+const previewErrorMessage = computed(
+    () => deviceErrorMessage.value ?? videoBackground.errorMessage.value,
 );
 const continueButtonLabel = computed(() => {
     if (guestDisplayNameMissing.value) {
@@ -110,7 +122,10 @@ async function continueToRoom(): Promise<void> {
     joinErrorMessage.value = null;
     roomJoin.joinRequest.clearErrors();
 
-    const query = deviceQuery.toQuery(devices.selectedDevices.value);
+    const query = deviceQuery.toQuery(
+        devices.selectedDevices.value,
+        videoBackground.preferences(),
+    );
 
     if (isIdentityStep.value && isGuest.value && needsPassword.value) {
         prepareStep.value = 'password';
@@ -148,6 +163,23 @@ async function continueToRoom(): Promise<void> {
     }
 
     router.visit(showCall.url(props.room.public_id, { query }));
+}
+
+async function processPreviewTrackBackground(
+    track: LocalVideoTrack,
+): Promise<void> {
+    if (videoBackground.enabled.value) {
+        await videoBackground.setProcessor(track);
+
+        return;
+    }
+
+    await videoBackground.removeProcessor(track);
+}
+
+async function updateBackgroundBlur(enabled: boolean): Promise<void> {
+    await videoBackground.setEnabled(enabled);
+    await processPreviewVideoTrack();
 }
 </script>
 
@@ -329,9 +361,21 @@ async function continueToRoom(): Promise<void> {
                             :video-permission-loading="videoPermissionLoading"
                             :preview-has-video="previewHasVideo"
                             :preview-loading="previewLoading"
-                            :error="deviceErrorMessage"
+                            :background-blur-enabled="
+                                videoBackground.enabled.value
+                            "
+                            :background-blur-disabled="
+                                videoBackground.processing.value
+                            "
+                            :background-blur-processing="
+                                videoBackground.processing.value
+                            "
+                            :error="previewErrorMessage"
                             @update-audio-input="setAudioInput"
                             @update-video-input="setVideoInput"
+                            @update-background-blur="
+                                (enabled) => void updateBackgroundBlur(enabled)
+                            "
                             @preview-host="setPreviewHost"
                             @request-audio-permission="requestAudioPermission"
                             @request-video-permission="requestVideoPermission"

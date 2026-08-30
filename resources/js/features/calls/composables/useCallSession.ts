@@ -16,12 +16,17 @@ type UseCallSessionOptions = {
     roomPublicId: string;
     displayName: string;
     initialSelectedDevices?: SelectedDevices;
+    initialVideoBackground?: {
+        enabled: boolean;
+        blurRadius: number;
+    };
     testingMediaMode?: TestingMediaMode;
 };
 
 export function useCallSession(options: UseCallSessionOptions) {
     const liveKit = useLiveKit({
         testingMediaMode: options.testingMediaMode,
+        initialVideoBackground: options.initialVideoBackground,
     });
     const mediaDevices = useMediaDevices({
         initialSelectedDevices: options.initialSelectedDevices,
@@ -36,6 +41,7 @@ export function useCallSession(options: UseCallSessionOptions) {
     const deviceErrorMessage = computed(
         () =>
             mediaDevices.deviceErrorMessage.value ??
+            liveKit.videoBackgroundErrorMessage.value ??
             liveKit.deviceErrorMessage.value,
     );
 
@@ -200,6 +206,8 @@ export function useCallSession(options: UseCallSessionOptions) {
         microphoneEnabled: liveKit.microphoneEnabled,
         cameraEnabled: liveKit.cameraEnabled,
         screenShareEnabled: liveKit.screenShareEnabled,
+        videoBackgroundEnabled: liveKit.videoBackgroundEnabled,
+        videoBackgroundProcessing: liveKit.videoBackgroundProcessing,
         activeSpeakerIdentity: liveKit.activeSpeakerIdentity,
         tiles: liveKit.tiles,
         errorMessage,
@@ -223,6 +231,7 @@ export function useCallSession(options: UseCallSessionOptions) {
         toggleMicrophone: liveKit.toggleMicrophone,
         toggleCamera: liveKit.toggleCamera,
         toggleScreenShare: liveKit.toggleScreenShare,
+        setVideoBackgroundEnabled: liveKit.setVideoBackgroundEnabled,
         setMediaHost: liveKit.setMediaHost,
     };
 }
