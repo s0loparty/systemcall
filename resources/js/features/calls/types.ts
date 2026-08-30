@@ -26,6 +26,7 @@ export type CallPageProps = {
 };
 
 export type TestingMediaMode = 'fake' | 'error' | null;
+export type ScreenSharePreset = '480p' | '720p' | '1024p';
 
 export type JoinForm = {
     display_name: string;

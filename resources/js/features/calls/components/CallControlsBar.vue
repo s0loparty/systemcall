@@ -24,6 +24,13 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -33,6 +40,7 @@ import {
 import type {
     RoomMemberSummary,
     RoomSubroomSummary,
+    ScreenSharePreset,
     WaitingRoomEntry,
 } from '../types';
 import SubroomManagementSheet from './SubroomManagementSheet.vue';
@@ -59,6 +67,8 @@ type Props = {
 const props = defineProps<Props>();
 const waitingRoomDialogOpen = ref(false);
 const subroomsOpen = ref(false);
+const screenShareQualityOpen = ref(false);
+const screenSharePreset = ref<ScreenSharePreset>('720p');
 const controlsHidden = ref(false);
 const isMobileViewport = ref(false);
 let hideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -67,7 +77,7 @@ let mobileMediaQuery: MediaQueryList | null = null;
 const emit = defineEmits<{
     toggleMicrophone: [];
     toggleCamera: [];
-    toggleScreenShare: [];
+    toggleScreenShare: [preset?: ScreenSharePreset];
     toggleHand: [];
     toggleChat: [];
     waitingRoomEntryDecided: [entryId: number];
@@ -80,7 +90,8 @@ const controlsAreHidden = computed(
     () =>
         controlsHidden.value &&
         !waitingRoomDialogOpen.value &&
-        !subroomsOpen.value,
+        !subroomsOpen.value &&
+        !screenShareQualityOpen.value,
 );
 
 function clearHideTimer(): void {
@@ -94,7 +105,6 @@ function clearHideTimer(): void {
 
 function scheduleAutoHide(): void {
     clearHideTimer();
-
     hideTimer = setTimeout(() => {
         controlsHidden.value = true;
     }, 10_000);
@@ -121,13 +131,29 @@ function handleUserActivity(): void {
     showControls();
 }
 
+function handleScreenShareClick(): void {
+    if (props.screenShareEnabled) {
+        screenShareQualityOpen.value = false;
+        emit('toggleScreenShare');
+
+        return;
+    }
+
+    screenShareQualityOpen.value = true;
+    showControls();
+}
+
+function startScreenShare(): void {
+    screenShareQualityOpen.value = false;
+    emit('toggleScreenShare', screenSharePreset.value);
+}
+
 onMounted(() => {
     mobileMediaQuery = window.matchMedia(
         '(pointer: coarse), (max-width: 767px)',
     );
     updateMobileViewport();
     mobileMediaQuery.addEventListener('change', updateMobileViewport);
-
     window.addEventListener('resize', updateMobileViewport);
     window.addEventListener('mousemove', handleDesktopMouseMove, {
         passive: true,
@@ -158,10 +184,10 @@ onBeforeUnmount(() => {
         data-test="call-controls-bar"
         :data-hidden="controlsAreHidden ? 'true' : 'false'"
         :data-mobile="isMobileViewport ? 'true' : 'false'"
-        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 dark:bg-black/92 dark:border-black/82 p-2 text-slate-950 transition-[opacity,transform] duration-300 ease-out max-[460px]:grid max-[460px]:grid-cols-4"
+        class="pointer-events-auto fixed inset-x-0 bottom-5 z-30 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-2 rounded-md border border-slate-200/80 bg-white/92 p-2 text-slate-950 transition-[opacity,transform] duration-300 ease-out dark:border-black/82 dark:bg-black/92 max-[460px]:grid max-[460px]:grid-cols-4"
         :class="
             controlsAreHidden
-                ? 'translate-y-8 opacity-0 pointer-events-none md:translate-y-12'
+                ? 'pointer-events-none translate-y-8 opacity-0 md:translate-y-12'
                 : 'translate-y-0 opacity-100'
         "
         aria-label="Управление звонком"
@@ -186,15 +212,15 @@ onBeforeUnmount(() => {
                         <MicOff v-else />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>
+                <TooltipContent side="top"
+                    ><p>
                         {{
                             microphoneEnabled
                                 ? 'Выключить микрофон'
                                 : 'Включить микрофон'
                         }}
-                    </p>
-                </TooltipContent>
+                    </p></TooltipContent
+                >
             </Tooltip>
 
             <Tooltip>
@@ -216,15 +242,15 @@ onBeforeUnmount(() => {
                         <VideoOff v-else />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>
+                <TooltipContent side="top"
+                    ><p>
                         {{
                             cameraEnabled
                                 ? 'Выключить камеру'
                                 : 'Включить камеру'
                         }}
-                    </p>
-                </TooltipContent>
+                    </p></TooltipContent
+                >
             </Tooltip>
 
             <Tooltip>
@@ -238,12 +264,10 @@ onBeforeUnmount(() => {
                         variant="outline"
                         size="icon-lg"
                         @click="subroomsOpen = !subroomsOpen"
-                    >
-                        <DoorOpen />
-                    </Button>
+                        ><DoorOpen
+                    /></Button>
                 </TooltipTrigger>
-
-                <TooltipContent> Подкомнаты </TooltipContent>
+                <TooltipContent>Подкомнаты</TooltipContent>
             </Tooltip>
 
             <Tooltip v-if="waitingRoomEnabled && canModerateWaitingRoom">
@@ -263,14 +287,11 @@ onBeforeUnmount(() => {
                             data-test="call-waiting-room-count"
                             :data-count="waitingRoomEntries.length"
                             class="absolute -top-2 -right-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1.5 text-[11px] leading-none text-white"
+                            >{{ waitingRoomEntries.length }}</Badge
                         >
-                            {{ waitingRoomEntries.length }}
-                        </Badge>
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>Зал ожидания</p>
-                </TooltipContent>
+                <TooltipContent side="top"><p>Зал ожидания</p></TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -288,54 +309,104 @@ onBeforeUnmount(() => {
                         variant="outline"
                         size="icon-lg"
                         @click="emit('toggleHand')"
-                    >
-                        <Hand />
-                    </Button>
+                        ><Hand
+                    /></Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>{{ handRaised ? 'Опустить руку' : 'Поднять руку' }}</p>
-                </TooltipContent>
+                <TooltipContent side="top"
+                    ><p>
+                        {{ handRaised ? 'Опустить руку' : 'Поднять руку' }}
+                    </p></TooltipContent
+                >
             </Tooltip>
 
-            <Tooltip v-if="canShareScreen">
-                <TooltipTrigger as-child>
-                    <Button
-                        :class="
-                            screenShareEnabled
-                                ? 'bg-violet-600 text-white hover:bg-violet-500'
-                                : ''
-                        "
-                        data-test="toggle-screen-share"
-                        :disabled="busy"
-                        :aria-label="
-                            screenShareEnabled
-                                ? 'Остановить показ экрана'
-                                : 'Показать экран'
-                        "
-                        variant="outline"
-                        size="icon-lg"
-                        @click="emit('toggleScreenShare')"
+            <div v-if="canShareScreen" class="relative">
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Button
+                            :class="
+                                screenShareEnabled
+                                    ? 'bg-violet-600 text-white hover:bg-violet-500'
+                                    : ''
+                            "
+                            data-test="toggle-screen-share"
+                            :disabled="busy"
+                            :aria-label="
+                                screenShareEnabled
+                                    ? 'Остановить показ экрана'
+                                    : 'Показать экран'
+                            "
+                            variant="outline"
+                            size="icon-lg"
+                            @click="handleScreenShareClick"
+                        >
+                            <MonitorUp />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top"
+                        ><p>
+                            {{
+                                screenShareEnabled
+                                    ? 'Остановить показ экрана'
+                                    : 'Показать экран'
+                            }}
+                        </p></TooltipContent
                     >
-                        <MonitorUp />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>
-                        {{
-                            screenShareEnabled
-                                ? 'Остановить показ экрана'
-                                : 'Показать экран'
-                        }}
+                </Tooltip>
+
+                <div
+                    v-if="screenShareQualityOpen && !screenShareEnabled"
+                    data-test="screen-share-quality-selector"
+                    class="absolute bottom-[calc(100%+0.75rem)] left-1/2 w-56 -translate-x-1/2 rounded-md border border-slate-200 bg-white p-3 shadow-xl dark:border-neutral-700 dark:bg-neutral-900"
+                >
+                    <p
+                        class="mb-2 text-xs font-medium text-slate-600 dark:text-slate-300"
+                    >
+                        Качество демонстрации
                     </p>
-                </TooltipContent>
-            </Tooltip>
+                    <Select v-model="screenSharePreset">
+                        <SelectTrigger
+                            data-test="screen-share-quality"
+                            class="w-full"
+                        >
+                            <SelectValue placeholder="Выберите качество" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="480p"
+                                >480p · экономно</SelectItem
+                            >
+                            <SelectItem value="720p"
+                                >720p · рекомендуется</SelectItem
+                            >
+                            <SelectItem value="1024p"
+                                >1024p · высокое качество</SelectItem
+                            >
+                        </SelectContent>
+                    </Select>
+                    <div class="mt-3 flex justify-end gap-2">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            @click="screenShareQualityOpen = false"
+                            >Отмена</Button
+                        >
+                        <Button
+                            type="button"
+                            data-test="start-screen-share"
+                            size="sm"
+                            @click="startScreenShare"
+                            >Поделиться</Button
+                        >
+                    </div>
+                </div>
+            </div>
 
             <Tooltip>
                 <TooltipTrigger as-child>
                     <Button
                         :class="
                             chatOpen
-                                ? 'bg-violet-600 text-white hover:text-white hover:bg-violet-500'
+                                ? 'bg-violet-600 text-white hover:bg-violet-500 hover:text-white'
                                 : ''
                         "
                         type="button"
@@ -344,13 +415,14 @@ onBeforeUnmount(() => {
                         variant="outline"
                         size="icon-lg"
                         @click="emit('toggleChat')"
-                    >
-                        <MessageSquare />
-                    </Button>
+                        ><MessageSquare
+                    /></Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>{{ chatOpen ? 'Закрыть чат' : 'Открыть чат' }}</p>
-                </TooltipContent>
+                <TooltipContent side="top"
+                    ><p>
+                        {{ chatOpen ? 'Закрыть чат' : 'Открыть чат' }}
+                    </p></TooltipContent
+                >
             </Tooltip>
 
             <Tooltip>
@@ -362,13 +434,10 @@ onBeforeUnmount(() => {
                         variant="destructive"
                         size="icon-lg"
                         @click="emit('leave')"
-                    >
-                        <PhoneOff />
-                    </Button>
+                        ><PhoneOff
+                    /></Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">
-                    <p>Отключиться</p>
-                </TooltipContent>
+                <TooltipContent side="top"><p>Отключиться</p></TooltipContent>
             </Tooltip>
         </TooltipProvider>
     </nav>
@@ -399,15 +468,15 @@ onBeforeUnmount(() => {
 
     <Dialog v-model:open="waitingRoomDialogOpen">
         <DialogContent
-            class="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-md dark:border-neutral-800 dark:bg-neutral-900 border-slate-200 bg-white p-0 sm:max-w-xl"
+            class="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-md border-slate-200 bg-white p-0 dark:border-neutral-800 dark:bg-neutral-900 sm:max-w-xl"
         >
             <DialogHeader class="px-5 pt-5">
                 <DialogTitle>Зал ожидания</DialogTitle>
-                <DialogDescription>
-                    Проверьте заявки и решите, кого пустить в звонок.
-                </DialogDescription>
+                <DialogDescription
+                    >Проверьте заявки и решите, кого пустить в
+                    звонок.</DialogDescription
+                >
             </DialogHeader>
-
             <div class="px-5 pb-5">
                 <WaitingRoomModeratorPanel
                     :room-public-id="roomPublicId"
