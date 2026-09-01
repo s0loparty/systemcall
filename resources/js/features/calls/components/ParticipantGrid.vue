@@ -34,6 +34,7 @@ const emit = defineEmits<{
     'pin-personal': [identity: string];
     'pin-global': [identity: string];
     'promote-moderator': [identity: string];
+    'demote-moderator': [identity: string];
     'move-subroom': [identity: string, subroomPublicId: string | null];
     'request-media': [identity: string, mediaKind: 'microphone' | 'camera'];
     'disable-media': [identity: string, mediaKind: 'microphone' | 'camera'];
@@ -121,6 +122,7 @@ void raisedQueue;
             @promote-moderator="
                 (identity) => emit('promote-moderator', identity)
             "
+            @demote-moderator="(identity) => emit('demote-moderator', identity)"
             @move-subroom="
                 (identity, subroomPublicId) =>
                     emit('move-subroom', identity, subroomPublicId)
@@ -160,6 +162,9 @@ void raisedQueue;
                 @pin-global="(identity) => emit('pin-global', identity)"
                 @promote-moderator="
                     (identity) => emit('promote-moderator', identity)
+                "
+                @demote-moderator="
+                    (identity) => emit('demote-moderator', identity)
                 "
                 @move-subroom="
                     (identity, subroomPublicId) =>
@@ -209,6 +214,9 @@ void raisedQueue;
                 @pin-global="(identity) => emit('pin-global', identity)"
                 @promote-moderator="
                     (identity) => emit('promote-moderator', identity)
+                "
+                @demote-moderator="
+                    (identity) => emit('demote-moderator', identity)
                 "
                 @move-subroom="
                     (identity, subroomPublicId) =>

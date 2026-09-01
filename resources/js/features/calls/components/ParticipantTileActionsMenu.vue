@@ -7,6 +7,7 @@ import {
     MicOff,
     Pin,
     PinOff,
+    ShieldMinus,
     ShieldPlus,
     UserMinus,
     Video,
@@ -52,6 +53,7 @@ const emit = defineEmits<{
     'pin-personal': [];
     'pin-global': [];
     'promote-moderator': [];
+    'demote-moderator': [];
     'move-subroom': [subroomPublicId: string | null];
     'request-media': [mediaKind: 'microphone' | 'camera'];
     'disable-media': [mediaKind: 'microphone' | 'camera'];
@@ -64,6 +66,7 @@ const hasActions = computed(
         props.actions.canPersonalPin ||
         props.actions.canGlobalPin ||
         props.actions.canPromoteModerator ||
+        props.actions.canDemoteModerator ||
         props.actions.canMoveSubroom ||
         props.actions.canRequestMicrophone ||
         props.actions.canRequestCamera ||
@@ -185,6 +188,24 @@ function moveSubroom(subroomPublicId: string | null): void {
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
                     <p>Назначить модератором</p>
+                </TooltipContent>
+            </Tooltip>
+
+            <Tooltip v-if="actions.canDemoteModerator">
+                <TooltipTrigger as-child>
+                    <button
+                        class="flex size-9 items-center justify-center rounded-md text-amber-100 transition hover:bg-amber-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        data-test="demote-moderator-participant"
+                        :disabled="disabled"
+                        aria-label="Снять модератора"
+                        @click.stop="emit('demote-moderator')"
+                    >
+                        <ShieldMinus class="size-4" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                    <p>Снять модератора</p>
                 </TooltipContent>
             </Tooltip>
 

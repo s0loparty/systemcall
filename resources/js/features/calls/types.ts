@@ -117,6 +117,7 @@ export type ParticipantTileActions = {
     canPersonalPin: boolean;
     canGlobalPin: boolean;
     canPromoteModerator: boolean;
+    canDemoteModerator: boolean;
     canMoveSubroom: boolean;
     canRequestMicrophone: boolean;
     canRequestCamera: boolean;

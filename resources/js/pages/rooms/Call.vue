@@ -285,6 +285,10 @@ const tileActionsByIdentity = computed(() =>
                 canTarget &&
                 currentRoomMember.value?.role === 'owner' &&
                 member?.role === 'participant',
+            canDemoteModerator:
+                canTarget &&
+                currentRoomMember.value?.role === 'owner' &&
+                member?.role === 'moderator',
             canMoveSubroom: canTarget && canManageSubrooms.value,
             canRequestMicrophone: canModerateTarget && !tile.microphone,
             canRequestCamera: canModerateTarget && !tile.camera,
@@ -442,6 +446,32 @@ async function promoteModerator(identity: string): Promise<void> {
     }
 
     roleRequest.role = 'moderator';
+
+    const response = await roleRequest.patch(
+        updateRole.url({
+            room: props.room.public_id,
+            roomMember: member.id,
+        }),
+    );
+
+    if (response?.member) {
+        upsertRoomMember(response.member);
+    }
+}
+
+async function demoteModerator(identity: string): Promise<void> {
+    const member = memberByIdentity(identity);
+
+    if (
+        !member ||
+        currentRoomMember.value?.role !== 'owner' ||
+        member.role !== 'moderator' ||
+        roleRequest.processing
+    ) {
+        return;
+    }
+
+    roleRequest.role = 'participant';
 
     const response = await roleRequest.patch(
         updateRole.url({
@@ -803,6 +833,7 @@ onMounted(() => {
                 @pin-personal="togglePersonalPin"
                 @pin-global="toggleGlobalPin"
                 @promote-moderator="promoteModerator"
+                @demote-moderator="demoteModerator"
                 @move-subroom="moveTileToSubroom"
                 @request-media="requestParticipantMedia"
                 @disable-media="disableParticipantMedia"

@@ -42,6 +42,14 @@ it('lets room owners promote and confirm destructive tile actions', function () 
     expect($participantMember->fresh()->role)->toBe(RoomRole::Moderator);
 
     $ownerPage
+        ->assertScript(pmTileActionCount($participantMember->livekit_identity, 'demote-moderator-participant'), 1)
+        ->assertScript(pmClickTileAction($participantMember->livekit_identity, 'demote-moderator-participant'), true)
+        ->wait(2)
+        ->assertNoJavaScriptErrors();
+
+    expect($participantMember->fresh()->role)->toBe(RoomRole::Participant);
+
+    $ownerPage
         ->assertScript(pmClickTileAction($participantMember->livekit_identity, 'ban-participant'), true)
         ->assertSee('Забанить участника?')
         ->click('@cancel-participant-moderation')
