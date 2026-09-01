@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 
-import {
-    ArrowRight,
-    CheckCircle2,
-    MessageSquare,
-    ShieldCheck,
-    Users,
-    Video,
-} from '@lucide/vue';
+import { ArrowRight, MessageSquare, ShieldCheck, Video } from '@lucide/vue';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -66,9 +59,7 @@ const featureCards = [
             <Card
                 class="border-border/60 bg-white/70 shadow-sm dark:border-neutral-800 dark:bg-neutral-900/70"
             >
-                <CardContent
-                    class="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
-                >
+                <CardContent class="p-6 md:p-8">
                     <div>
                         <Badge
                             variant="outline"
@@ -105,74 +96,6 @@ const featureCards = [
                                     <ArrowRight class="size-4" />
                                 </Link>
                             </Button>
-                        </div>
-                    </div>
-
-                    <!-- Командная комната -->
-                    <div
-                        class="rounded-xl border border-border/60 bg-white p-4 shadow-sm dark:border-neutral-800 dark:bg-neutral-950/70"
-                    >
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="font-semibold">Командная комната</p>
-                                <p class="mt-1 text-sm text-muted-foreground">
-                                    звонок для команд и гостей
-                                </p>
-                            </div>
-                            <Badge
-                                class="rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-500/15 dark:text-emerald-300"
-                            >
-                                активна
-                            </Badge>
-                        </div>
-
-                        <div class="mt-4 grid gap-3 sm:grid-cols-2">
-                            <div
-                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 dark:border-neutral-800 dark:bg-neutral-900"
-                            >
-                                <Users class="size-4 text-muted-foreground" />
-                                <span class="text-sm font-medium"
-                                    >Участники готовы</span
-                                >
-                            </div>
-                            <div
-                                class="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 dark:border-neutral-800 dark:bg-neutral-900"
-                            >
-                                <CheckCircle2 class="size-4 text-emerald-500" />
-                                <span class="text-sm font-medium"
-                                    >Доступ настроен</span
-                                >
-                            </div>
-                        </div>
-
-                        <div class="mt-4 flex items-center gap-3">
-                            <div class="flex -space-x-2">
-                                <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
-                                >
-                                    А
-                                </div>
-                                <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
-                                >
-                                    М
-                                </div>
-                                <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
-                                >
-                                    К
-                                </div>
-                                <div
-                                    class="flex size-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700 ring-2 ring-white dark:bg-neutral-800 dark:text-neutral-200 dark:ring-neutral-950"
-                                >
-                                    +3
-                                </div>
-                            </div>
-                            <a
-                                href="#"
-                                class="text-sm font-medium text-foreground hover:underline"
-                                >Присоединиться →</a
-                            >
                         </div>
                     </div>
                 </CardContent>
