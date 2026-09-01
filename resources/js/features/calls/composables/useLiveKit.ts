@@ -26,9 +26,25 @@ type InitialMediaState = {
     camera?: boolean;
 };
 
+type LiveKitConnectContext = {
+    identity: string;
+    name: string;
+    roomName: string;
+};
+
 type UseLiveKitOptions = {
     testingMediaMode?: TestingMediaMode;
     initialVideoBackground?: VideoBackgroundPreferences;
+};
+
+type FakeParticipantState = {
+    identity: string;
+    name: string;
+    camera: boolean;
+    microphone: boolean;
+    screenShare: boolean;
+    backgroundBlur: boolean;
+    updatedAt: number;
 };
 
 type ScreenShareQuality = {
@@ -66,18 +82,28 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     });
     const mediaHosts = new Map<string, HTMLElement>();
     const mediaElements = new Map<string, HTMLMediaElement[]>();
-    let fakeMicrophoneTrack: MediaStreamTrack | null = null;
     let fakeCameraTrack: MediaStreamTrack | null = null;
     let fakeScreenShareTrack: MediaStreamTrack | null = null;
     let fakeCameraFrameTimer: number | null = null;
     let fakeScreenShareFrameTimer: number | null = null;
+    let fakeRoomStorageKey: string | null = null;
+    let fakeLocalIdentity: string | null = null;
+    let fakeStorageListener: ((event: StorageEvent) => void) | null = null;
+    let fakeUnloadListener: (() => void) | null = null;
 
     async function connect(
         url: string,
         token: string,
         selectedDevices: SelectedDevices,
         initialMedia: InitialMediaState = {},
+        context?: LiveKitConnectContext,
     ): Promise<void> {
+        if (options.testingMediaMode === 'fake') {
+            connectFake(selectedDevices, initialMedia, context);
+
+            return;
+        }
+
         const liveKitRoom = new Room({ adaptiveStream: true, dynacast: true });
         bindRoomEvents(liveKitRoom);
         activeRoom.value = markRaw(liveKitRoom);
@@ -137,20 +163,29 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     }
 
     async function disconnect(): Promise<void> {
-        activeRoom.value?.disconnect();
+        if (options.testingMediaMode === 'fake') {
+            removeFakeLocalParticipant();
+        } else {
+            activeRoom.value?.disconnect();
+        }
+
         clearState();
     }
 
     async function toggleMicrophone(): Promise<void> {
-        if (!activeRoom.value) {
+        if (options.testingMediaMode === 'fake') {
+            if (!fakeLocalIdentity) {
+                return;
+            }
+
+            await setFakeMicrophoneEnabled(!microphoneEnabled.value);
+
             return;
         }
 
         const enabled = !microphoneEnabled.value;
 
-        if (options.testingMediaMode === 'fake') {
-            await setFakeMicrophoneEnabled(enabled);
-
+        if (!activeRoom.value) {
             return;
         }
 
@@ -161,15 +196,19 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     }
 
     async function toggleCamera(): Promise<void> {
-        if (!activeRoom.value) {
+        if (options.testingMediaMode === 'fake') {
+            if (!fakeLocalIdentity) {
+                return;
+            }
+
+            await setFakeCameraEnabled(!cameraEnabled.value);
+
             return;
         }
 
         const enabled = !cameraEnabled.value;
 
-        if (options.testingMediaMode === 'fake') {
-            await setFakeCameraEnabled(enabled);
-
+        if (!activeRoom.value) {
             return;
         }
 
@@ -190,16 +229,23 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     async function toggleScreenShare(
         preset: ScreenSharePreset = '720p',
     ): Promise<void> {
-        if (!activeRoom.value) {
+        if (options.testingMediaMode === 'fake') {
+            if (!fakeLocalIdentity) {
+                return;
+            }
+
+            await setFakeScreenShareEnabled(
+                !screenShareEnabled.value,
+                SCREEN_SHARE_PRESETS[preset],
+            );
+
             return;
         }
 
         const enabled = !screenShareEnabled.value;
         const quality = SCREEN_SHARE_PRESETS[preset];
 
-        if (options.testingMediaMode === 'fake') {
-            await setFakeScreenShareEnabled(enabled, quality);
-
+        if (!activeRoom.value) {
             return;
         }
 
@@ -436,7 +482,10 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     }
 
     function patchLocalTile(partial: Partial<ParticipantTile>): void {
-        const localIdentity = activeRoom.value?.localParticipant.identity;
+        const localIdentity =
+            options.testingMediaMode === 'fake'
+                ? fakeLocalIdentity
+                : activeRoom.value?.localParticipant.identity;
 
         if (!localIdentity) {
             return;
@@ -448,49 +497,31 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
     }
 
     async function setFakeMicrophoneEnabled(enabled: boolean): Promise<void> {
-        if (!activeRoom.value) {
+        if (!fakeLocalIdentity) {
             return;
-        }
-
-        if (enabled && !fakeMicrophoneTrack) {
-            fakeMicrophoneTrack = createFakeAudioTrack();
-            await activeRoom.value.localParticipant.publishTrack(
-                fakeMicrophoneTrack,
-                { source: Track.Source.Microphone },
-            );
-        }
-
-        if (!enabled && fakeMicrophoneTrack) {
-            await activeRoom.value.localParticipant.unpublishTrack(
-                fakeMicrophoneTrack,
-                true,
-            );
-            fakeMicrophoneTrack.stop();
-            fakeMicrophoneTrack = null;
         }
 
         microphoneEnabled.value = enabled;
         patchLocalTile({ microphone: enabled });
+        await updateFakeLocalParticipant({ microphone: enabled });
     }
 
     async function setFakeCameraEnabled(enabled: boolean): Promise<void> {
-        if (!activeRoom.value) {
+        if (!fakeLocalIdentity) {
             return;
         }
 
         if (enabled && !fakeCameraTrack) {
             fakeCameraTrack = createFakeVideoTrack();
-            await activeRoom.value.localParticipant.publishTrack(
+            attachFakeVideoElement(
+                fakeLocalIdentity,
                 fakeCameraTrack,
-                { source: Track.Source.Camera, simulcast: true },
+                Track.Source.Camera,
             );
         }
 
         if (!enabled && fakeCameraTrack) {
-            await activeRoom.value.localParticipant.unpublishTrack(
-                fakeCameraTrack,
-                true,
-            );
+            detachMedia(fakeLocalIdentity, undefined, Track.Source.Camera);
             fakeCameraTrack.stop();
             fakeCameraTrack = null;
         }
@@ -500,63 +531,293 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
             camera: enabled,
             backgroundBlur: enabled && videoBackground.enabled.value,
         });
+        await updateFakeLocalParticipant({
+            camera: enabled,
+            backgroundBlur: enabled && videoBackground.enabled.value,
+        });
     }
 
     async function setFakeScreenShareEnabled(
         enabled: boolean,
         quality: ScreenShareQuality,
     ): Promise<void> {
-        if (!activeRoom.value) {
+        if (!fakeLocalIdentity) {
             return;
         }
 
         if (enabled && !fakeScreenShareTrack) {
             fakeScreenShareTrack = createFakeScreenShareTrack();
-            await activeRoom.value.localParticipant.publishTrack(
+            void quality;
+            attachFakeVideoElement(
+                fakeLocalIdentity,
                 fakeScreenShareTrack,
-                {
-                    source: Track.Source.ScreenShare,
-                    simulcast: false,
-                    degradationPreference: 'maintain-resolution',
-                    screenShareEncoding: {
-                        maxBitrate: quality.maxBitrate,
-                        maxFramerate: quality.frameRate,
-                    },
-                },
+                Track.Source.ScreenShare,
             );
         }
 
         if (!enabled && fakeScreenShareTrack) {
-            await activeRoom.value.localParticipant.unpublishTrack(
-                fakeScreenShareTrack,
-                true,
-            );
+            detachMedia(fakeLocalIdentity, undefined, Track.Source.ScreenShare);
             fakeScreenShareTrack.stop();
             fakeScreenShareTrack = null;
         }
 
         screenShareEnabled.value = enabled;
         patchLocalTile({ screenShare: enabled });
+        await updateFakeLocalParticipant({ screenShare: enabled });
     }
 
-    function createFakeAudioTrack(): MediaStreamTrack {
-        const audioContext = new AudioContext();
-        const oscillator = audioContext.createOscillator();
-        const destination = audioContext.createMediaStreamDestination();
-        oscillator.frequency.value = 440;
-        oscillator.connect(destination);
-        oscillator.start();
-        const [track] = destination.stream.getAudioTracks();
-        track.addEventListener(
-            'ended',
-            () => {
-                oscillator.stop();
-                void audioContext.close();
-            },
-            { once: true },
+    function connectFake(
+        selectedDevices: SelectedDevices,
+        initialMedia: InitialMediaState,
+        context?: LiveKitConnectContext,
+    ): void {
+        if (!context) {
+            throw new Error('Fake LiveKit connection requires member context.');
+        }
+
+        removeFakeLocalParticipant();
+        connectionState.value = 'connecting';
+        deviceErrorMessage.value = null;
+        fakeLocalIdentity = context.identity;
+        fakeRoomStorageKey = `systemcall:e2e-livekit:${context.roomName}`;
+        bindFakePresenceEvents();
+
+        const shouldEnableMicrophone =
+            initialMedia.microphone ?? selectedDevices.audioInputId !== '';
+        const shouldEnableCamera =
+            initialMedia.camera ?? selectedDevices.videoInputId !== '';
+
+        connected.value = true;
+        connectionState.value = 'connected';
+        microphoneEnabled.value = shouldEnableMicrophone;
+        cameraEnabled.value = shouldEnableCamera;
+        screenShareEnabled.value = false;
+
+        void updateFakeLocalParticipant({
+            identity: context.identity,
+            name: context.name,
+            microphone: shouldEnableMicrophone,
+            camera: shouldEnableCamera,
+            screenShare: false,
+            backgroundBlur: shouldEnableCamera && videoBackground.enabled.value,
+        });
+
+        if (shouldEnableCamera) {
+            void setFakeCameraEnabled(true);
+        }
+    }
+
+    function bindFakePresenceEvents(): void {
+        if (!fakeRoomStorageKey || typeof window === 'undefined') {
+            return;
+        }
+
+        fakeStorageListener = (event: StorageEvent) => {
+            if (event.key === fakeRoomStorageKey) {
+                syncFakeParticipants();
+            }
+        };
+        fakeUnloadListener = () => removeFakeLocalParticipant();
+        window.addEventListener('storage', fakeStorageListener);
+        window.addEventListener('beforeunload', fakeUnloadListener);
+    }
+
+    function unbindFakePresenceEvents(): void {
+        if (fakeStorageListener) {
+            window.removeEventListener('storage', fakeStorageListener);
+            fakeStorageListener = null;
+        }
+
+        if (fakeUnloadListener) {
+            window.removeEventListener('beforeunload', fakeUnloadListener);
+            fakeUnloadListener = null;
+        }
+    }
+
+    async function updateFakeLocalParticipant(
+        partial: Partial<FakeParticipantState>,
+    ): Promise<void> {
+        if (!fakeRoomStorageKey || !fakeLocalIdentity) {
+            return;
+        }
+
+        const participants = readFakeParticipants();
+        const current = participants[fakeLocalIdentity];
+
+        participants[fakeLocalIdentity] = {
+            identity: fakeLocalIdentity,
+            name: current?.name ?? fakeLocalIdentity,
+            camera: current?.camera ?? false,
+            microphone: current?.microphone ?? false,
+            screenShare: current?.screenShare ?? false,
+            backgroundBlur: current?.backgroundBlur ?? false,
+            updatedAt: Date.now(),
+            ...partial,
+        };
+
+        writeFakeParticipants(participants);
+        syncFakeParticipants();
+    }
+
+    function removeFakeLocalParticipant(): void {
+        if (!fakeRoomStorageKey || !fakeLocalIdentity) {
+            unbindFakePresenceEvents();
+
+            return;
+        }
+
+        const participants = readFakeParticipants();
+        delete participants[fakeLocalIdentity];
+        writeFakeParticipants(participants);
+        unbindFakePresenceEvents();
+        fakeLocalIdentity = null;
+        fakeRoomStorageKey = null;
+    }
+
+    function readFakeParticipants(): Record<string, FakeParticipantState> {
+        if (!fakeRoomStorageKey) {
+            return {};
+        }
+
+        try {
+            const stored = window.localStorage.getItem(fakeRoomStorageKey);
+
+            return stored
+                ? (JSON.parse(stored) as Record<string, FakeParticipantState>)
+                : {};
+        } catch {
+            return {};
+        }
+    }
+
+    function writeFakeParticipants(
+        participants: Record<string, FakeParticipantState>,
+    ): void {
+        if (!fakeRoomStorageKey) {
+            return;
+        }
+
+        window.localStorage.setItem(
+            fakeRoomStorageKey,
+            JSON.stringify(participants),
+        );
+    }
+
+    function syncFakeParticipants(): void {
+        const participants = Object.values(readFakeParticipants()).sort(
+            (a, b) => a.identity.localeCompare(b.identity),
         );
 
-        return track;
+        tiles.value = participants.map((participant) => ({
+            identity: participant.identity,
+            name: participant.name,
+            local: participant.identity === fakeLocalIdentity,
+            camera: participant.camera,
+            microphone: participant.microphone,
+            speaking: false,
+            screenShare: participant.screenShare,
+            backgroundBlur: participant.backgroundBlur,
+            handRaised: false,
+        }));
+
+        participants.forEach((participant) => {
+            syncFakeParticipantMedia(participant);
+        });
+
+        [...mediaElements.keys()]
+            .filter(
+                (identity) =>
+                    !participants.some(
+                        (participant) => participant.identity === identity,
+                    ),
+            )
+            .forEach((identity) => detachIdentityMedia(identity));
+    }
+
+    function syncFakeParticipantMedia(participant: FakeParticipantState): void {
+        const isLocal = participant.identity === fakeLocalIdentity;
+
+        if (!isLocal) {
+            syncFakeRemoteVideoElement(
+                participant.identity,
+                Track.Source.Camera,
+                participant.camera,
+            );
+            syncFakeRemoteVideoElement(
+                participant.identity,
+                Track.Source.ScreenShare,
+                participant.screenShare,
+            );
+
+            return;
+        }
+
+        if (!participant.camera) {
+            detachMedia(participant.identity, undefined, Track.Source.Camera);
+        }
+
+        if (!participant.screenShare) {
+            detachMedia(
+                participant.identity,
+                undefined,
+                Track.Source.ScreenShare,
+            );
+        }
+    }
+
+    function syncFakeRemoteVideoElement(
+        identity: string,
+        source: Track.Source,
+        enabled: boolean,
+    ): void {
+        const sourceKey = source.replaceAll('_', '-');
+        const existing = (mediaElements.get(identity) ?? []).some(
+            (element) => element.dataset.source === sourceKey,
+        );
+
+        if (!enabled) {
+            detachMedia(identity, undefined, source);
+
+            return;
+        }
+
+        if (existing) {
+            return;
+        }
+
+        const element = document.createElement('video');
+        element.autoplay = true;
+        element.playsInline = true;
+        element.muted = true;
+        element.dataset.identity = identity;
+        element.dataset.source = sourceKey;
+        mediaElements.set(identity, [
+            ...(mediaElements.get(identity) ?? []),
+            element,
+        ]);
+        nextTick(() => renderMedia(identity));
+    }
+
+    function attachFakeVideoElement(
+        identity: string,
+        track: MediaStreamTrack,
+        source: Track.Source,
+    ): void {
+        detachMedia(identity, undefined, source);
+
+        const element = document.createElement('video');
+        element.autoplay = true;
+        element.playsInline = true;
+        element.muted = true;
+        element.srcObject = new MediaStream([track]);
+        element.dataset.identity = identity;
+        element.dataset.source = source.replaceAll('_', '-');
+        mediaElements.set(identity, [
+            ...(mediaElements.get(identity) ?? []),
+            element,
+        ]);
+        void element.play().catch(() => undefined);
+        nextTick(() => renderMedia(identity));
     }
 
     function createFakeVideoTrack(): MediaStreamTrack {
@@ -761,8 +1022,6 @@ export function useLiveKit(options: UseLiveKitOptions = {}) {
         mediaHosts.clear();
     }
     function stopFakeMediaTracks(): void {
-        fakeMicrophoneTrack?.stop();
-        fakeMicrophoneTrack = null;
         fakeCameraTrack?.stop();
         fakeCameraTrack = null;
         fakeScreenShareTrack?.stop();

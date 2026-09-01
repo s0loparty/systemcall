@@ -79,6 +79,12 @@ export function useCallSession(options: UseCallSessionOptions) {
                 response.response.livekit.url,
                 response.response.livekit.token,
                 mediaDevices.selectedDevices.value,
+                {},
+                {
+                    identity: response.response.livekit.identity,
+                    name: response.member.display_name,
+                    roomName: response.response.livekit.room_name,
+                },
             );
         } catch (error) {
             errorMessage.value =
@@ -123,6 +129,12 @@ export function useCallSession(options: UseCallSessionOptions) {
                 response.response.livekit.url,
                 response.response.livekit.token,
                 mediaDevices.selectedDevices.value,
+                {},
+                {
+                    identity: response.response.livekit.identity,
+                    name: event.member?.display_name ?? options.displayName,
+                    roomName: response.response.livekit.room_name,
+                },
             );
             joinedMember.value = event.member;
         } catch (error) {
@@ -160,6 +172,11 @@ export function useCallSession(options: UseCallSessionOptions) {
                 response.livekit.token,
                 mediaDevices.selectedDevices.value,
                 currentMediaState,
+                {
+                    identity: response.livekit.identity,
+                    name: response.member.display_name,
+                    roomName: response.livekit.room_name,
+                },
             );
             joinedMember.value = response.member;
 

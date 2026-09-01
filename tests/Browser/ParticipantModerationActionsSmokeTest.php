@@ -32,6 +32,7 @@ it('lets room owners promote and confirm destructive tile actions', function () 
         ->assertScript(pmConnectionState(), 'connected')
         ->assertNoJavaScriptErrors();
 
+    $this->actingAs($owner);
     $ownerPage->wait(3)
         ->assertScript(pmTileCount(), 2)
         ->assertScript(pmClickTileAction($participantMember->livekit_identity, 'promote-moderator-participant'), true)
@@ -71,6 +72,7 @@ it('keeps owner kick and ban tile actions visible after refreshing the call page
         ->assertScript(pmConnectionState(), 'connected')
         ->assertNoJavaScriptErrors();
 
+    $this->actingAs($owner);
     $ownerPage->wait(3)
         ->assertScript(pmTileCount(), 2)
         ->assertScript(pmTileActionCount($participantMember->livekit_identity, 'kick-participant'), 1)

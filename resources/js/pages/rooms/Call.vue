@@ -205,12 +205,38 @@ const currentVideoBackground = computed(() => ({
     enabled: videoBackgroundEnabled.value,
     blurRadius: deviceQuery.videoBackground.value.blurRadius,
 }));
-const canManageSubrooms = computed(() => props.can_moderate_members);
+const canManageSubrooms = computed(() => canModerateMembers.value);
 const pendingWaitingRoomEntries = computed(() =>
     waitingRoomEntries.value.filter((entry) => entry.status === 'pending'),
 );
+const fakeParticipantTiles = computed<ParticipantTile[]>(() => {
+    const liveTilesByIdentity = new Map(
+        tiles.value.map((tile) => [tile.identity, tile]),
+    );
+
+    return roomMembers.value
+        .filter((member) => member.left_at === null)
+        .map((member) => {
+            const liveTile = liveTilesByIdentity.get(member.livekit_identity);
+
+            return {
+                identity: member.livekit_identity,
+                name: member.display_name,
+                local: member.id === currentRoomMemberId.value,
+                camera: liveTile?.camera ?? false,
+                microphone: liveTile?.microphone ?? false,
+                speaking: liveTile?.speaking ?? false,
+                screenShare: liveTile?.screenShare ?? false,
+                backgroundBlur: liveTile?.backgroundBlur ?? false,
+                handRaised: Boolean(member.hand_raised_at),
+            };
+        });
+});
 const tilesWithApplicationState = computed<ParticipantTile[]>(() =>
-    tiles.value.map((tile) => {
+    (props.testing_media_mode === 'fake'
+        ? fakeParticipantTiles.value
+        : tiles.value
+    ).map((tile) => {
         const member = roomMembers.value.find(
             (roomMember) => roomMember.livekit_identity === tile.identity,
         );
@@ -370,7 +396,7 @@ async function toggleGlobalPin(identity: string): Promise<void> {
     if (
         !member ||
         member.id === currentRoomMemberId.value ||
-        !props.can_moderate_members ||
+        !canModerateMembers.value ||
         globalPinRequest.processing
     ) {
         return;

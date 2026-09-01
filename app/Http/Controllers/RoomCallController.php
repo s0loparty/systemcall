@@ -56,10 +56,10 @@ class RoomCallController extends Controller
     ): array {
         abort_unless($this->canOpen($request, $room), 403);
 
-        $canModerateWaitingRoom = $this->canModerateWaitingRoom($request, $room);
+        $canModerateMembers = $this->canModerateMembers($request, $room);
         $currentRoomMemberId = $this->currentRoomMemberId($request, $room, $guestIdentity);
-        $canSeeRoomMembers = $canModerateWaitingRoom || $currentRoomMemberId !== null;
-        $canSeeWaitingRoomEntries = $canModerateWaitingRoom || $includeWaitingRoomEntries;
+        $canSeeRoomMembers = $canModerateMembers || $currentRoomMemberId !== null;
+        $canSeeWaitingRoomEntries = $canModerateMembers || $includeWaitingRoomEntries;
 
         return [
             'room' => [
@@ -72,8 +72,8 @@ class RoomCallController extends Controller
                 'livekit_room_name' => $liveKit->roomName($room),
             ],
             'can_join_without_password' => $this->canJoinWithoutPassword($request, $room, $guestIdentity),
-            'can_moderate_waiting_room' => $canModerateWaitingRoom,
-            'can_moderate_members' => $canModerateWaitingRoom,
+            'can_moderate_waiting_room' => $canModerateMembers,
+            'can_moderate_members' => $canModerateMembers,
             'current_room_member_id' => $currentRoomMemberId,
             'global_pinned_room_member_id' => $room->global_pinned_room_member_id,
             'room_members' => $canSeeRoomMembers
@@ -160,7 +160,7 @@ class RoomCallController extends Controller
             ->exists();
     }
 
-    private function canModerateWaitingRoom(Request $request, Room $room): bool
+    private function canModerateMembers(Request $request, Room $room): bool
     {
         $user = $request->user();
 

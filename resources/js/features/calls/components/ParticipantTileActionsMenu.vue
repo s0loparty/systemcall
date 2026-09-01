@@ -26,12 +26,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
@@ -52,6 +46,7 @@ type Props = {
 
 const props = defineProps<Props>();
 const confirmAction = ref<ConfirmAction | null>(null);
+const subroomMenuOpen = ref(false);
 
 const emit = defineEmits<{
     'pin-personal': [];
@@ -102,6 +97,11 @@ function confirm(): void {
     }
 
     confirmAction.value = null;
+}
+
+function moveSubroom(subroomPublicId: string | null): void {
+    emit('move-subroom', subroomPublicId);
+    subroomMenuOpen.value = false;
 }
 </script>
 
@@ -188,48 +188,54 @@ function confirm(): void {
                 </TooltipContent>
             </Tooltip>
 
-            <DropdownMenu v-if="actions.canMoveSubroom">
+            <div v-if="actions.canMoveSubroom" class="relative">
                 <Tooltip>
                     <TooltipTrigger as-child>
-                        <DropdownMenuTrigger as-child>
-                            <button
-                                class="flex size-9 items-center justify-center rounded-md text-violet-100 transition hover:bg-violet-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                                type="button"
-                                data-test="move-subroom-participant"
-                                :disabled="disabled"
-                                aria-label="Переместить в подкомнату"
-                                @click.stop
-                            >
-                                <DoorOpen class="size-4" />
-                            </button>
-                        </DropdownMenuTrigger>
+                        <button
+                            class="flex size-9 items-center justify-center rounded-md text-violet-100 transition hover:bg-violet-500/25 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                            type="button"
+                            data-test="move-subroom-participant"
+                            :disabled="disabled"
+                            aria-label="Переместить в подкомнату"
+                            @click.stop="subroomMenuOpen = !subroomMenuOpen"
+                        >
+                            <DoorOpen class="size-4" />
+                        </button>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
                         <p>Переместить в подкомнату</p>
                     </TooltipContent>
                 </Tooltip>
-                <DropdownMenuContent
-                    align="end"
-                    class="z-60 w-56 rounded-md"
-                    @click.stop
+                <div
+                    v-if="subroomMenuOpen"
+                    data-test="move-subroom-options"
+                    class="absolute top-11 right-0 z-60 w-56 rounded-md border border-slate-200 bg-white p-1 text-sm text-slate-950 shadow-xl dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-50"
                 >
-                    <DropdownMenuItem
+                    <button
+                        type="button"
                         data-test="move-subroom-option-main"
-                        @select="emit('move-subroom', null)"
+                        class="flex w-full rounded-md px-3 py-2 text-left transition hover:bg-slate-100 dark:hover:bg-neutral-900"
+                        @pointerdown.stop.prevent="moveSubroom(null)"
+                        @click.stop="moveSubroom(null)"
                     >
                         Основная комната
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                    </button>
+                    <button
                         v-for="subroom in subrooms"
                         :key="subroom.id"
+                        type="button"
                         data-test="move-subroom-option"
                         :data-subroom-id="subroom.public_id"
-                        @select="emit('move-subroom', subroom.public_id)"
+                        class="flex w-full rounded-md px-3 py-2 text-left transition hover:bg-slate-100 dark:hover:bg-neutral-900"
+                        @pointerdown.stop.prevent="
+                            moveSubroom(subroom.public_id)
+                        "
+                        @click.stop="moveSubroom(subroom.public_id)"
                     >
                         {{ subroom.name }}
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                    </button>
+                </div>
+            </div>
 
             <Tooltip v-if="actions.canRequestMicrophone">
                 <TooltipTrigger as-child>
