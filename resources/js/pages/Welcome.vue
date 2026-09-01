@@ -62,7 +62,8 @@ const handleDownloadClick = async () => {
         >
             <!-- Header -->
             <header
-                class="flex w-full max-w-4xl flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
+                class="flex w-full max-w-4xl flex-col items-start justify-between sm:flex-row sm:items-center"
+                :class="[user ? 'sm:gap-4' : '']"
             >
                 <Link
                     :href="user ? dashboard() : '/'"
