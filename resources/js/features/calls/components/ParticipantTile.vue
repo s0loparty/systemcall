@@ -24,7 +24,12 @@ withDefaults(defineProps<Props>(), {
         canPersonalPin: false,
         canGlobalPin: false,
         canPromoteModerator: false,
+        canDemoteModerator: false,
         canMoveSubroom: false,
+        canRequestMicrophone: false,
+        canRequestCamera: false,
+        canDisableMicrophone: false,
+        canDisableCamera: false,
         canKick: false,
         canBan: false,
     }),
@@ -38,7 +43,10 @@ const emit = defineEmits<{
     'pin-personal': [identity: string];
     'pin-global': [identity: string];
     'promote-moderator': [identity: string];
+    'demote-moderator': [identity: string];
     'move-subroom': [identity: string, subroomPublicId: string | null];
+    'request-media': [identity: string, mediaKind: 'microphone' | 'camera'];
+    'disable-media': [identity: string, mediaKind: 'microphone' | 'camera'];
     kick: [identity: string];
     ban: [identity: string];
 }>();
@@ -90,7 +98,12 @@ const emit = defineEmits<{
                 actions.canPersonalPin ||
                 actions.canGlobalPin ||
                 actions.canPromoteModerator ||
+                actions.canDemoteModerator ||
                 actions.canMoveSubroom ||
+                actions.canRequestMicrophone ||
+                actions.canRequestCamera ||
+                actions.canDisableMicrophone ||
+                actions.canDisableCamera ||
                 actions.canKick ||
                 actions.canBan
             "
@@ -102,9 +115,16 @@ const emit = defineEmits<{
             @pin-personal="emit('pin-personal', tile.identity)"
             @pin-global="emit('pin-global', tile.identity)"
             @promote-moderator="emit('promote-moderator', tile.identity)"
+            @demote-moderator="emit('demote-moderator', tile.identity)"
             @move-subroom="
                 (subroomPublicId) =>
                     emit('move-subroom', tile.identity, subroomPublicId)
+            "
+            @request-media="
+                (mediaKind) => emit('request-media', tile.identity, mediaKind)
+            "
+            @disable-media="
+                (mediaKind) => emit('disable-media', tile.identity, mediaKind)
             "
             @kick="emit('kick', tile.identity)"
             @ban="emit('ban', tile.identity)"

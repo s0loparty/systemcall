@@ -4,6 +4,8 @@ namespace App\Actions\Rooms;
 
 use App\Enums\RoomRole;
 use App\Events\Rooms\RoomMemberBanned;
+use App\Events\Rooms\RoomMemberMediaDisabled;
+use App\Events\Rooms\RoomMemberMediaRequested;
 use App\Events\Rooms\RoomMemberMuted;
 use App\Events\Rooms\RoomMemberRemoved;
 use App\Events\Rooms\RoomMemberRoleChanged;
@@ -82,6 +84,47 @@ class ModerateRoomMemberAction
             });
 
         return $muted;
+    }
+
+    public function requestMedia(Room $room, RoomMember $target, User $actor, string $mediaKind): RoomMember
+    {
+        $this->authorizeCanModerateTarget($room, $target, $actor);
+
+        RoomMemberMediaRequested::dispatch($target, $actor, $mediaKind);
+
+        return $target;
+    }
+
+    public function disableMedia(Room $room, RoomMember $target, User $actor, string $mediaKind): RoomMember
+    {
+        $this->authorizeCanModerateTarget($room, $target, $actor);
+
+        RoomMemberMediaDisabled::dispatch($target, $actor, $mediaKind);
+
+        return $target;
+    }
+
+    /**
+     * @return array<int, RoomMember>
+     */
+    public function disableMediaAll(Room $room, User $actor, string $mediaKind): array
+    {
+        $actorMember = $this->actorMember($room, $actor);
+        $disabled = [];
+
+        $room->members()
+            ->whereNull('left_at')
+            ->get()
+            ->each(function (RoomMember $target) use ($actor, $actorMember, $mediaKind, &$disabled): void {
+                if ($target->id === $actorMember->id || $target->isModerator()) {
+                    return;
+                }
+
+                RoomMemberMediaDisabled::dispatch($target, $actor, $mediaKind);
+                $disabled[] = $target;
+            });
+
+        return $disabled;
     }
 
     public function kick(Room $room, RoomMember $target, User $actor): RoomMember

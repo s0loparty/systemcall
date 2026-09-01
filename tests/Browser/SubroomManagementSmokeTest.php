@@ -73,6 +73,7 @@ it('shows participant tile action for moving into a subroom', function () {
         ->assertScript(subroomConnectionState(), 'connected')
         ->assertNoJavaScriptErrors();
 
+    $this->actingAs($owner);
     $ownerPage->wait(6)
         ->assertScript(subroomTileActionCount($participantMember->livekit_identity), 1)
         ->assertScript(subroomClickTileMove($participantMember->livekit_identity), true)
@@ -153,12 +154,12 @@ function subroomTileActionCount(string $identity): string
 
 function subroomClickTileMove(string $identity): string
 {
-    return '(() => { document.querySelector('.json_encode(subroomTileSelector($identity).' [data-test=move-subroom-participant]').').click(); return true; })()';
+    return '(() => { const element = document.querySelector('.json_encode(subroomTileSelector($identity).' [data-test=move-subroom-participant]').'); element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })); element.click(); return true; })()';
 }
 
 function subroomClickTileMoveOption(string $subroomPublicId): string
 {
-    return '(() => { document.querySelector("[data-test=move-subroom-option][data-subroom-id=\"'.$subroomPublicId.'\"]").click(); return true; })()';
+    return '(() => { const element = document.querySelector("[data-test=move-subroom-option][data-subroom-id=\"'.$subroomPublicId.'\"]"); element.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); element.dispatchEvent(new PointerEvent("pointerup", { bubbles: true })); element.click(); return true; })()';
 }
 
 function subroomTileSelector(string $identity): string

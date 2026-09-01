@@ -9,6 +9,8 @@ import type {
     RoomMemberHandUpdatedEvent,
     RoomMemberJoinedEvent,
     RoomMemberLeftEvent,
+    RoomMemberMediaDisabledEvent,
+    RoomMemberMediaRequestedEvent,
     RoomMemberMutedEvent,
     RoomMemberRemovedEvent,
     RoomMemberRoleChangedEvent,
@@ -31,6 +33,8 @@ type UseRoomApplicationEventsOptions = {
     waitingRoomEntries?: WaitingRoomEntry[];
     onWaitingRoomDecision?: (event: WaitingRoomEntryDecidedEvent) => void;
     onMemberSubroomChanged?: (event: RoomMemberSubroomChangedEvent) => void;
+    onMemberMediaRequested?: (event: RoomMemberMediaRequestedEvent) => void;
+    onMemberMediaDisabled?: (event: RoomMemberMediaDisabledEvent) => void;
 };
 
 export function useRoomApplicationEvents(
@@ -136,6 +140,34 @@ export function useRoomApplicationEvents(
                 `${event.member.display_name} был выключен модератором`,
                 event.occurred_at,
             );
+        },
+    );
+
+    useEcho<RoomMemberMediaRequestedEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.media-requested',
+        (event) => {
+            upsertRoomMember(event.member);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.media_kind}:${event.occurred_at}`,
+                `${event.moderator.name} попросил включить ${mediaKindLabel(event.media_kind)}`,
+                event.occurred_at,
+            );
+            options.onMemberMediaRequested?.(event);
+        },
+    );
+
+    useEcho<RoomMemberMediaDisabledEvent>(
+        `room.${roomPublicId}`,
+        '.room.member.media-disabled',
+        (event) => {
+            upsertRoomMember(event.member);
+            addActivity(
+                `${event.type}:${event.member.id}:${event.media_kind}:${event.occurred_at}`,
+                `${event.moderator.name} выключил ${mediaKindLabel(event.media_kind)}`,
+                event.occurred_at,
+            );
+            options.onMemberMediaDisabled?.(event);
         },
     );
 
@@ -304,6 +336,12 @@ export function useRoomApplicationEvents(
                 rejected: 'отклонен',
             } satisfies Record<WaitingRoomEntry['status'], string>
         )[status];
+    }
+
+    function mediaKindLabel(
+        mediaKind: RoomMemberMediaRequestedEvent['media_kind'],
+    ): string {
+        return mediaKind === 'camera' ? 'камеру' : 'микрофон';
     }
 
     return {

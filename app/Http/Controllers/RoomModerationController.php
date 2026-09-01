@@ -52,6 +52,40 @@ class RoomModerationController extends Controller
         ]);
     }
 
+    public function requestMedia(
+        Request $request,
+        Room $room,
+        RoomMember $roomMember,
+        ModerateRoomMemberAction $moderate,
+    ): JsonResponse {
+        $data = $this->validateMediaKind($request);
+        $member = $moderate->requestMedia($room, $roomMember, $this->actor($request), $data['media_kind']);
+
+        return response()->json(['member' => $this->memberPayload($member)]);
+    }
+
+    public function disableMedia(
+        Request $request,
+        Room $room,
+        RoomMember $roomMember,
+        ModerateRoomMemberAction $moderate,
+    ): JsonResponse {
+        $data = $this->validateMediaKind($request);
+        $member = $moderate->disableMedia($room, $roomMember, $this->actor($request), $data['media_kind']);
+
+        return response()->json(['member' => $this->memberPayload($member)]);
+    }
+
+    public function disableMediaAll(Request $request, Room $room, ModerateRoomMemberAction $moderate): JsonResponse
+    {
+        $data = $this->validateMediaKind($request);
+        $members = $moderate->disableMediaAll($room, $this->actor($request), $data['media_kind']);
+
+        return response()->json([
+            'members' => array_map(fn (RoomMember $member): array => $this->memberPayload($member), $members),
+        ]);
+    }
+
     public function kick(
         Request $request,
         Room $room,
@@ -118,6 +152,16 @@ class RoomModerationController extends Controller
         abort_unless($user instanceof User, 403);
 
         return $user;
+    }
+
+    /**
+     * @return array{media_kind:string}
+     */
+    private function validateMediaKind(Request $request): array
+    {
+        return $request->validate([
+            'media_kind' => ['required', Rule::in(['microphone', 'camera'])],
+        ]);
     }
 
     /**

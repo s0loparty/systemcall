@@ -34,7 +34,10 @@ const emit = defineEmits<{
     'pin-personal': [identity: string];
     'pin-global': [identity: string];
     'promote-moderator': [identity: string];
+    'demote-moderator': [identity: string];
     'move-subroom': [identity: string, subroomPublicId: string | null];
+    'request-media': [identity: string, mediaKind: 'microphone' | 'camera'];
+    'disable-media': [identity: string, mediaKind: 'microphone' | 'camera'];
     kick: [identity: string];
     ban: [identity: string];
 }>();
@@ -119,9 +122,18 @@ void raisedQueue;
             @promote-moderator="
                 (identity) => emit('promote-moderator', identity)
             "
+            @demote-moderator="(identity) => emit('demote-moderator', identity)"
             @move-subroom="
                 (identity, subroomPublicId) =>
                     emit('move-subroom', identity, subroomPublicId)
+            "
+            @request-media="
+                (identity, mediaKind) =>
+                    emit('request-media', identity, mediaKind)
+            "
+            @disable-media="
+                (identity, mediaKind) =>
+                    emit('disable-media', identity, mediaKind)
             "
             @kick="(identity) => emit('kick', identity)"
             @ban="(identity) => emit('ban', identity)"
@@ -151,9 +163,20 @@ void raisedQueue;
                 @promote-moderator="
                     (identity) => emit('promote-moderator', identity)
                 "
+                @demote-moderator="
+                    (identity) => emit('demote-moderator', identity)
+                "
                 @move-subroom="
                     (identity, subroomPublicId) =>
                         emit('move-subroom', identity, subroomPublicId)
+                "
+                @request-media="
+                    (identity, mediaKind) =>
+                        emit('request-media', identity, mediaKind)
+                "
+                @disable-media="
+                    (identity, mediaKind) =>
+                        emit('disable-media', identity, mediaKind)
                 "
                 @kick="(identity) => emit('kick', identity)"
                 @ban="(identity) => emit('ban', identity)"
@@ -192,9 +215,20 @@ void raisedQueue;
                 @promote-moderator="
                     (identity) => emit('promote-moderator', identity)
                 "
+                @demote-moderator="
+                    (identity) => emit('demote-moderator', identity)
+                "
                 @move-subroom="
                     (identity, subroomPublicId) =>
                         emit('move-subroom', identity, subroomPublicId)
+                "
+                @request-media="
+                    (identity, mediaKind) =>
+                        emit('request-media', identity, mediaKind)
+                "
+                @disable-media="
+                    (identity, mediaKind) =>
+                        emit('disable-media', identity, mediaKind)
                 "
                 @kick="(identity) => emit('kick', identity)"
                 @ban="(identity) => emit('ban', identity)"
