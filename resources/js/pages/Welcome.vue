@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, usePage } from '@inertiajs/vue3';
 
-import { ArrowRight } from '@lucide/vue';
+import {
+    ArrowDownToLine,
+    ArrowRight,
+    GitBranch,
+    Loader2,
+    Smartphone,
+} from '@lucide/vue';
 
 import { computed } from 'vue';
 
@@ -14,12 +20,37 @@ import { dashboard, login, register } from '@/routes';
 import { index as roomsIndex } from '@/routes/rooms';
 
 import AppLogo from '@/components/AppLogo.vue';
+import { useGitHubRelease } from '@/composables/useGitHubRelease';
 import AppFooter from '@/layouts/AppFooter.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
 
 const { VITE_APP_NAME } = import.meta.env;
+
+const { apkUrl, isLoading, error, downloadApk, fetchLatestRelease } =
+    useGitHubRelease({
+        repo: 's0loparty/systemcall-mobile',
+        // Кастомный фильтр, если нужен (опционально)
+        apkFilter: (asset) =>
+            asset.name.endsWith('.apk') &&
+            (asset.name.includes('arm64') || asset.name.includes('release')),
+    });
+
+const handleDownloadClick = async () => {
+    // Если ссылка ещё не загружена - пробуем получить
+    if (!apkUrl.value && !error.value) {
+        await fetchLatestRelease();
+    }
+
+    // Если есть ошибка - ничего не делаем
+    if (error.value) {
+        return;
+    }
+
+    // Скачиваем
+    downloadApk();
+};
 </script>
 
 <template>
@@ -113,6 +144,73 @@ const { VITE_APP_NAME } = import.meta.env;
                         </Link>
                     </Button>
                 </div>
+
+                <!-- Android app -->
+                <section
+                    class="overflow-hidden rounded-md border border-border/60 bg-white/80 shadow-sm shadow-slate-950/5 dark:border-neutral-800 dark:bg-neutral-900/70 dark:shadow-black/20 relative"
+                >
+                    <div
+                        class="grid gap-6 p-5 sm:grid-cols-[1fr_auto] sm:items-center sm:p-6"
+                    >
+                        <div class="flex gap-4">
+                            <div
+                                class="flex size-12 shrink-0 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                            >
+                                <Smartphone class="size-6" />
+                            </div>
+                            <div class="space-y-1">
+                                <h3
+                                    class="text-xl font-semibold tracking-tight"
+                                >
+                                    Установите приложение на Android
+                                </h3>
+                                <p
+                                    class="max-w-xl text-sm leading-relaxed text-muted-foreground"
+                                >
+                                    Открывайте комнаты, подключайтесь к звонкам
+                                    и проверяйте устройства прямо с телефона.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <Button
+                                as-child
+                                size="default"
+                                class="grow sm:w-auto"
+                                :disabled="isLoading || !!error"
+                            >
+                                <a
+                                    :href="apkUrl || '#'"
+                                    class="flex items-center justify-center gap-2"
+                                    @click.prevent="handleDownloadClick"
+                                >
+                                    <template v-if="isLoading">
+                                        <Loader2 class="size-4 animate-spin" />
+                                        Загрузка...
+                                    </template>
+                                    <template v-else-if="error">
+                                        ⚠️ Ошибка
+                                    </template>
+                                    <template v-else>
+                                        Скачать .apk
+                                        <ArrowDownToLine class="size-4" />
+                                    </template>
+                                </a>
+                            </Button>
+
+                            <Button
+                                :as="Link"
+                                href="https://github.com/s0loparty/systemcall-mobile"
+                                target="_blank"
+                                variant="outline"
+                                size="icon"
+                            >
+                                <GitBranch />
+                            </Button>
+                        </div>
+                    </div>
+                </section>
 
                 <!-- Features grid -->
                 <div class="grid gap-4 sm:grid-cols-2">
