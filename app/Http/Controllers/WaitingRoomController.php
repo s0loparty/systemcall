@@ -51,6 +51,10 @@ class WaitingRoomController extends Controller
             return false;
         }
 
+        if ($room->owner()->is($user)) {
+            return true;
+        }
+
         return $room->members()
             ->whereBelongsTo($user)
             ->whereNull('left_at')
