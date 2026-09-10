@@ -23,6 +23,10 @@ class RoomApplicationChannel
             return false;
         }
 
+        if ($user instanceof User && $room->owner()->is($user)) {
+            return true;
+        }
+
         $guestId = $user instanceof User ? null : $this->guestIdentity->current(request());
         $member = $this->memberForIdentity($room, $user, $guestId);
 
