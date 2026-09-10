@@ -41,6 +41,24 @@ test('authenticated active room members can authorize the private application ch
         ->assertJsonStructure(['auth']);
 });
 
+test('room owner can authorize the private application channel before membership is created', function () {
+    $owner = User::factory()->create();
+    $room = Room::factory()
+        ->for($owner, 'owner')
+        ->public()
+        ->create(['waiting_room_enabled' => true]);
+
+    expect($room->members()->whereBelongsTo($owner)->exists())->toBeFalse();
+
+    $this->actingAs($owner, 'web')
+        ->post('/broadcasting/room-auth', [
+            'socket_id' => '123.456',
+            'channel_name' => 'private-room.'.$room->public_id,
+        ])
+        ->assertOk()
+        ->assertJsonStructure(['auth']);
+});
+
 test('non members and blocked members cannot authorize the private application channel', function () {
     $owner = User::factory()->create();
     $stranger = User::factory()->create();
