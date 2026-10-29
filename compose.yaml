@@ -1,5 +1,6 @@
 x-laravel-runtime: &laravel-runtime
-    image: '${APP_IMAGE:-systemcall-app:production}'
+    image: '${APP_IMAGE:?Set APP_IMAGE to the published GHCR image}'
+    pull_policy: always
     restart: unless-stopped
     depends_on:
         postgres:
@@ -63,15 +64,6 @@ x-laravel-environment: &laravel-environment
 services:
     app:
         <<: *laravel-runtime
-        build:
-            context: .
-            dockerfile: Dockerfile
-            args:
-                VITE_APP_NAME: '${VITE_APP_NAME:-Systemcall}'
-                VITE_REVERB_APP_KEY: '${VITE_REVERB_APP_KEY:-${REVERB_APP_KEY:-}}'
-                VITE_REVERB_HOST: '${VITE_REVERB_HOST:-${REVERB_HOST:-ws.call.example.com}}'
-                VITE_REVERB_PORT: '${VITE_REVERB_PORT:-${REVERB_PORT:-443}}'
-                VITE_REVERB_SCHEME: '${VITE_REVERB_SCHEME:-${REVERB_SCHEME:-https}}'
         environment:
             <<: *laravel-environment
         networks:

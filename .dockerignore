@@ -19,3 +19,4 @@ public/hot
 public/storage
 npm-debug.log
 yarn-error.log
+*.log.txt

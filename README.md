@@ -170,6 +170,64 @@ livekit
 
 `app`, `worker`, `scheduler` и `reverb` используют один production image Laravel-приложения. `app` работает через FrankenPHP + Laravel Octane, не через `php artisan serve`.
 
+## GitHub Actions: Variables и Secrets
+
+Откройте репозиторий GitHub: **Settings → Secrets and variables → Actions**.
+Добавляйте значения на уровне репозитория: публичные настройки во вкладке
+**Variables**, токен Dokploy во вкладке **Secrets**.
+
+### Variables для сборки образа
+
+| Имя | Обязательно | Значение / пример |
+| --- | --- | --- |
+| `VITE_REVERB_APP_KEY` | Да | Публичный ключ Reverb, точно совпадающий с `REVERB_APP_KEY` в Dokploy |
+| `VITE_REVERB_HOST` | Да | Публичный hostname Reverb без протокола и пути, например `ws.call.example.com` |
+| `VITE_APP_NAME` | Нет | Название приложения; по умолчанию `Systemcall` |
+| `VITE_REVERB_PORT` | Нет | Публичный порт Reverb; по умолчанию `443` |
+| `VITE_REVERB_SCHEME` | Нет | По умолчанию `https` |
+
+Для сборки и публикации достаточно двух обязательных Variables. `VITE_*`
+встраиваются в frontend и доступны браузеру: это не место для секретов. После
+изменения этих значений запустите CI заново, чтобы собрать и опубликовать новый
+образ. Изменение только runtime-переменных Dokploy не обновит frontend.
+
+### Variables и Secrets для автодеплоя
+
+Эти настройки нужны только для автоматического запуска деплоя в Dokploy после
+успешной публикации образа из ветки `production`.
+
+| Тип | Имя | Значение / пример |
+| --- | --- | --- |
+| Variable | `DOKPLOY_DEPLOY_ENABLED` | `true` для включения автодеплоя; если отсутствует или не равно `true`, деплой выполняется вручную |
+| Variable | `DOKPLOY_URL` | HTTPS-адрес панели Dokploy, например `https://dokploy.example.com`, без `/api` в конце |
+| Variable | `DOKPLOY_COMPOSE_ID` | ID существующего Compose-сервиса в Dokploy, не имя проекта или контейнера |
+| Secret | `DOKPLOY_API_KEY` | API-токен Dokploy с правом деплоя указанного Compose-сервиса |
+
+API-токен создаётся в профиле Dokploy. ID Compose-сервиса можно найти в ответе
+Dokploy API `project.all`. Панель должна быть доступна GitHub runner по HTTPS.
+Ветка `main` публикует образ, но не запускает production-деплой.
+
+### Доступ к GHCR и настройка Dokploy
+
+`GITHUB_TOKEN` создаётся GitHub автоматически: добавлять такой Secret или отдельный
+GitHub PAT для публикации не нужно. Workflow выдаёт задаче публикации право
+`packages: write`; политика репозитория/организации должна разрешать публикацию
+пакетов.
+
+В Dokploy задайте `APP_IMAGE=ghcr.io/s0loparty/systemcall:production`. Если пакет
+приватный, настройте там доступ к registry `ghcr.io`: GitHub username и PAT
+(classic) с `read:packages`, имеющий доступ к пакету. Этот PAT хранится в настройках
+registry Dokploy, а не в GitHub Actions Secrets. Для публичного пакета авторизация
+при скачивании не нужна.
+
+Отключите деплой по Git push в Dokploy, чтобы он не запускался раньше завершения
+CI и публикации образа. Для автодеплоя используйте настройки выше; для ручного
+деплоя дождитесь успешной задачи `Production image` и нажмите Deploy в Dokploy.
+
+`APP_KEY`, `DB_PASSWORD`, `REVERB_APP_SECRET` и `LIVEKIT_API_SECRET` остаются в
+Dokploy. Они не нужны сборке и не должны передаваться в Docker build arguments.
+Полная инструкция: [DEPLOYMENT.md](docs/video-calls/DEPLOYMENT.md).
+
 ## Dokploy domains
 
 Создайте DNS записи на публичный IP VPS:
@@ -218,6 +276,7 @@ Secrets хранить в Dokploy, не в Git.
 Минимально заполнить:
 
 ```env
+APP_IMAGE=ghcr.io/s0loparty/systemcall:production
 APP_NAME=Systemcall
 APP_ENV=production
 APP_KEY=
@@ -264,13 +323,16 @@ LIVEKIT_API_KEY=
 LIVEKIT_API_SECRET=
 ```
 
-`VITE_REVERB_APP_KEY` должен совпадать с `REVERB_APP_KEY`. Все `VITE_*` значения попадают в production JS bundle на этапе сборки образа, поэтому после их изменения в Dokploy нужен rebuild/redeploy image, не только restart контейнеров.
+`VITE_REVERB_APP_KEY` должен совпадать с `REVERB_APP_KEY`. Источник `VITE_*` для
+сборки образа — GitHub Actions Variables из раздела выше. После их изменения
+пересоберите образ через CI и задеплойте его в Dokploy.
 
 ## Production deploy flow
 
 1. Push production branch.
-2. Dokploy builds and deploys `compose.yaml`.
-3. Run one-shot migration in the application container:
+2. GitHub Actions runs checks, builds and smoke-tests the image, then publishes it to GHCR.
+3. Dokploy pulls the image and deploys `compose.yaml`, manually or through the optional CI deployment job.
+4. Run one-shot migration in the application container:
 
 ```bash
 php artisan migrate --force
@@ -279,9 +341,9 @@ php artisan route:cache
 php artisan event:cache
 ```
 
-4. Verify `app`, `worker`, `scheduler`, `reverb`, `postgres`, `redis`, `livekit`.
-5. Verify Dokploy routes and HTTPS certificates.
-6. Verify LiveKit signaling and media ports.
+5. Verify `app`, `worker`, `scheduler`, `reverb`, `postgres`, `redis`, `livekit`.
+6. Verify Dokploy routes and HTTPS certificates.
+7. Verify LiveKit signaling and media ports.
 
 Do not run unconditional migrations in every long-running container startup command.
 
