@@ -4,7 +4,10 @@
 # PHP base
 # -----------------------------------------------------------------------------
 
-FROM dunglas/frankenphp:1-php8.4-trixie AS php-base
+FROM dunglas/frankenphp:1-php8.4.27-trixie AS php-base
+
+# CVE-2026-109618 / CVE-2026-109619: require the patched PHP runtime.
+RUN php -r 'if (PHP_VERSION_ID < 80427 || PHP_VERSION_ID >= 80500) { fwrite(STDERR, "PHP 8.4.27+ required for this image\n"); exit(1); }'
 
 WORKDIR /app
 

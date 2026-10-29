@@ -59,9 +59,12 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           tools: composer:v2
           coverage: none
+
+      - name: Verify patched PHP version
+        run: php -r 'if (PHP_VERSION_ID < 80427 || PHP_VERSION_ID >= 80500) { fwrite(STDERR, "PHP 8.4.27+ required for CI\n"); exit(1); }'
 
       # The project uses npm/package-lock.json as the source of truth,
       # but Bun is intentionally used in CI for faster installs/builds.
@@ -137,9 +140,12 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           tools: composer:v2
           coverage: none
+
+      - name: Verify patched PHP version
+        run: php -r 'if (PHP_VERSION_ID < 80427 || PHP_VERSION_ID >= 80500) { fwrite(STDERR, "PHP 8.4.27+ required for CI\n"); exit(1); }'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -288,9 +294,12 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           tools: composer:v2
           coverage: none
+
+      - name: Verify patched PHP version
+        run: php -r 'if (PHP_VERSION_ID < 80427 || PHP_VERSION_ID >= 80500) { fwrite(STDERR, "PHP 8.4.27+ required for CI\n"); exit(1); }'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
