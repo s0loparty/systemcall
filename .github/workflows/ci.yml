@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - production
   pull_request:
   workflow_dispatch:
     inputs:
@@ -192,6 +193,22 @@ jobs:
             test-results
             playwright-report
           if-no-files-found: ignore
+
+  publish-image:
+    name: Production image
+    needs:
+      - checks
+      - browser-smoke
+    if: >-
+      ${{
+        (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
+        (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/production')
+      }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-image.yml
+    secrets: inherit
 
   # ---------------------------------------------------------------------------
   # 3. Full LiveKit + Reverb browser E2E
