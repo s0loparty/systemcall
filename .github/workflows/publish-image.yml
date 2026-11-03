@@ -1,0 +1,168 @@
+name: Publish Application Image
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build, test and publish GHCR image
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    env:
+      VITE_APP_NAME: ${{ vars.VITE_APP_NAME || 'Systemcall' }}
+      VITE_REVERB_APP_KEY: ${{ vars.VITE_REVERB_APP_KEY }}
+      VITE_REVERB_HOST: ${{ vars.VITE_REVERB_HOST }}
+      VITE_REVERB_PORT: ${{ vars.VITE_REVERB_PORT || '443' }}
+      VITE_REVERB_SCHEME: ${{ vars.VITE_REVERB_SCHEME || 'https' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate public frontend configuration
+        run: |
+          for variable in VITE_REVERB_APP_KEY VITE_REVERB_HOST; do
+            if [ -z "${!variable}" ]; then
+              echo "::error::Set the GitHub Actions repository variable $variable before building the production image."
+              exit 1
+            fi
+          done
+
+      - name: Prepare image reference
+        id: image
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "name=$image" >> "$GITHUB_OUTPUT"
+          echo "revision=$image:sha-$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          echo "channel=$image:$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Validate production Compose
+        env:
+          APP_IMAGE: ${{ steps.image.outputs.revision }}
+          DB_PASSWORD: ci-compose-validation-only
+        run: docker compose --env-file /dev/null -f compose.yaml config --quiet
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build application image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: app
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.image.outputs.revision }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            VITE_APP_NAME=${{ env.VITE_APP_NAME }}
+            VITE_REVERB_APP_KEY=${{ env.VITE_REVERB_APP_KEY }}
+            VITE_REVERB_HOST=${{ env.VITE_REVERB_HOST }}
+            VITE_REVERB_PORT=${{ env.VITE_REVERB_PORT }}
+            VITE_REVERB_SCHEME=${{ env.VITE_REVERB_SCHEME }}
+          cache-from: type=gha,scope=application-image
+          cache-to: type=gha,scope=application-image,mode=max
+
+      - name: Smoke test production runtime
+        env:
+          TEST_IMAGE: ${{ steps.image.outputs.revision }}
+        run: |
+          docker run --rm --entrypoint php "$TEST_IMAGE" -r '
+            foreach (["pcntl", "pdo_pgsql", "pgsql", "redis", "zip", "intl", "bcmath"] as $extension) {
+                if (!extension_loaded($extension)) {
+                    fwrite(STDERR, "Missing PHP extension: $extension\n");
+                    exit(1);
+                }
+            }
+            if (!is_file("/app/public/build/manifest.json")) {
+                fwrite(STDERR, "Missing frontend build manifest\n");
+                exit(1);
+            }
+          '
+
+          docker run --detach --name application-image-smoke \
+            --publish 127.0.0.1:18000:8000 \
+            --env APP_KEY=base64:seIiB3mYvfRbcdm8pkdleIfF+EnxWpupz1p0yQ2I9Cg= \
+            --env APP_URL=http://127.0.0.1:18000 \
+            --env OCTANE_HTTPS=false \
+            --env DB_CONNECTION=sqlite --env DB_DATABASE=:memory: \
+            --env CACHE_STORE=array --env SESSION_DRIVER=array \
+            --env QUEUE_CONNECTION=sync --env BROADCAST_CONNECTION=null \
+            "$TEST_IMAGE"
+
+          for attempt in {1..30}; do
+            if curl --fail --silent --max-time 2 http://127.0.0.1:18000/up >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs application-image-smoke
+          exit 1
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish tested image
+        env:
+          REVISION_IMAGE: ${{ steps.image.outputs.revision }}
+          CHANNEL_IMAGE: ${{ steps.image.outputs.channel }}
+        run: |
+          docker push "$REVISION_IMAGE"
+          docker tag "$REVISION_IMAGE" "$CHANNEL_IMAGE"
+          docker push "$CHANNEL_IMAGE"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "$REVISION_IMAGE")
+          {
+            echo '### Published application image'
+            echo "Channel: \`$CHANNEL_IMAGE\`"
+            echo "Revision: \`$REVISION_IMAGE\`"
+            echo "Pinned image: \`$digest\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up smoke container
+        if: always()
+        run: docker rm --force application-image-smoke || true
+
+  deploy:
+    name: Request Dokploy deployment
+    needs: publish
+    if: github.ref == 'refs/heads/production' && vars.DOKPLOY_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      DOKPLOY_URL: ${{ vars.DOKPLOY_URL }}
+      DOKPLOY_COMPOSE_ID: ${{ vars.DOKPLOY_COMPOSE_ID }}
+      DOKPLOY_API_KEY: ${{ secrets.DOKPLOY_API_KEY }}
+    steps:
+      - name: Trigger Compose deployment after publication
+        run: |
+          for variable in DOKPLOY_URL DOKPLOY_COMPOSE_ID DOKPLOY_API_KEY; do
+            if [ -z "${!variable}" ]; then
+              echo "::error::Missing $variable for Dokploy deployment."
+              exit 1
+            fi
+          done
+
+          payload=$(jq -n --arg composeId "$DOKPLOY_COMPOSE_ID" \
+            --arg title "GitHub Actions: $GITHUB_SHA" \
+            '{composeId: $composeId, title: $title}')
+          curl --fail-with-body --silent --show-error \
+            --connect-timeout 10 --max-time 60 \
+            --request POST "${DOKPLOY_URL%/}/api/compose.deploy" \
+            --header "x-api-key: $DOKPLOY_API_KEY" \
+            --header 'Content-Type: application/json' \
+            --data "$payload"

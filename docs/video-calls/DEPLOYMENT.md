@@ -29,7 +29,19 @@ livekit.example.com
 to the VPS public IP.
 
 ## Dokploy setup
-Create a project/environment and a Docker Compose service connected to the production Git branch.
+Create a project/environment and a Docker Compose service connected to the `production` Git branch, using `compose.yaml`.
+
+The production Compose file only pulls images; it does not build on the VPS. Set
+`APP_IMAGE=ghcr.io/s0loparty/systemcall:production` in Dokploy before deploying.
+The `app`, `worker`, `scheduler` and `reverb` services use this same image and
+`pull_policy: always`, so a deployment fetches the current published tag.
+
+Disable Git push Auto Deploy in Dokploy. Otherwise Dokploy can deploy before
+GitHub finishes testing and publishing the new image. Deploy manually after the
+publication job succeeds, or enable the GitHub-triggered deployment below.
+
+Keep the existing Compose project/service and named volumes when switching to
+registry images. Do not recreate the project or remove PostgreSQL/Redis volumes.
 
 Configure domains:
 ```text
@@ -72,10 +84,17 @@ PostgreSQL 18 Docker images store data under a versioned subdirectory. Keep the 
 
 Public Reverb host should be the WSS domain. Keep internal/public host variables separate where the framework requires it.
 
-Frontend Echo connects to the public Reverb WSS domain from `VITE_REVERB_*` values. These values are build-time inputs for the production Vite bundle, so set them explicitly in Dokploy and rebuild the image after changing them. Room application-channel authorization is still an HTTP request to the Laravel app at `/broadcasting/room-auth`; route `call.example.com` to `app:8000` before testing private room channels.
+Frontend Echo connects to the public Reverb WSS domain from `VITE_REVERB_*` values.
+These values are build-time inputs for the production Vite bundle: configure them
+in GitHub Actions repository variables as described below and publish a new image
+after changing them. Changing only Dokploy's runtime `VITE_*` variables does not
+change the built bundle. Room application-channel authorization is still an HTTP
+request to the Laravel app at `/broadcasting/room-auth`; route `call.example.com`
+to `app:8000` before testing private room channels.
 
 Required Dokploy variables:
 ```text
+APP_IMAGE=ghcr.io/s0loparty/systemcall:production
 APP_NAME
 APP_ENV=production
 APP_KEY
@@ -177,18 +196,112 @@ php artisan event:cache
 ```
 
 ## Deploy flow
-1. Push production branch.
-2. Dokploy builds/deploys Compose.
-3. Run explicit migration step.
-4. Verify app, DB, Redis, worker, scheduler and Reverb.
-5. Verify LiveKit signaling/media.
-6. Run two-browser smoke test.
+1. Push `production` (or first verify the image on `main`).
+2. GitHub Actions runs app checks and browser smoke tests.
+3. Actions builds the production Dockerfile on a GitHub runner with BuildKit caching.
+4. Actions checks PHP extensions, built frontend assets and the running Octane `/up` endpoint before publishing to GHCR.
+5. Dokploy pulls the published image and starts Compose, either manually or through the optional Actions deployment job.
+6. Run the explicit migration step.
+7. Verify app, DB, Redis, worker, scheduler and Reverb, then LiveKit signaling/media and a two-browser smoke test.
+
+### GitHub image publication
+
+The existing `CI` workflow calls `.github/workflows/publish-image.yml` after app
+checks and browser smoke pass. Publication runs on pushes to `main` and
+`production`, or a manual CI run on either branch. Pull requests and scheduled
+runs do not publish or deploy. Full LiveKit E2E retains its existing manual/weekly
+schedule; it is not a publication gate.
+
+Set **Settings > Secrets and variables > Actions > Variables**:
+
+| Variable | Value |
+| --- | --- |
+| `VITE_APP_NAME` | `Systemcall` (default) |
+| `VITE_REVERB_APP_KEY` | Public Reverb app key, matching Dokploy's `REVERB_APP_KEY` (required) |
+| `VITE_REVERB_HOST` | Public WSS hostname, e.g. `ws.call.example.com` (required) |
+| `VITE_REVERB_PORT` | `443` (default) |
+| `VITE_REVERB_SCHEME` | `https` (default) |
+
+These values are public frontend configuration, not backend secrets. Never put
+`APP_KEY`, database passwords, `REVERB_APP_SECRET` or `LIVEKIT_API_SECRET` in build
+arguments. Backend secrets remain in Dokploy and enter containers at runtime.
+
+GitHub's automatic `GITHUB_TOKEN` publishes with job-scoped `packages: write`;
+no registry PAT is needed in Actions. Ensure repository/organization policy
+allows package publication. Images target `linux/amd64`, matching the x86 VPS.
+
+Published tags:
+
+```text
+ghcr.io/s0loparty/systemcall:main
+ghcr.io/s0loparty/systemcall:production
+ghcr.io/s0loparty/systemcall:sha-<full-commit-sha>
+```
+
+Only the corresponding branch tag is updated on each run. The Actions job summary
+also records the image digest; use `ghcr.io/s0loparty/systemcall@sha256:<digest>`
+as `APP_IMAGE` to pin an exact image. A rebuild of the same commit can produce a
+different digest because base images and public build configuration can change.
+
+### Dokploy registry access
+
+For a private GHCR package, configure a `ghcr.io` registry credential in Dokploy
+using your GitHub username and a PAT (classic) with `read:packages`, authorized to
+read the package. Attach/use the credential for this Compose deployment according
+to your Dokploy version. Alternatively, make the package public to allow
+anonymous pulls. Do not put registry credentials in `compose.yaml` or `APP_IMAGE`.
+
+Configure `APP_IMAGE` as above and keep the existing domain mappings and backend
+network. If a custom Compose command is configured in Dokploy, remove build
+options; preserve Dokploy's actual project name and Compose path and use
+`up -d --no-build --remove-orphans` as its final arguments. `pull_policy: always`
+fetches the Laravel image even when the branch tag is already cached locally.
+
+### Optional automatic deployment
+
+After manually verifying the first registry-based deployment, set these GitHub
+Actions repository variables:
+
+```text
+DOKPLOY_DEPLOY_ENABLED=true
+DOKPLOY_URL=https://your-dokploy-instance.example.com
+DOKPLOY_COMPOSE_ID=<existing-compose-service-id>
+```
+
+Add `DOKPLOY_API_KEY` as an Actions **secret**, using a Dokploy API token with
+permission to deploy that Compose service. The runner must be able to reach the
+Dokploy API over HTTPS.
+
+Only a successful `production` image publication requests
+`POST /api/compose.deploy`. `main` never triggers this deployment. The API request
+queues the deployment; its success is not proof that the containers are healthy.
+Check Dokploy's deployment logs and perform the explicit migration/verification
+steps. The job does not execute migrations or delete/recreate volumes.
+
+Without `DOKPLOY_DEPLOY_ENABLED=true`, images are still published, and deployment
+is manual. Leave Git push Auto Deploy disabled in both modes.
+
+References: [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry),
+[Docker test-before-push](https://docs.docker.com/build/ci/github-actions/test-before-push/),
+[Dokploy Compose API](https://docs.dokploy.com/docs/api/compose).
+
+Local verification on 2026-10-23: deployment configuration tests passed (3 tests,
+31 assertions), Pint and actionlint passed, and standalone Docker Compose
+`config --quiet` passed with a placeholder image/password. The production image
+build/runtime smoke and GHCR publication were not executed locally: Docker Engine
+is unavailable in this WSL distro (Docker reports missing WSL integration).
+The workflow performs those checks on its GitHub runner; the first publication
+and actual Dokploy deployment still need verification after configuration.
 
 ## Backups
 Back up PostgreSQL regularly with retention, off-server copy and documented restore.
 
 ## Rollback
-Retain previous deployable revision/image. Prefer backward-compatible migrations. Never blindly `migrate:rollback` in production.
+Retain previous deployable revision/image. To roll back application code, set
+`APP_IMAGE` to a previously verified digest from an Actions job summary and deploy
+again. Disable automatic deployment while pinned for rollback, then restore the
+`production` tag when ready to resume releases. Prefer backward-compatible
+migrations. Never blindly `migrate:rollback` in production.
 
 ## LiveKit webhook deployment requirement
 Abnormal disconnect cleanup requires the self-hosted LiveKit server to send signed webhooks to Laravel:

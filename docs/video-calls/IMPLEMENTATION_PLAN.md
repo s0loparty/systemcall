@@ -19,7 +19,7 @@ Current assessment:
 - Redis config existed but app defaults were database-backed cache/session/queue in `.env.example`.
 - Reverb and Octane were not installed before Milestone 0. They are now installed for the infrastructure runtime.
 - Frontend is Vue 3 + TypeScript under `resources/js`, with generated Wayfinder routes/actions.
-- Tests exist under Pest feature/unit suites. CI runs PHP 8.3, Node 22, `composer setup`, then `composer ci:check`.
+- Tests exist under Pest feature/unit suites. CI runs PHP 8.3, Bun frontend checks/build, PHP format/static analysis, unit/feature tests and browser smoke. Successful `main`/`production` runs build and smoke-test the production Docker image on GitHub runners before publishing it to GHCR.
 - Production `compose.yaml` is intentionally not Sail compose. It pins internal service hosts/drivers for production (`DB_HOST=postgres`, `REDIS_HOST=redis`, Redis cache/session/queue, Reverb broadcasting) so a local Sail `.env` cannot silently redirect production containers to Sail service names such as `pgsql`.
 - PostgreSQL uses image `postgres:18-alpine`; its volume target is `/var/lib/postgresql`, not `/var/lib/postgresql/data`, to match PostgreSQL 18 Docker image layout.
 
@@ -450,3 +450,4 @@ Implemented ahead of the full milestone: signed LiveKit `participant_left` webho
 - LiveKit media ports bypass HTTP reverse proxy.
 - TURN/TLS on host 443 is deferred while Dokploy owns 443.
 - Optional 5349 TURN/TLS requires version-specific verification.
+- Production application images are built/tested in GitHub Actions and published to GHCR; Dokploy only pulls the required `APP_IMAGE` for app/worker/scheduler/reverb. Git push Auto Deploy must be disabled to avoid deploying before publication; optional production deployment is requested by Actions after publication. See `DEPLOYMENT.md` for registry credentials, public build variables and migration steps.
