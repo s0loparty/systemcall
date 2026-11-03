@@ -1,4 +1,6 @@
 import { createInertiaApp } from '@inertiajs/vue3';
+import * as Sentry from '@sentry/vue';
+import { createApp, h } from 'vue';
 
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -45,6 +47,25 @@ createInertiaApp({
     },
     progress: {
         color: '#4B5563',
+    },
+    setup({ el, App, props, plugin }) {
+        const app = createApp({ render: () => h(App, props) });
+        app.use(plugin);
+
+        // Sentry-compatible DSN points to the self-hosted Bugsink instance.
+        // Disabled by default for local development and unconfigured deploys.
+        const dsn = import.meta.env.VITE_SENTRY_DSN;
+        if (dsn && import.meta.env.PROD) {
+            Sentry.init({
+                app,
+                dsn,
+                environment: import.meta.env.MODE,
+                tracesSampleRate: 0,
+                sendDefaultPii: false,
+            });
+        }
+
+        app.mount(el);
     },
 });
 
