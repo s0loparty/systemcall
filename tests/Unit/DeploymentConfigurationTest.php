@@ -36,3 +36,23 @@ test('automatic deployment requires a published production image and explicit op
         ->and($deployment['if'])->toBe("github.ref == 'refs/heads/production' && vars.DOKPLOY_DEPLOY_ENABLED == 'true'")
         ->and($deployment['env']['DOKPLOY_API_KEY'])->toBe('${{ secrets.DOKPLOY_API_KEY }}');
 });
+
+test('the image build receives the public Bugsink frontend DSN', function () {
+    $workflow = Yaml::parseFile(dirname(__DIR__, 2).'/.github/workflows/publish-image.yml');
+    $publication = $workflow['jobs']['publish'];
+    $build = collect($publication['steps'])->firstWhere('name', 'Build application image');
+
+    expect($publication['env']['VITE_SENTRY_DSN'] ?? null)->toBe('${{ vars.VITE_SENTRY_DSN }}')
+        ->and($build['with']['build-args'])->toContain('VITE_SENTRY_DSN=${{ env.VITE_SENTRY_DSN }}');
+});
+
+test('all Laravel services receive optional backend Bugsink configuration', function () {
+    $compose = Yaml::parseFile(dirname(__DIR__, 2).'/compose.yaml');
+
+    foreach (['app', 'worker', 'scheduler', 'reverb'] as $serviceName) {
+        $environment = $compose['services'][$serviceName]['environment'];
+
+        expect($environment['SENTRY_LARAVEL_DSN'] ?? null)->toBe('${SENTRY_LARAVEL_DSN:-}')
+            ->and($environment['SENTRY_TRACES_SAMPLE_RATE'] ?? null)->toBe('${SENTRY_TRACES_SAMPLE_RATE:-0}');
+    }
+});

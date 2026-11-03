@@ -6,6 +6,7 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeEcho } from '@/lib/echo';
 import { initializeFlashToast } from '@/lib/flashToast';
+import * as Sentry from '@sentry/vue';
 
 import './assets/css/app.css';
 
@@ -46,18 +47,40 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
+    withApp(app, { ssr }) {
+        // Sentry-compatible DSN points to the self-hosted Bugsink instance.
+        // Disabled by default for local development and unconfigured deploys.
+        const dsn = import.meta.env.VITE_SENTRY_DSN;
+
+        if (!ssr && dsn && import.meta.env.PROD) {
+            Sentry.init({
+                app,
+                dsn,
+                environment: import.meta.env.MODE,
+                tracesSampleRate: 0,
+                dataCollection: {
+                    userInfo: false,
+                    cookies: false,
+                    httpHeaders: false,
+                    httpBodies: [],
+                    urlQueryParams: false,
+                },
+            });
+        }
+    },
 });
 
-// This will set light / dark mode on page load...
-initializeTheme();
+if (typeof window !== 'undefined') {
+    initializeTheme();
+    initializeFlashToast();
 
-// This will listen for flash toast data from the server...
-initializeFlashToast();
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
-            console.error('Service worker registration failed:', error);
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker
+                .register('/sw.js')
+                .catch((error: unknown) => {
+                    console.error('Service worker registration failed:', error);
+                });
         });
-    });
+    }
 }

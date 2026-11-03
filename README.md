@@ -185,11 +185,16 @@ livekit
 | `VITE_APP_NAME` | Нет | Название приложения; по умолчанию `Systemcall` |
 | `VITE_REVERB_PORT` | Нет | Публичный порт Reverb; по умолчанию `443` |
 | `VITE_REVERB_SCHEME` | Нет | По умолчанию `https` |
+| `VITE_SENTRY_DSN` | Для мониторинга Vue | DSN frontend-проекта Bugsink; пустое значение отключает мониторинг браузера |
 
 Для сборки и публикации достаточно двух обязательных Variables. `VITE_*`
 встраиваются в frontend и доступны браузеру: это не место для секретов. После
 изменения этих значений запустите CI заново, чтобы собрать и опубликовать новый
 образ. Изменение только runtime-переменных Dokploy не обновит frontend.
+
+Для мониторинга Laravel задайте `SENTRY_LARAVEL_DSN` и
+`SENTRY_TRACES_SAMPLE_RATE=0` в окружении Compose в Dokploy: они передаются
+в `app`, `worker`, `scheduler` и `reverb`. Инструкции: [Bugsink](docs/bugsink.md).
 
 ### Variables и Secrets для автодеплоя
 

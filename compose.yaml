@@ -21,6 +21,8 @@ x-laravel-environment: &laravel-environment
     BCRYPT_ROUNDS: '${BCRYPT_ROUNDS:-12}'
     LOG_CHANNEL: '${LOG_CHANNEL:-stderr}'
     LOG_LEVEL: '${LOG_LEVEL:-info}'
+    SENTRY_LARAVEL_DSN: '${SENTRY_LARAVEL_DSN:-}'
+    SENTRY_TRACES_SAMPLE_RATE: '${SENTRY_TRACES_SAMPLE_RATE:-0}'
     DB_CONNECTION: pgsql
     DB_HOST: postgres
     DB_PORT: '5432'

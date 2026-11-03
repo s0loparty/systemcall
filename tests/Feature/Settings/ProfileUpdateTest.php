@@ -2,6 +2,12 @@
 
 use App\Models\User;
 
+test('settings redirects authenticated users to their profile', function (string $method) {
+    $this->actingAs(User::factory()->create())
+        ->call($method, '/settings')
+        ->assertRedirect('/settings/profile');
+})->with(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'QUERY']);
+
 test('profile page is displayed', function () {
     $user = User::factory()->create();
 
