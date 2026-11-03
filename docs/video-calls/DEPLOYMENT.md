@@ -221,10 +221,16 @@ Set **Settings > Secrets and variables > Actions > Variables**:
 | `VITE_REVERB_HOST` | Public WSS hostname, e.g. `ws.call.example.com` (required) |
 | `VITE_REVERB_PORT` | `443` (default) |
 | `VITE_REVERB_SCHEME` | `https` (default) |
+| `VITE_SENTRY_DSN` | Public frontend Bugsink project DSN; optional, empty disables browser monitoring |
 
 These values are public frontend configuration, not backend secrets. Never put
 `APP_KEY`, database passwords, `REVERB_APP_SECRET` or `LIVEKIT_API_SECRET` in build
 arguments. Backend secrets remain in Dokploy and enter containers at runtime.
+
+For backend Bugsink monitoring, set `SENTRY_LARAVEL_DSN` and
+`SENTRY_TRACES_SAMPLE_RATE=0` in Dokploy's Compose environment. The shared
+Laravel environment passes these values to app, worker, scheduler and reverb.
+See [Bugsink setup](../bugsink.md). Do not use the backend DSN as a build argument.
 
 GitHub's automatic `GITHUB_TOKEN` publishes with job-scoped `packages: write`;
 no registry PAT is needed in Actions. Ensure repository/organization policy
