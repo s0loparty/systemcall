@@ -2,25 +2,11 @@
 
 This branch integrates the official Sentry-compatible SDKs with a **self-hosted Bugsink** server. No Sentry SaaS account is required.
 
-## Before building
+## Build status
 
-The GitHub connector cannot resolve Composer/npm dependency trees and regenerate lock files. **Do not deploy this branch until both lock files are updated and committed.**
+The Composer and npm lock files have now been regenerated and committed to this branch. GitHub Actions CI passed on commit `eb9167a0` (see the branch Checks tab). Before deploying, confirm that the merged commit has a successful CI run and that Dokploy builds the intended branch or image. Do not configure public DSNs or production monitoring on a staging container accidentally.
 
-On a workstation with PHP 8.4 + Composer and Node 22:
-
-```bash
-composer update sentry/sentry-laravel --with-all-dependencies
-npm install
-php artisan config:clear
-npm run types:check
-npm run build
-php artisan test
-git add composer.lock package-lock.json
-git commit -m "build: lock Bugsink SDK dependencies"
-git push
-```
-
-The Dockerfile uses `composer install` and `npm ci`, so outdated locks will cause deployment errors or leave the SDK missing.
+The Dockerfile uses `composer install` and `npm ci`; keep both lock files updated whenever SDK versions change.
 
 ## Bugsink projects
 
